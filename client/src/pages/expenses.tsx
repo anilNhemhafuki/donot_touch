@@ -1,14 +1,39 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, Edit, Trash2, Receipt, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -19,9 +44,14 @@ export default function Expenses() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const { toast } = useToast();
 
-  const { data: expenses = [], isLoading, error } = useQuery({
+  const {
+    data: expenses = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["/api/expenses"],
   });
 
@@ -45,12 +75,16 @@ export default function Expenses() {
         }, 500);
         return;
       }
-      toast({ title: "Error", description: "Failed to save expense", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to save expense",
+        variant: "destructive",
+      });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
       apiRequest("PUT", `/api/expenses/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
@@ -70,7 +104,11 @@ export default function Expenses() {
         }, 500);
         return;
       }
-      toast({ title: "Error", description: "Failed to update expense", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to update expense",
+        variant: "destructive",
+      });
     },
   });
 
@@ -92,7 +130,11 @@ export default function Expenses() {
         }, 500);
         return;
       }
-      toast({ title: "Error", description: "Failed to delete expense", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to delete expense",
+        variant: "destructive",
+      });
     },
   });
 

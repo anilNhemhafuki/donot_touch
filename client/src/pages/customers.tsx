@@ -108,11 +108,12 @@ export default function Customers() {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const data = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      phone: formData.get("phone"),
-      address: formData.get("address"),
+      name: formData.get("name") as string,
+      email: formData.get("email") as string || null,
+      phone: formData.get("phone") as string || null,
+      address: formData.get("address") as string || null,
       remainingBalance: parseFloat(formData.get("remainingBalance") as string) || 0,
+      isActive: true,
     };
 
     if (editingCustomer) {
