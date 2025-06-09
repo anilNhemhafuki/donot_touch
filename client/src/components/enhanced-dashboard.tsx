@@ -113,7 +113,7 @@ export default function EnhancedDashboard() {
     const formData = new FormData(e.target as HTMLFormElement);
     const productId = parseInt(formData.get("productId") as string);
     const quantity = parseInt(formData.get("quantity") as string);
-    const selectedProduct = products.find((p: any) => p.id === productId);
+    const selectedProduct = (products as any[]).find((p: any) => p.id === productId);
     
     if (!selectedProduct) return;
 
@@ -248,7 +248,7 @@ export default function EnhancedDashboard() {
                         <SelectValue placeholder="Select Product" />
                       </SelectTrigger>
                       <SelectContent>
-                        {products.map((product: any) => (
+                        {(products as any[]).map((product: any) => (
                           <SelectItem key={product.id} value={product.id.toString()}>
                             {product.name}
                           </SelectItem>
@@ -286,7 +286,7 @@ export default function EnhancedDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {todayProduction.map((item: any, index: number) => (
+                {(todayProduction as any[]).map((item: any, index: number) => (
                   <TableRow key={item.id || index}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{item.productName || item.product?.name}</TableCell>
@@ -295,7 +295,7 @@ export default function EnhancedDashboard() {
                     <TableCell>Rs. {(item.quantity * (item.unitPrice || 0)).toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
-                {todayProduction.length === 0 && (
+                {(todayProduction as any[]).length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center text-muted-foreground">
                       No production scheduled for today
@@ -318,7 +318,7 @@ export default function EnhancedDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {lowStockItems.map((item: any) => (
+              {(lowStockItems as any[]).map((item: any) => (
                 <div key={item.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
                   <div>
                     <p className="font-medium text-red-800">{item.name}</p>
@@ -329,7 +329,7 @@ export default function EnhancedDashboard() {
                   </Badge>
                 </div>
               ))}
-              {lowStockItems.length === 0 && (
+              {(lowStockItems as any[]).length === 0 && (
                 <div className="text-center text-muted-foreground">
                   All items are well stocked
                 </div>
@@ -349,7 +349,7 @@ export default function EnhancedDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentOrders.map((order: any) => (
+              {(recentOrders as any[]).map((order: any) => (
                 <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <p className="font-medium">Order #{order.id}</p>
@@ -367,7 +367,7 @@ export default function EnhancedDashboard() {
                   </div>
                 </div>
               ))}
-              {recentOrders.length === 0 && (
+              {(recentOrders as any[]).length === 0 && (
                 <div className="text-center text-muted-foreground">
                   No recent orders
                 </div>
