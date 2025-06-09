@@ -13,6 +13,10 @@ import Inventory from "@/pages/inventory";
 import Orders from "@/pages/orders";
 import Production from "@/pages/production";
 import Reports from "@/pages/reports";
+import Customers from "@/pages/customers";
+import Parties from "@/pages/parties";
+import Assets from "@/pages/assets";
+import Expenses from "@/pages/expenses";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
@@ -52,6 +56,10 @@ function Router() {
             <Route path="/inventory" component={Inventory} />
             <Route path="/orders" component={Orders} />
             <Route path="/production" component={Production} />
+            <Route path="/customers" component={Customers} />
+            <Route path="/parties" component={Parties} />
+            <Route path="/assets" component={Assets} />
+            <Route path="/expenses" component={Expenses} />
             <Route path="/reports" component={Reports} />
             <Route component={NotFound} />
           </Switch>

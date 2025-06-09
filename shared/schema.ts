@@ -306,6 +306,18 @@ export type InsertProductionScheduleItem = typeof productionSchedule.$inferInser
 export type InventoryTransaction = typeof inventoryTransactions.$inferSelect;
 export type InsertInventoryTransaction = typeof inventoryTransactions.$inferInsert;
 
+export type Customer = typeof customers.$inferSelect;
+export type InsertCustomer = typeof customers.$inferInsert;
+
+export type Party = typeof parties.$inferSelect;
+export type InsertParty = typeof parties.$inferInsert;
+
+export type Asset = typeof assets.$inferSelect;
+export type InsertAsset = typeof assets.$inferInsert;
+
+export type Expense = typeof expenses.$inferSelect;
+export type InsertExpense = typeof expenses.$inferInsert;
+
 // Schemas
 export const insertCategorySchema = createInsertSchema(categories);
 export const insertProductSchema = createInsertSchema(products);
@@ -315,3 +327,7 @@ export const insertOrderSchema = createInsertSchema(orders);
 export const insertOrderItemSchema = createInsertSchema(orderItems);
 export const insertProductionScheduleItemSchema = createInsertSchema(productionSchedule);
 export const insertInventoryTransactionSchema = createInsertSchema(inventoryTransactions);
+export const insertCustomerSchema = createInsertSchema(customers);
+export const insertPartySchema = createInsertSchema(parties);
+export const insertAssetSchema = createInsertSchema(assets);
+export const insertExpenseSchema = createInsertSchema(expenses);

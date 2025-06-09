@@ -8,6 +8,10 @@ import {
   orderItems,
   productionSchedule,
   inventoryTransactions,
+  customers,
+  parties,
+  assets,
+  expenses,
   type User,
   type UpsertUser,
   type Category,
@@ -26,6 +30,14 @@ import {
   type InsertProductionScheduleItem,
   type InventoryTransaction,
   type InsertInventoryTransaction,
+  type Customer,
+  type InsertCustomer,
+  type Party,
+  type InsertParty,
+  type Asset,
+  type InsertAsset,
+  type Expense,
+  type InsertExpense,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, gte, lte, sql, like } from "drizzle-orm";
@@ -91,6 +103,34 @@ export interface IStorage {
   // Analytics operations
   getDashboardStats(): Promise<any>;
   getSalesAnalytics(startDate?: Date, endDate?: Date): Promise<any>;
+
+  // Customer operations
+  getCustomers(): Promise<Customer[]>;
+  getCustomerById(id: number): Promise<Customer | undefined>;
+  createCustomer(customer: InsertCustomer): Promise<Customer>;
+  updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer>;
+  deleteCustomer(id: number): Promise<void>;
+
+  // Party operations
+  getParties(): Promise<Party[]>;
+  getPartyById(id: number): Promise<Party | undefined>;
+  createParty(party: InsertParty): Promise<Party>;
+  updateParty(id: number, party: Partial<InsertParty>): Promise<Party>;
+  deleteParty(id: number): Promise<void>;
+
+  // Asset operations
+  getAssets(): Promise<Asset[]>;
+  getAssetById(id: number): Promise<Asset | undefined>;
+  createAsset(asset: InsertAsset): Promise<Asset>;
+  updateAsset(id: number, asset: Partial<InsertAsset>): Promise<Asset>;
+  deleteAsset(id: number): Promise<void>;
+
+  // Expense operations
+  getExpenses(): Promise<Expense[]>;
+  getExpenseById(id: number): Promise<Expense | undefined>;
+  createExpense(expense: InsertExpense): Promise<Expense>;
+  updateExpense(id: number, expense: Partial<InsertExpense>): Promise<Expense>;
+  deleteExpense(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -564,6 +604,102 @@ export class DatabaseStorage implements IStorage {
         revenue: Number(row.totalRevenue),
       })),
     };
+  }
+
+  // Customer operations
+  async getCustomers(): Promise<Customer[]> {
+    return await db.select().from(customers).where(eq(customers.isActive, true)).orderBy(desc(customers.createdAt));
+  }
+
+  async getCustomerById(id: number): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+    return customer;
+  }
+
+  async createCustomer(customer: InsertCustomer): Promise<Customer> {
+    const [created] = await db.insert(customers).values(customer).returning();
+    return created;
+  }
+
+  async updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer> {
+    const [updated] = await db.update(customers).set(customer).where(eq(customers.id, id)).returning();
+    return updated;
+  }
+
+  async deleteCustomer(id: number): Promise<void> {
+    await db.update(customers).set({ isActive: false }).where(eq(customers.id, id));
+  }
+
+  // Party operations
+  async getParties(): Promise<Party[]> {
+    return await db.select().from(parties).where(eq(parties.isActive, true)).orderBy(desc(parties.createdAt));
+  }
+
+  async getPartyById(id: number): Promise<Party | undefined> {
+    const [party] = await db.select().from(parties).where(eq(parties.id, id));
+    return party;
+  }
+
+  async createParty(party: InsertParty): Promise<Party> {
+    const [created] = await db.insert(parties).values(party).returning();
+    return created;
+  }
+
+  async updateParty(id: number, party: Partial<InsertParty>): Promise<Party> {
+    const [updated] = await db.update(parties).set(party).where(eq(parties.id, id)).returning();
+    return updated;
+  }
+
+  async deleteParty(id: number): Promise<void> {
+    await db.update(parties).set({ isActive: false }).where(eq(parties.id, id));
+  }
+
+  // Asset operations
+  async getAssets(): Promise<Asset[]> {
+    return await db.select().from(assets).where(eq(assets.isActive, true)).orderBy(desc(assets.createdAt));
+  }
+
+  async getAssetById(id: number): Promise<Asset | undefined> {
+    const [asset] = await db.select().from(assets).where(eq(assets.id, id));
+    return asset;
+  }
+
+  async createAsset(asset: InsertAsset): Promise<Asset> {
+    const [created] = await db.insert(assets).values(asset).returning();
+    return created;
+  }
+
+  async updateAsset(id: number, asset: Partial<InsertAsset>): Promise<Asset> {
+    const [updated] = await db.update(assets).set(asset).where(eq(assets.id, id)).returning();
+    return updated;
+  }
+
+  async deleteAsset(id: number): Promise<void> {
+    await db.update(assets).set({ isActive: false }).where(eq(assets.id, id));
+  }
+
+  // Expense operations
+  async getExpenses(): Promise<Expense[]> {
+    return await db.select().from(expenses).orderBy(desc(expenses.date));
+  }
+
+  async getExpenseById(id: number): Promise<Expense | undefined> {
+    const [expense] = await db.select().from(expenses).where(eq(expenses.id, id));
+    return expense;
+  }
+
+  async createExpense(expense: InsertExpense): Promise<Expense> {
+    const [created] = await db.insert(expenses).values(expense).returning();
+    return created;
+  }
+
+  async updateExpense(id: number, expense: Partial<InsertExpense>): Promise<Expense> {
+    const [updated] = await db.update(expenses).set(expense).where(eq(expenses.id, id)).returning();
+    return updated;
+  }
+
+  async deleteExpense(id: number): Promise<void> {
+    await db.delete(expenses).where(eq(expenses.id, id));
   }
 }
 

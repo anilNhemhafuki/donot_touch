@@ -8,6 +8,10 @@ import {
   insertInventoryItemSchema,
   insertOrderSchema,
   insertProductionScheduleItemSchema,
+  insertCustomerSchema,
+  insertPartySchema,
+  insertAssetSchema,
+  insertExpenseSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -346,6 +350,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching sales analytics:", error);
       res.status(500).json({ message: "Failed to fetch sales analytics" });
+    }
+  });
+
+  // Customer routes
+  app.get("/api/customers", isAuthenticated, async (req, res) => {
+    try {
+      const customers = await storage.getCustomers();
+      res.json(customers);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+      res.status(500).json({ message: "Failed to fetch customers" });
+    }
+  });
+
+  app.post("/api/customers", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertCustomerSchema.parse(req.body);
+      const customer = await storage.createCustomer(validatedData);
+      res.json(customer);
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      res.status(500).json({ message: "Failed to create customer" });
+    }
+  });
+
+  app.put("/api/customers/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const customer = await storage.updateCustomer(id, req.body);
+      res.json(customer);
+    } catch (error) {
+      console.error("Error updating customer:", error);
+      res.status(500).json({ message: "Failed to update customer" });
+    }
+  });
+
+  app.delete("/api/customers/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteCustomer(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      res.status(500).json({ message: "Failed to delete customer" });
+    }
+  });
+
+  // Party routes
+  app.get("/api/parties", isAuthenticated, async (req, res) => {
+    try {
+      const parties = await storage.getParties();
+      res.json(parties);
+    } catch (error) {
+      console.error("Error fetching parties:", error);
+      res.status(500).json({ message: "Failed to fetch parties" });
+    }
+  });
+
+  app.post("/api/parties", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertPartySchema.parse(req.body);
+      const party = await storage.createParty(validatedData);
+      res.json(party);
+    } catch (error) {
+      console.error("Error creating party:", error);
+      res.status(500).json({ message: "Failed to create party" });
+    }
+  });
+
+  app.put("/api/parties/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const party = await storage.updateParty(id, req.body);
+      res.json(party);
+    } catch (error) {
+      console.error("Error updating party:", error);
+      res.status(500).json({ message: "Failed to update party" });
+    }
+  });
+
+  // Asset routes
+  app.get("/api/assets", isAuthenticated, async (req, res) => {
+    try {
+      const assets = await storage.getAssets();
+      res.json(assets);
+    } catch (error) {
+      console.error("Error fetching assets:", error);
+      res.status(500).json({ message: "Failed to fetch assets" });
+    }
+  });
+
+  app.post("/api/assets", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertAssetSchema.parse(req.body);
+      const asset = await storage.createAsset(validatedData);
+      res.json(asset);
+    } catch (error) {
+      console.error("Error creating asset:", error);
+      res.status(500).json({ message: "Failed to create asset" });
+    }
+  });
+
+  app.put("/api/assets/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const asset = await storage.updateAsset(id, req.body);
+      res.json(asset);
+    } catch (error) {
+      console.error("Error updating asset:", error);
+      res.status(500).json({ message: "Failed to update asset" });
+    }
+  });
+
+  // Expense routes
+  app.get("/api/expenses", isAuthenticated, async (req, res) => {
+    try {
+      const expenses = await storage.getExpenses();
+      res.json(expenses);
+    } catch (error) {
+      console.error("Error fetching expenses:", error);
+      res.status(500).json({ message: "Failed to fetch expenses" });
+    }
+  });
+
+  app.post("/api/expenses", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const validatedData = insertExpenseSchema.parse({
+        ...req.body,
+        createdBy: userId,
+      });
+      const expense = await storage.createExpense(validatedData);
+      res.json(expense);
+    } catch (error) {
+      console.error("Error creating expense:", error);
+      res.status(500).json({ message: "Failed to create expense" });
+    }
+  });
+
+  app.put("/api/expenses/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const expense = await storage.updateExpense(id, req.body);
+      res.json(expense);
+    } catch (error) {
+      console.error("Error updating expense:", error);
+      res.status(500).json({ message: "Failed to update expense" });
     }
   });
 
