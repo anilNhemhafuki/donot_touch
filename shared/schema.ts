@@ -1,0 +1,259 @@
+import {
+  pgTable,
+  text,
+  varchar,
+  timestamp,
+  jsonb,
+  index,
+  serial,
+  decimal,
+  integer,
+  boolean,
+  uuid,
+  primaryKey,
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// Session storage table.
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table.
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  role: varchar("role").default("staff").notNull(), // 'admin', 'staff'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Product categories
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Products
+export const products = pgTable("products", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  categoryId: integer("category_id").references(() => categories.id),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  cost: decimal("cost", { precision: 10, scale: 2 }).notNull(),
+  margin: decimal("margin", { precision: 5, scale: 2 }).notNull(),
+  sku: varchar("sku", { length: 50 }).unique(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Inventory items (ingredients)
+export const inventoryItems = pgTable("inventory_items", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  currentStock: decimal("current_stock", { precision: 10, scale: 2 }).notNull(),
+  minLevel: decimal("min_level", { precision: 10, scale: 2 }).notNull(),
+  unit: varchar("unit", { length: 50 }).notNull(), // lbs, kg, dozen, etc.
+  costPerUnit: decimal("cost_per_unit", { precision: 10, scale: 2 }).notNull(),
+  supplier: varchar("supplier", { length: 200 }),
+  lastRestocked: timestamp("last_restocked"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Product ingredients (recipes)
+export const productIngredients = pgTable("product_ingredients", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").references(() => products.id).notNull(),
+  inventoryItemId: integer("inventory_item_id").references(() => inventoryItems.id).notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 4 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Customer orders
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  orderNumber: varchar("order_number", { length: 50 }).unique().notNull(),
+  customerName: varchar("customer_name", { length: 200 }).notNull(),
+  customerEmail: varchar("customer_email", { length: 200 }),
+  customerPhone: varchar("customer_phone", { length: 50 }),
+  status: varchar("status", { length: 50 }).default("pending").notNull(), // pending, in_progress, completed, cancelled
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  orderDate: timestamp("order_date").defaultNow(),
+  dueDate: timestamp("due_date"),
+  notes: text("notes"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Order items
+export const orderItems = pgTable("order_items", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id").references(() => orders.id).notNull(),
+  productId: integer("product_id").references(() => products.id).notNull(),
+  quantity: integer("quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Production schedule
+export const productionSchedule = pgTable("production_schedule", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").references(() => products.id).notNull(),
+  quantity: integer("quantity").notNull(),
+  scheduledDate: timestamp("scheduled_date").notNull(),
+  startTime: timestamp("start_time"),
+  endTime: timestamp("end_time"),
+  status: varchar("status", { length: 50 }).default("scheduled").notNull(), // scheduled, in_progress, completed, cancelled
+  assignedTo: varchar("assigned_to").references(() => users.id),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Inventory transactions
+export const inventoryTransactions = pgTable("inventory_transactions", {
+  id: serial("id").primaryKey(),
+  inventoryItemId: integer("inventory_item_id").references(() => inventoryItems.id).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // 'in', 'out', 'adjustment'
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
+  reason: varchar("reason", { length: 200 }),
+  reference: varchar("reference", { length: 100 }), // order_id, production_id, etc.
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  orders: many(orders),
+  productionTasks: many(productionSchedule),
+  inventoryTransactions: many(inventoryTransactions),
+}));
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  products: many(products),
+}));
+
+export const productsRelations = relations(products, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [products.categoryId],
+    references: [categories.id],
+  }),
+  ingredients: many(productIngredients),
+  orderItems: many(orderItems),
+  productionTasks: many(productionSchedule),
+}));
+
+export const inventoryItemsRelations = relations(inventoryItems, ({ many }) => ({
+  productIngredients: many(productIngredients),
+  transactions: many(inventoryTransactions),
+}));
+
+export const productIngredientsRelations = relations(productIngredients, ({ one }) => ({
+  product: one(products, {
+    fields: [productIngredients.productId],
+    references: [products.id],
+  }),
+  inventoryItem: one(inventoryItems, {
+    fields: [productIngredients.inventoryItemId],
+    references: [inventoryItems.id],
+  }),
+}));
+
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  items: many(orderItems),
+  createdByUser: one(users, {
+    fields: [orders.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderItems.orderId],
+    references: [orders.id],
+  }),
+  product: one(products, {
+    fields: [orderItems.productId],
+    references: [products.id],
+  }),
+}));
+
+export const productionScheduleRelations = relations(productionSchedule, ({ one }) => ({
+  product: one(products, {
+    fields: [productionSchedule.productId],
+    references: [products.id],
+  }),
+  assignedUser: one(users, {
+    fields: [productionSchedule.assignedTo],
+    references: [users.id],
+  }),
+}));
+
+export const inventoryTransactionsRelations = relations(inventoryTransactions, ({ one }) => ({
+  inventoryItem: one(inventoryItems, {
+    fields: [inventoryTransactions.inventoryItemId],
+    references: [inventoryItems.id],
+  }),
+  createdByUser: one(users, {
+    fields: [inventoryTransactions.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// Types
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
+
+export type Category = typeof categories.$inferSelect;
+export type InsertCategory = typeof categories.$inferInsert;
+
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = typeof products.$inferInsert;
+
+export type InventoryItem = typeof inventoryItems.$inferSelect;
+export type InsertInventoryItem = typeof inventoryItems.$inferInsert;
+
+export type ProductIngredient = typeof productIngredients.$inferSelect;
+export type InsertProductIngredient = typeof productIngredients.$inferInsert;
+
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = typeof orders.$inferInsert;
+
+export type OrderItem = typeof orderItems.$inferSelect;
+export type InsertOrderItem = typeof orderItems.$inferInsert;
+
+export type ProductionScheduleItem = typeof productionSchedule.$inferSelect;
+export type InsertProductionScheduleItem = typeof productionSchedule.$inferInsert;
+
+export type InventoryTransaction = typeof inventoryTransactions.$inferSelect;
+export type InsertInventoryTransaction = typeof inventoryTransactions.$inferInsert;
+
+// Schemas
+export const insertCategorySchema = createInsertSchema(categories);
+export const insertProductSchema = createInsertSchema(products);
+export const insertInventoryItemSchema = createInsertSchema(inventoryItems);
+export const insertProductIngredientSchema = createInsertSchema(productIngredients);
+export const insertOrderSchema = createInsertSchema(orders);
+export const insertOrderItemSchema = createInsertSchema(orderItems);
+export const insertProductionScheduleItemSchema = createInsertSchema(productionSchedule);
+export const insertInventoryTransactionSchema = createInsertSchema(inventoryTransactions);

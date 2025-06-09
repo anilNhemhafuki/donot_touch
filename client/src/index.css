@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(43, 33%, 98%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(40, 8%, 95%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(40, 10%, 90%);
+  --input: hsl(40, 10%, 90%);
+  --primary: hsl(30, 40%, 65%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(39, 85%, 85%);
+  --secondary-foreground: hsl(20, 14.3%, 4.1%);
+  --accent: hsl(39, 85%, 85%);
+  --accent-foreground: hsl(20, 14.3%, 4.1%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(30, 40%, 65%);
+  --radius: 0.5rem;
+  
+  /* Bakery theme colors */
+  --bakery-brown: hsl(25, 45%, 27%);
+  --bakery-tan: hsl(30, 44%, 65%);
+  --bakery-orange: hsl(16, 100%, 60%);
+  --bakery-cream: hsl(43, 33%, 98%);
+  --bakery-accent: hsl(30, 65%, 70%);
+}
+
+.dark {
+  --background: hsl(30, 10%, 8%);
+  --foreground: hsl(30, 5%, 95%);
+  --muted: hsl(30, 8%, 15%);
+  --muted-foreground: hsl(30, 5%, 60%);
+  --popover: hsl(30, 10%, 8%);
+  --popover-foreground: hsl(30, 5%, 95%);
+  --card: hsl(30, 10%, 8%);
+  --card-foreground: hsl(30, 5%, 95%);
+  --border: hsl(30, 8%, 15%);
+  --input: hsl(30, 8%, 15%);
+  --primary: hsl(30, 40%, 65%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(30, 8%, 15%);
+  --secondary-foreground: hsl(30, 5%, 95%);
+  --accent: hsl(30, 8%, 15%);
+  --accent-foreground: hsl(30, 5%, 95%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(30, 40%, 65%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Custom bakery-themed styles */
+.bakery-gradient {
+  background: linear-gradient(135deg, var(--bakery-cream) 0%, var(--bakery-tan) 100%);
+}
+
+.bakery-shadow {
+  box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1), 0 2px 4px -1px rgba(139, 69, 19, 0.06);
+}
+
+.nav-item.active {
+  background-color: var(--bakery-brown);
+  color: white;
+}
+
+.nav-item:hover {
+  background-color: rgba(139, 69, 19, 0.1);
+}
