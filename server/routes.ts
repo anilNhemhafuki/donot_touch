@@ -430,6 +430,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/parties/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteParty(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting party:", error);
+      res.status(500).json({ message: "Failed to delete party" });
+    }
+  });
+
   // Asset routes
   app.get("/api/assets", isAuthenticated, async (req, res) => {
     try {
@@ -460,6 +471,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating asset:", error);
       res.status(500).json({ message: "Failed to update asset" });
+    }
+  });
+
+  app.delete("/api/assets/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteAsset(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting asset:", error);
+      res.status(500).json({ message: "Failed to delete asset" });
     }
   });
 
@@ -497,6 +519,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating expense:", error);
       res.status(500).json({ message: "Failed to update expense" });
+    }
+  });
+
+  app.delete("/api/expenses/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteExpense(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      res.status(500).json({ message: "Failed to delete expense" });
     }
   });
 

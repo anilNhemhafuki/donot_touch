@@ -56,7 +56,7 @@ export default function Inventory() {
         minLevel: parseFloat(data.minLevel),
         costPerUnit: parseFloat(data.costPerUnit),
       };
-      
+
       if (editingItem) {
         await apiRequest("PUT", `/api/inventory/${editingItem.id}`, transformedData);
       } else {
@@ -184,10 +184,10 @@ export default function Inventory() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
-          <p className="text-gray-600">Track your ingredients and supplies</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Inventory Management</h1>
+          <p className="text-muted-foreground">Track ingredient stock levels and costs</p>
         </div>
         <Button onClick={() => setShowAddForm(true)}>
           <i className="fas fa-plus mr-2"></i>
@@ -228,7 +228,7 @@ export default function Inventory() {
                         const current = Number(item.currentStock);
                         const min = Number(item.minLevel);
                         const status = getStockStatus(current, min);
-                        
+
                         return (
                           <tr key={item.id} className="border-b hover:bg-gray-50">
                             <td className="py-3">
