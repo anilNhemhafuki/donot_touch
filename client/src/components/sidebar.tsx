@@ -70,7 +70,17 @@ export default function Sidebar() {
             <p className="text-xs text-gray-500">{user?.role || 'Staff'}</p>
           </div>
           <button 
-            onClick={() => window.location.href = '/api/logout'}
+            onClick={async () => {
+              try {
+                await fetch('/api/logout', { 
+                  method: 'POST', 
+                  credentials: 'include' 
+                });
+                window.location.reload();
+              } catch (error) {
+                console.error('Logout failed:', error);
+              }
+            }}
             className="text-gray-400 hover:text-gray-600"
           >
             <i className="fas fa-sign-out-alt"></i>
