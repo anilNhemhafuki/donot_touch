@@ -44,6 +44,8 @@ export default function Assets() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCondition, setSelectedCondition] = useState("good");
   const { toast } = useToast();
 
   const {
@@ -141,15 +143,14 @@ export default function Assets() {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const data = {
-      name: formData.get("name"),
-      category: formData.get("category"),
-      description: formData.get("description"),
-      location: formData.get("location"),
-      condition: formData.get("condition"),
-      purchaseDate: formData.get("purchaseDate") || null,
-      purchasePrice:
-        parseFloat(formData.get("purchasePrice") as string) || null,
-      currentValue: parseFloat(formData.get("currentValue") as string) || null,
+      name: formData.get("name") as string,
+      category: formData.get("category") as string,
+      description: formData.get("description") as string || null,
+      location: formData.get("location") as string || null,
+      condition: formData.get("condition") as string || "good",
+      purchaseDate: formData.get("purchaseDate") ? new Date(formData.get("purchaseDate") as string) : null,
+      purchasePrice: formData.get("purchasePrice") ? parseFloat(formData.get("purchasePrice") as string) : null,
+      currentValue: formData.get("currentValue") ? parseFloat(formData.get("currentValue") as string) : null,
     };
 
     if (editingAsset) {
@@ -192,16 +193,20 @@ export default function Assets() {
     return variants[condition] || "outline";
   };
 
-  if (error && isUnauthorizedError(error)) {
-    toast({
-      title: "Unauthorized",
-      description: "You are logged out. Logging in again...",
-      variant: "destructive",
-    });
-    setTimeout(() => {
-      window.location.href = "/api/login";
-    }, 500);
-    return null;
+  if (error) {
+    if (isUnauthorizedError(error)) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return null;
+    }
+    // Handle other errors
+    console.error("Error loading assets:", error);
   }
 
   return (
@@ -213,10 +218,21 @@ export default function Assets() {
             Track and manage your business assets
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setEditingAsset(null);
+            setSelectedCategory("");
+            setSelectedCondition("good");
+          }
+        }}>
           <DialogTrigger asChild>
             <Button
-              onClick={() => setEditingAsset(null)}
+              onClick={() => {
+                setEditingAsset(null);
+                setSelectedCategory("");
+                setSelectedCondition("good");
+              }}
               className="w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -237,21 +253,25 @@ export default function Assets() {
                 defaultValue={editingAsset?.name || ""}
                 required
               />
-              <Select
-                name="category"
-                defaultValue={editingAsset?.category || ""}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                  defaultValue={editingAsset?.category || ""}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <input type="hidden" name="category" value={selectedCategory} />
+              </div>
               <Textarea
                 name="description"
                 placeholder="Description"
@@ -263,21 +283,25 @@ export default function Assets() {
                 placeholder="Location"
                 defaultValue={editingAsset?.location || ""}
               />
-              <Select
-                name="condition"
-                defaultValue={editingAsset?.condition || "good"}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Condition" />
-                </SelectTrigger>
-                <SelectContent>
-                  {conditions.map((condition) => (
-                    <SelectItem key={condition} value={condition}>
-                      {condition.charAt(0).toUpperCase() + condition.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div>
+                <Select
+                  value={selectedCondition}
+                  onValueChange={setSelectedCondition}
+                  defaultValue={editingAsset?.condition || "good"}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Condition" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {conditions.map((condition) => (
+                      <SelectItem key={condition} value={condition}>
+                        {condition.charAt(0).toUpperCase() + condition.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <input type="hidden" name="condition" value={selectedCondition} />
+              </div>
               <Input
                 name="purchaseDate"
                 type="date"
@@ -435,6 +459,8 @@ export default function Assets() {
                             size="sm"
                             onClick={() => {
                               setEditingAsset(asset);
+                              setSelectedCategory(asset.category || "");
+                              setSelectedCondition(asset.condition || "good");
                               setIsDialogOpen(true);
                             }}
                           >
