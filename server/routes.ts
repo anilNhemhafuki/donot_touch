@@ -274,7 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             productId: item.productId,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
-            totalPrice: item.quantity * item.unitPrice,
+            totalPrice: (item.quantity * item.unitPrice).toString(),
           });
         }
       }

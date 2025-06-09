@@ -40,17 +40,17 @@ export default function Sidebar() {
           {navigation.map((item) => {
             const active = isActive(item.href);
             return (
-              <Link key={item.name} href={item.href}>
-                <a
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                    active
-                      ? "bg-primary text-white"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  }`}
-                >
-                  <i className={item.icon}></i>
-                  <span className="font-medium">{item.name}</span>
-                </a>
+              <Link 
+                key={item.name} 
+                href={item.href}
+                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                  active
+                    ? "bg-primary text-white"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                <i className={item.icon}></i>
+                <span className="font-medium">{item.name}</span>
               </Link>
             );
           })}

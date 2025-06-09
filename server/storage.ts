@@ -185,10 +185,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Product ingredients operations
-  async getProductIngredients(productId: number): Promise<ProductIngredient[]> {
+  async getProductIngredients(productId: number): Promise<any[]> {
     return await db
       .select({
         id: productIngredients.id,
+        createdAt: productIngredients.createdAt,
         productId: productIngredients.productId,
         inventoryItemId: productIngredients.inventoryItemId,
         quantity: productIngredients.quantity,
