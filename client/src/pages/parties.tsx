@@ -60,7 +60,7 @@ export default function Parties() {
     }
   };
 
-  const filteredParties = parties.filter((party: any) =>
+  const filteredParties = (parties as any[]).filter((party: any) =>
     party.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     party.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
