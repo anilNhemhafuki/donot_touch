@@ -37,7 +37,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role").default("staff").notNull(), // 'admin', 'staff'
+  role: varchar("role").default("staff").notNull(), // 'admin', 'supervisor', 'manager', 'staff', 'marketer'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -141,6 +141,63 @@ export const inventoryTransactions = pgTable("inventory_transactions", {
   reference: varchar("reference", { length: 100 }), // order_id, production_id, etc.
   createdBy: varchar("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Customers
+export const customers = pgTable("customers", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  email: varchar("email", { length: 100 }),
+  phone: varchar("phone", { length: 20 }),
+  address: text("address"),
+  remainingBalance: decimal("remaining_balance", { precision: 12, scale: 2 }).default("0.00"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Parties (Suppliers/Vendors)
+export const parties = pgTable("parties", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  email: varchar("email", { length: 100 }),
+  phone: varchar("phone", { length: 20 }),
+  address: text("address"),
+  paymentTerms: varchar("payment_terms", { length: 50 }),
+  outstandingAmount: decimal("outstanding_amount", { precision: 12, scale: 2 }).default("0.00"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Assets
+export const assets = pgTable("assets", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  category: varchar("category", { length: 50 }).notNull(), // 'equipment', 'furniture', 'vehicle', etc.
+  purchaseDate: timestamp("purchase_date"),
+  purchasePrice: decimal("purchase_price", { precision: 12, scale: 2 }),
+  currentValue: decimal("current_value", { precision: 12, scale: 2 }),
+  description: text("description"),
+  location: varchar("location", { length: 100 }),
+  condition: varchar("condition", { length: 50 }).default("good"), // 'excellent', 'good', 'fair', 'poor'
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Expenses
+export const expenses = pgTable("expenses", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 100 }).notNull(),
+  category: varchar("category", { length: 50 }).notNull(), // 'utilities', 'rent', 'supplies', 'marketing', etc.
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  date: timestamp("date").notNull(),
+  description: text("description"),
+  receipt: varchar("receipt", { length: 255 }), // file path
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Relations
