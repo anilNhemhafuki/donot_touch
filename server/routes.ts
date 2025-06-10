@@ -533,6 +533,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin user management routes
+  const isAdmin = (req: any, res: any, next: any) => {
+    if (req.user && req.user.role === 'admin') {
+      return next();
+    }
+    res.status(403).json({ message: "Access denied. Admin role required." });
+  };
+
+  app.get("/api/admin/users", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/admin/users", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { email, password, firstName, lastName, role } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required' });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'User already exists' });
+      }
+
+      // Hash password
+      const bcrypt = require('bcrypt');
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user
+      const user = await storage.upsertUser({
+        id: `user_${Date.now()}`,
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        role: role || 'staff'
+      });
+
+      res.json(user);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      res.status(500).json({ message: 'Failed to create user' });
+    }
+  });
+
+  app.put("/api/admin/users/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { email, password, firstName, lastName, role } = req.body;
+      
+      const updateData: any = {
+        email,
+        firstName,
+        lastName,
+        role,
+      };
+
+      // Only update password if provided
+      if (password) {
+        const bcrypt = require('bcrypt');
+        updateData.password = await bcrypt.hash(password, 10);
+      }
+
+      const user = await storage.updateUser(id, updateData);
+      res.json(user);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ message: 'Failed to update user' });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteUser(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Failed to delete user' });
+    }
+  });
+
+  // Profile management routes
+  app.put("/api/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { firstName, lastName, email, currentPassword, newPassword } = req.body;
+      
+      const updateData: any = {
+        firstName,
+        lastName,
+        email,
+      };
+
+      // If password change is requested, verify current password
+      if (newPassword) {
+        if (!currentPassword) {
+          return res.status(400).json({ message: 'Current password is required to change password' });
+        }
+
+        const user = await storage.getUser(userId);
+        const bcrypt = require('bcrypt');
+        const isValidPassword = await bcrypt.compare(currentPassword, user.password || '');
+        if (!isValidPassword) {
+          return res.status(400).json({ message: 'Current password is incorrect' });
+        }
+
+        updateData.password = await bcrypt.hash(newPassword, 10);
+      }
+
+      const user = await storage.updateUser(userId, updateData);
+      res.json(user);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      res.status(500).json({ message: 'Failed to update profile' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

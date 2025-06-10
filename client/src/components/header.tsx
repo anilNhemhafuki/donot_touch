@@ -75,7 +75,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2 lg:space-x-4">
           {/* Search */}
           <form onSubmit={handleSearch} className="relative hidden md:block">
@@ -88,7 +88,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             />
             <i className="fas fa-search absolute left-3 top-3 text-gray-400"></i>
           </form>
-          
+
           {/* Language Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

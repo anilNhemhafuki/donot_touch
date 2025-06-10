@@ -131,6 +131,11 @@ export interface IStorage {
   createExpense(expense: InsertExpense): Promise<Expense>;
   updateExpense(id: number, expense: Partial<InsertExpense>): Promise<Expense>;
   deleteExpense(id: number): Promise<void>;
+
+  // User management methods
+  getAllUsers(): Promise<any[]>;
+  updateUser(id: string, data: any): Promise<any>;
+  deleteUser(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -704,6 +709,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteExpense(id: number): Promise<void> {
     await db.delete(expenses).where(eq(expenses.id, id));
+  }
+
+  // User management methods
+  async getAllUsers() {
+    return await db.select({
+      id: users.id,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      role: users.role,
+      createdAt: users.createdAt,
+    }).from(users);
+  }
+
+  async updateUser(id: string, data: any) {
+    const [updated] = await db
+      .update(users)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteUser(id: string) {
+    await db.delete(users).where(eq(users.id, id));
   }
 }
 

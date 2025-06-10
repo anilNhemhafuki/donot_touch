@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Package, ShoppingCart, Users, TrendingUp, AlertTriangle, Calendar } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import AdminUserManagement from "./admin-user-management";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProductionItem {
   id?: number;
@@ -23,11 +25,8 @@ interface ProductionItem {
 }
 
 export default function EnhancedDashboard() {
-  const [productionSchedule, setProductionSchedule] = useState<ProductionItem[]>([]);
-  const [isProductionDialogOpen, setIsProductionDialogOpen] = useState(false);
-  const [editingProduction, setEditingProduction] = useState<ProductionItem | null>(null);
-  const { t } = useLanguage();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const { data: stats = {} } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -114,7 +113,7 @@ export default function EnhancedDashboard() {
     const productId = parseInt(formData.get("productId") as string);
     const quantity = parseInt(formData.get("quantity") as string);
     const selectedProduct = (products as any[]).find((p: any) => p.id === productId);
-    
+
     if (!selectedProduct) return;
 
     const productionData = {
@@ -411,6 +410,17 @@ export default function EnhancedDashboard() {
             </Table>
           </CardContent>
         </Card>
+      </div>
+
+        {/* Admin Section */}
+        {user?.role === 'admin' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold mb-4">Admin Panel</h2>
+              <AdminUserManagement />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -42,7 +42,7 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
           onClick={onToggle}
         />
       )}
-      
+
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-50 
         w-64 bg-white dark:bg-gray-900 shadow-lg 
@@ -87,6 +87,20 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                 </Link>
               );
             })}
+             {/* Add admin-only items if user is admin */}
+            {user?.role === 'admin' && (
+              <Link
+                href="/admin/users"
+                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive('/admin/users')
+                    ? "bg-primary text-white"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                <i className="fas fa-users-cog"></i>
+                <span className="font-medium">User Management</span>
+              </Link>
+            )}
           </nav>
         </div>
 
