@@ -21,6 +21,7 @@ import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 import LoginForm from "@/components/login-form";
+import AdminUsers from "@/pages/admin-users";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -61,6 +62,7 @@ function Router() {
             <Route path="/assets" component={Assets} />
             <Route path="/expenses" component={Expenses} />
             <Route path="/reports" component={Reports} />
+            <Route path="/admin/users" component={AdminUsers} />
             <Route component={NotFound} />
           </Switch>
         </div>

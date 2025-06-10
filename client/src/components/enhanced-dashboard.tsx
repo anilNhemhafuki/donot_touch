@@ -104,28 +104,28 @@ export default function EnhancedDashboard() {
 
   const quickActions = [
     {
-      title: t("add") + " " + t("products"),
+      title: "add" + " " + "products",
       description: "Add new bakery products",
       icon: Package,
       color: "bg-blue-500",
       action: () => (window.location.href = "/products"),
     },
     {
-      title: t("add") + " Order",
+      title: "add" + " Order",
       description: "Create new customer order",
       icon: ShoppingCart,
       color: "bg-green-500",
       action: () => (window.location.href = "/orders"),
     },
     {
-      title: t("add") + " " + t("customers"),
+      title: "add" + " " + "customers",
       description: "Add new customer",
       icon: Users,
       color: "bg-purple-500",
       action: () => (window.location.href = "/customers"),
     },
     {
-      title: "View " + t("reports"),
+      title: "View " + "reports",
       description: "Generate reports",
       icon: TrendingUp,
       color: "bg-orange-500",
@@ -199,7 +199,7 @@ export default function EnhancedDashboard() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>{t("quickActions")}</CardTitle>
+          <CardTitle>Quick Actions</CardTitle>
           <CardDescription>
             Commonly used actions for quick access
           </CardDescription>
@@ -234,9 +234,7 @@ export default function EnhancedDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t("todaySales")}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Today Sales</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -250,9 +248,7 @@ export default function EnhancedDashboard() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t("todayOrders")}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Today Orders</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -267,7 +263,7 @@ export default function EnhancedDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              {t("productsInStock")}
+              Products In Stock
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -280,9 +276,7 @@ export default function EnhancedDashboard() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t("lowStockItems")}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
@@ -294,9 +288,7 @@ export default function EnhancedDashboard() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t("productionToday")}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Production Today</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -314,7 +306,7 @@ export default function EnhancedDashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>{t("productionSchedule")}</CardTitle>
+                <CardTitle>Production Schedule</CardTitle>
                 <CardDescription>Today's production items</CardDescription>
               </div>
               <Dialog
@@ -380,11 +372,11 @@ export default function EnhancedDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("serialNo")}</TableHead>
-                  <TableHead>{t("productName")}</TableHead>
-                  <TableHead>{t("quantity")}</TableHead>
-                  <TableHead>{t("unit")}</TableHead>
-                  <TableHead>{t("total")}</TableHead>
+                  <TableHead>Serial No</TableHead>
+                  <TableHead>Product Name</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Unit</TableHead>
+                  <TableHead>Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -421,7 +413,7 @@ export default function EnhancedDashboard() {
           <CardHeader>
             <div className="flex items-center space-x-2">
               <AlertTriangle className="h-5 w-5 text-red-500" />
-              <CardTitle>{t("lowStockAlert")}</CardTitle>
+              <CardTitle>Low Stock Alert</CardTitle>
             </div>
             <CardDescription>Ingredients running low</CardDescription>
           </CardHeader>
@@ -456,7 +448,7 @@ export default function EnhancedDashboard() {
         {/* Recent Orders */}
         <Card>
           <CardHeader>
-            <CardTitle>{t("recentOrders")}</CardTitle>
+            <CardTitle>Recent Orders</CardTitle>
             <CardDescription>Latest customer orders</CardDescription>
           </CardHeader>
           <CardContent>
@@ -498,7 +490,7 @@ export default function EnhancedDashboard() {
         {/* Expired Products Return */}
         <Card>
           <CardHeader>
-            <CardTitle>{t("expiredProducts")} Return</CardTitle>
+            <CardTitle>Expired Products Return</CardTitle>
             <CardDescription>
               Products to be returned or disposed
             </CardDescription>
@@ -507,11 +499,11 @@ export default function EnhancedDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("serialNo")}</TableHead>
-                  <TableHead>{t("productName")}</TableHead>
-                  <TableHead>{t("quantity")}</TableHead>
-                  <TableHead>{t("rate")}</TableHead>
-                  <TableHead>{t("amount")}</TableHead>
+                  <TableHead>Serial No</TableHead>
+                  <TableHead>Product Name</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Rate</TableHead>
+                  <TableHead>Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -526,7 +518,7 @@ export default function EnhancedDashboard() {
                 ))}
                 <TableRow className="font-medium bg-gray-50">
                   <TableCell colSpan={4} className="text-right">
-                    {t("total")} Balance:
+                    Total Balance:
                   </TableCell>
                   <TableCell>Rs. {totalExpiredBalance}</TableCell>
                 </TableRow>
