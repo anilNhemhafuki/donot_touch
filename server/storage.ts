@@ -111,23 +111,20 @@ export interface IStorage {
   updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer>;
   deleteCustomer(id: number): Promise<void>;
 
-  // Party operations
+  // Parties operations
   getParties(): Promise<Party[]>;
-  getPartyById(id: number): Promise<Party | undefined>;
   createParty(party: InsertParty): Promise<Party>;
   updateParty(id: number, party: Partial<InsertParty>): Promise<Party>;
   deleteParty(id: number): Promise<void>;
 
-  // Asset operations
+  // Assets operations
   getAssets(): Promise<Asset[]>;
-  getAssetById(id: number): Promise<Asset | undefined>;
   createAsset(asset: InsertAsset): Promise<Asset>;
   updateAsset(id: number, asset: Partial<InsertAsset>): Promise<Asset>;
   deleteAsset(id: number): Promise<void>;
 
   // Expense operations
   getExpenses(): Promise<Expense[]>;
-  getExpenseById(id: number): Promise<Expense | undefined>;
   createExpense(expense: InsertExpense): Promise<Expense>;
   updateExpense(id: number, expense: Partial<InsertExpense>): Promise<Expense>;
   deleteExpense(id: number): Promise<void>;
@@ -613,12 +610,7 @@ export class DatabaseStorage implements IStorage {
 
   // Customer operations
   async getCustomers(): Promise<Customer[]> {
-    return await db.select().from(customers).where(eq(customers.isActive, true)).orderBy(desc(customers.createdAt));
-  }
-
-  async getCustomerById(id: number): Promise<Customer | undefined> {
-    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
-    return customer;
+    return await db.select().from(customers).orderBy(asc(customers.name));
   }
 
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
@@ -627,22 +619,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer> {
-    const [updated] = await db.update(customers).set(customer).where(eq(customers.id, id)).returning();
+    const [updated] = await db
+      .update(customers)
+      .set({ ...customer, updatedAt: new Date() })
+      .where(eq(customers.id, id))
+      .returning();
     return updated;
   }
 
   async deleteCustomer(id: number): Promise<void> {
-    await db.update(customers).set({ isActive: false }).where(eq(customers.id, id));
+    await db.delete(customers).where(eq(customers.id, id));
   }
 
-  // Party operations
+  // Parties operations
   async getParties(): Promise<Party[]> {
-    return await db.select().from(parties).where(eq(parties.isActive, true)).orderBy(desc(parties.createdAt));
-  }
-
-  async getPartyById(id: number): Promise<Party | undefined> {
-    const [party] = await db.select().from(parties).where(eq(parties.id, id));
-    return party;
+    return await db.select().from(parties).orderBy(asc(parties.name));
   }
 
   async createParty(party: InsertParty): Promise<Party> {
@@ -651,22 +642,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateParty(id: number, party: Partial<InsertParty>): Promise<Party> {
-    const [updated] = await db.update(parties).set(party).where(eq(parties.id, id)).returning();
+    const [updated] = await db
+      .update(parties)
+      .set({ ...party, updatedAt: new Date() })
+      .where(eq(parties.id, id))
+      .returning();
     return updated;
   }
 
   async deleteParty(id: number): Promise<void> {
-    await db.update(parties).set({ isActive: false }).where(eq(parties.id, id));
+    await db.delete(parties).where(eq(parties.id, id));
   }
 
-  // Asset operations
+  // Assets operations
   async getAssets(): Promise<Asset[]> {
-    return await db.select().from(assets).where(eq(assets.isActive, true)).orderBy(desc(assets.createdAt));
-  }
-
-  async getAssetById(id: number): Promise<Asset | undefined> {
-    const [asset] = await db.select().from(assets).where(eq(assets.id, id));
-    return asset;
+    return await db.select().from(assets).orderBy(asc(assets.name));
   }
 
   async createAsset(asset: InsertAsset): Promise<Asset> {
@@ -675,22 +665,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateAsset(id: number, asset: Partial<InsertAsset>): Promise<Asset> {
-    const [updated] = await db.update(assets).set(asset).where(eq(assets.id, id)).returning();
+    const [updated] = await db
+      .update(assets)
+      .set({ ...asset, updatedAt: new Date() })
+      .where(eq(assets.id, id))
+      .returning();
     return updated;
   }
 
   async deleteAsset(id: number): Promise<void> {
-    await db.update(assets).set({ isActive: false }).where(eq(assets.id, id));
+    await db.delete(assets).where(eq(assets.id, id));
   }
 
   // Expense operations
   async getExpenses(): Promise<Expense[]> {
     return await db.select().from(expenses).orderBy(desc(expenses.date));
-  }
-
-  async getExpenseById(id: number): Promise<Expense | undefined> {
-    const [expense] = await db.select().from(expenses).where(eq(expenses.id, id));
-    return expense;
   }
 
   async createExpense(expense: InsertExpense): Promise<Expense> {
@@ -699,12 +688,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateExpense(id: number, expense: Partial<InsertExpense>): Promise<Expense> {
-    const [updated] = await db.update(expenses).set(expense).where(eq(expenses.id, id)).returning();
+    const [updated] = await db
+      .update(expenses)
+      .set({ ...expense, updatedAt: new Date() })
+      .where(eq(expenses.id, id))
+      .returning();
     return updated;
-  }
-
-  async deleteExpense(id: number): Promise<void> {
-    await db.delete(expenses).where(eq(expenses.id, id));
   }
 
   async deleteExpense(id: number): Promise<void> {

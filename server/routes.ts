@@ -126,9 +126,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { ingredients, ...productData } = req.body;
       const validatedProduct = insertProductSchema.parse(productData);
-      
+
       const product = await storage.createProduct(validatedProduct);
-      
+
       // Add ingredients if provided
       if (ingredients && ingredients.length > 0) {
         for (const ingredient of ingredients) {
@@ -139,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
-      
+
       res.json(product);
     } catch (error) {
       console.error("Error creating product:", error);
@@ -151,9 +151,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const { ingredients, ...productData } = req.body;
-      
+
       const product = await storage.updateProduct(id, productData);
-      
+
       // Update ingredients if provided
       if (ingredients) {
         await storage.deleteProductIngredients(id);
@@ -165,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
-      
+
       res.json(product);
     } catch (error) {
       console.error("Error updating product:", error);
@@ -258,18 +258,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { items, ...orderData } = req.body;
       const userId = req.user.claims.sub;
-      
+
       // Generate order number
       const orderNumber = `ORD-${Date.now()}`;
-      
+
       const validatedOrder = insertOrderSchema.parse({
         ...orderData,
         orderNumber,
         createdBy: userId,
       });
-      
+
       const order = await storage.createOrder(validatedOrder);
-      
+
       // Add order items
       if (items && items.length > 0) {
         for (const item of items) {
@@ -282,7 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
-      
+
       res.json(order);
     } catch (error) {
       console.error("Error creating order:", error);
@@ -344,7 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { startDate, endDate } = req.query;
       const start = startDate ? new Date(startDate as string) : undefined;
       const end = endDate ? new Date(endDate as string) : undefined;
-      
+
       const analytics = await storage.getSalesAnalytics(start, end);
       res.json(analytics);
     } catch (error) {
@@ -556,7 +556,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/users", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { email, password, firstName, lastName, role } = req.body;
-      
+
       if (!email || !password) {
         return res.status(400).json({ message: 'Email and password are required' });
       }
@@ -592,7 +592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { email, password, firstName, lastName, role } = req.body;
-      
+
       const updateData: any = {
         email,
         firstName,
@@ -630,7 +630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const { firstName, lastName, email, currentPassword, newPassword } = req.body;
-      
+
       const updateData: any = {
         firstName,
         lastName,
