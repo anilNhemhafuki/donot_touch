@@ -973,6 +973,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  app.put("/api/categories/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+
+      if (!req.body.name) {
+        return res.status(400).json({ message: "Category name is required" });
+      }
+
+      const transformedData = {
+        name: req.body.name.trim(),
+        description: req.body.description ? req.body.description.trim() : null,
+      };
+
+      const category = await storage.updateCategory(id, transformedData);
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  app.delete("/api/categories/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteCategory(id);
+      res.json({ message: "Category deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
   const httpServer = createServer(app);
   return httpServer;
 }
