@@ -125,9 +125,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/products", isAuthenticated, async (req, res) => {
     try {
       const { ingredients, ...productData } = req.body;
-      const validatedProduct = insertProductSchema.parse(productData);
 
-      const product = await storage.createProduct(validatedProduct);
+      // Ensure required fields are present
+      if (!productData.name) {
+        return res.status(400).json({ message: "Product name is required" });
+      }
+
+      if (!productData.price || isNaN(parseFloat(productData.price))) {
+        return res.status(400).json({ message: "Valid price is required" });
+      }
+
+      if (!productData.cost || isNaN(parseFloat(productData.cost))) {
+        return res.status(400).json({ message: "Valid cost is required" });
+      }
+
+      if (!productData.margin || isNaN(parseFloat(productData.margin))) {
+        return res.status(400).json({ message: "Valid margin is required" });
+      }
+
+      // Transform the data
+      const transformedData = {
+        name: productData.name.trim(),
+        description: productData.description || null,
+        categoryId: productData.categoryId || null,
+        price: parseFloat(productData.price).toString(),
+        cost: parseFloat(productData.cost).toString(),
+        margin: parseFloat(productData.margin).toString(),
+        sku: productData.sku || null,
+        isActive: true,
+      };
+
+      console.log("Creating product with data:", transformedData);
+
+      const product = await storage.createProduct(transformedData);
 
       // Add ingredients if provided
       if (ingredients && ingredients.length > 0) {
@@ -140,10 +170,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      console.log("Product created successfully:", product);
       res.json(product);
     } catch (error) {
       console.error("Error creating product:", error);
-      res.status(500).json({ message: "Failed to create product" });
+      res.status(500).json({ 
+        message: "Failed to create product", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
     }
   });
 
