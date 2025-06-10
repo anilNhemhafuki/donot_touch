@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -35,7 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Edit, Trash2, Receipt, DollarSign } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
@@ -53,6 +54,10 @@ export default function Expenses() {
     error,
   } = useQuery({
     queryKey: ["/api/expenses"],
+    retry: (failureCount, error) => {
+      if (isUnauthorizedError(error)) return false;
+      return failureCount < 3;
+    },
   });
 
   const createMutation = useMutation({
@@ -142,11 +147,11 @@ export default function Expenses() {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const data = {
-      title: formData.get("title"),
-      category: formData.get("category"),
-      amount: parseFloat(formData.get("amount") as string),
-      date: formData.get("date"),
-      description: formData.get("description"),
+      title: formData.get("title") as string,
+      category: formData.get("category") as string,
+      amount: parseFloat(formData.get("amount") as string) || 0,
+      date: new Date(formData.get("date") as string),
+      description: formData.get("description") as string || null,
     };
 
     if (editingExpense) {
@@ -156,31 +161,41 @@ export default function Expenses() {
     }
   };
 
-  const categories = ["utilities", "rent", "supplies", "marketing", "insurance", "maintenance", "labor", "equipment", "travel", "other"];
+  const categories = [
+    "utilities",
+    "rent",
+    "supplies",
+    "marketing",
+    "maintenance",
+    "equipment",
+    "travel",
+    "office",
+    "other",
+  ];
 
   const filteredExpenses = (expenses as any[]).filter((expense: any) => {
-    const matchesSearch = expense.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         expense.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === "all" || expense.category === categoryFilter;
+    const matchesSearch =
+      expense.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      expense.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      categoryFilter === "all" || expense.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
   const getCategoryBadge = (category: string) => {
-    const colors: Record<string, string> = {
-      utilities: "bg-blue-100 text-blue-800",
-      rent: "bg-purple-100 text-purple-800",
-      supplies: "bg-green-100 text-green-800",
-      marketing: "bg-pink-100 text-pink-800",
-      insurance: "bg-orange-100 text-orange-800",
-      maintenance: "bg-yellow-100 text-yellow-800",
-      labor: "bg-indigo-100 text-indigo-800",
-      equipment: "bg-red-100 text-red-800",
-      travel: "bg-teal-100 text-teal-800",
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      utilities: "default",
+      rent: "secondary",
+      supplies: "outline",
+      marketing: "default",
+      maintenance: "destructive",
+      equipment: "secondary",
+      travel: "outline",
+      office: "default",
+      other: "outline",
     };
-    return colors[category] || "bg-gray-100 text-gray-800";
+    return variants[category] || "outline";
   };
-
-  const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0);
 
   if (error && isUnauthorizedError(error)) {
     toast({
@@ -199,21 +214,35 @@ export default function Expenses() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Expense Management</h1>
-          <p className="text-muted-foreground">Track and manage business expenses</p>
+          <p className="text-muted-foreground">
+            Track and manage your business expenses
+          </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setEditingExpense(null);
+            setSelectedCategory("");
+          }
+        }}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingExpense(null)} className="w-full sm:w-auto">
+            <Button
+              onClick={() => {
+                setEditingExpense(null);
+                setSelectedCategory("");
+              }}
+              className="w-full sm:w-auto"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Expense
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingExpense ? "Edit Expense" : "Add New Expense"}</DialogTitle>
-              <DialogDescription>
-                Enter expense details below
-              </DialogDescription>
+              <DialogTitle>
+                {editingExpense ? "Edit Expense" : "Add New Expense"}
+              </DialogTitle>
+              <DialogDescription>Enter expense details below</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSave} className="space-y-4">
               <Input
@@ -222,18 +251,25 @@ export default function Expenses() {
                 defaultValue={editingExpense?.title || ""}
                 required
               />
-              <Select name="category" defaultValue={editingExpense?.category || ""}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                  defaultValue={editingExpense?.category || ""}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <input type="hidden" name="category" value={selectedCategory} />
+              </div>
               <Input
                 name="amount"
                 type="number"
@@ -245,7 +281,11 @@ export default function Expenses() {
               <Input
                 name="date"
                 type="date"
-                defaultValue={editingExpense?.date ? new Date(editingExpense.date).toISOString().split('T')[0] : ""}
+                defaultValue={
+                  editingExpense?.date
+                    ? new Date(editingExpense.date).toISOString().split("T")[0]
+                    : new Date().toISOString().split("T")[0]
+                }
                 required
               />
               <Textarea
@@ -255,10 +295,21 @@ export default function Expenses() {
                 rows={3}
               />
               <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  className="w-full sm:w-auto"
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="w-full sm:w-auto">
+                <Button
+                  type="submit"
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
+                  className="w-full sm:w-auto"
+                >
                   {editingExpense ? "Update" : "Create"}
                 </Button>
               </div>
@@ -266,34 +317,6 @@ export default function Expenses() {
           </DialogContent>
         </Dialog>
       </div>
-
-      {/* Summary Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <DollarSign className="h-5 w-5 mr-2" />
-            Expense Summary
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)}</div>
-              <div className="text-muted-foreground">Total Expenses</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">{filteredExpenses.length}</div>
-              <div className="text-muted-foreground">Total Records</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">
-                ${filteredExpenses.length > 0 ? (totalExpenses / filteredExpenses.length).toFixed(2) : "0.00"}
-              </div>
-              <div className="text-muted-foreground">Average Amount</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>
@@ -336,9 +359,13 @@ export default function Expenses() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Expense</TableHead>
-                    <TableHead className="hidden sm:table-cell">Category</TableHead>
+                    <TableHead className="hidden sm:table-cell">
+                      Category
+                    </TableHead>
                     <TableHead>Amount</TableHead>
-                    <TableHead className="hidden md:table-cell">Date</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Date
+                    </TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -352,25 +379,20 @@ export default function Expenses() {
                           </div>
                           <div>
                             <div className="font-medium">{expense.title}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {expense.description && expense.description.length > 50 
-                                ? `${expense.description.substring(0, 50)}...` 
-                                : expense.description
-                              }
-                            </div>
                             <div className="text-sm text-muted-foreground sm:hidden">
-                              {expense.category?.charAt(0).toUpperCase() + expense.category?.slice(1)}
+                              {expense.category}
                             </div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryBadge(expense.category)}`}>
-                          {expense.category?.charAt(0).toUpperCase() + expense.category?.slice(1)}
-                        </span>
+                        <Badge variant={getCategoryBadge(expense.category)}>
+                          {expense.category?.charAt(0).toUpperCase() +
+                            expense.category?.slice(1)}
+                        </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="font-semibold text-red-600">
+                        <div className="font-medium">
                           ${parseFloat(expense.amount || 0).toFixed(2)}
                         </div>
                       </TableCell>
@@ -384,6 +406,7 @@ export default function Expenses() {
                             size="sm"
                             onClick={() => {
                               setEditingExpense(expense);
+                              setSelectedCategory(expense.category || "");
                               setIsDialogOpen(true);
                             }}
                           >
@@ -406,12 +429,13 @@ export default function Expenses() {
               {filteredExpenses.length === 0 && (
                 <div className="text-center py-8">
                   <Receipt className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">No expenses found</h3>
+                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                    No expenses found
+                  </h3>
                   <p className="text-muted-foreground mb-4">
-                    {searchQuery || categoryFilter !== "all" 
-                      ? "Try adjusting your search criteria" 
-                      : "Start by adding your first expense"
-                    }
+                    {searchQuery || categoryFilter !== "all"
+                      ? "Try adjusting your search criteria"
+                      : "Start by adding your first expense"}
                   </p>
                   <Button onClick={() => setIsDialogOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />

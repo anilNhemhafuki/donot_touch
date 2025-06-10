@@ -168,7 +168,7 @@ export default function Products() {
           filteredProducts.map((product: any) => {
             const stockStatus = getStockStatus(0); // Mock stock for now
             const margin = Number(product.margin);
-            
+
             return (
               <Card key={product.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
@@ -188,12 +188,12 @@ export default function Products() {
                     </div>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="space-y-4">
                   {product.description && (
                     <p className="text-sm text-gray-600">{product.description}</p>
                   )}
-                  
+
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Price:</span>

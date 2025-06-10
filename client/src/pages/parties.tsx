@@ -27,6 +27,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Search, Edit, Trash2, Building } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
 import {
   Select,
   SelectContent,
@@ -34,10 +38,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Edit, Trash2, Building2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
 
 export default function Parties() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,6 +53,10 @@ export default function Parties() {
     error,
   } = useQuery({
     queryKey: ["/api/parties"],
+    retry: (failureCount, error) => {
+      if (isUnauthorizedError(error)) return false;
+      return failureCount < 3;
+    },
   });
 
   const createMutation = useMutation({
@@ -191,6 +195,15 @@ export default function Parties() {
     };
     return variants[type] || "outline";
   };
+
+  const getAmountBadge = (amount: any) => {
+    const value = parseFloat(amount || 0);
+    if (value > 0) {
+      return { variant: "destructive" as const, text: `$${value.toFixed(2)}` };
+    }
+    return { variant: "secondary" as const, text: "$0.00" };
+  };
+
 
   if (error) {
     if (isUnauthorizedError(error)) {
@@ -383,7 +396,7 @@ export default function Parties() {
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                            <Building2 className="h-4 w-4 text-primary" />
+                            <Building className="h-4 w-4 text-primary" />
                           </div>
                           <div>
                             <div className="font-medium">{party.name}</div>
@@ -446,7 +459,7 @@ export default function Parties() {
               </Table>
               {filteredParties.length === 0 && (
                 <div className="text-center py-8">
-                  <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-muted-foreground mb-2">
                     No parties found
                   </h3>

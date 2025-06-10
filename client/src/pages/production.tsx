@@ -1,79 +1,75 @@
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertProductionScheduleItemSchema } from "@shared/schema";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { Plus, Calendar, Edit, Trash2, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { z } from "zod";
-
-const productionFormSchema = insertProductionScheduleItemSchema.extend({
-  productId: z.string().min(1, "Product is required"),
-  quantity: z.string().min(1, "Quantity is required"),
-  scheduledDate: z.string().min(1, "Scheduled date is required"),
-  startTime: z.string().optional(),
-});
 
 export default function Production() {
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("scheduled");
   const { toast } = useToast();
 
-  const { data: productionSchedule = [], isLoading, error } = useQuery({
+  const {
+    data: schedule = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["/api/production"],
+    retry: (failureCount, error) => {
+      if (isUnauthorizedError(error)) return false;
+      return failureCount < 3;
+    },
   });
 
   const { data: products = [] } = useQuery({
     queryKey: ["/api/products"],
   });
 
-  const form = useForm({
-    resolver: zodResolver(productionFormSchema),
-    defaultValues: {
-      productId: "",
-      quantity: "",
-      scheduledDate: "",
-      startTime: "",
-      notes: "",
-    },
-  });
-
   const createMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const transformedData = {
-        ...data,
-        productId: parseInt(data.productId),
-        quantity: parseInt(data.quantity),
-        scheduledDate: new Date(data.scheduledDate),
-        startTime: data.startTime ? new Date(`${data.scheduledDate}T${data.startTime}`) : null,
-      };
-      
-      if (editingItem) {
-        await apiRequest("PUT", `/api/production/${editingItem.id}`, transformedData);
-      } else {
-        await apiRequest("POST", "/api/production", transformedData);
-      }
-    },
+    mutationFn: (data: any) => apiRequest("POST", "/api/production", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/production"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/production-schedule"] });
-      setShowAddForm(false);
+      setIsDialogOpen(false);
       setEditingItem(null);
-      form.reset();
-      toast({
-        title: "Success",
-        description: editingItem ? "Production item updated successfully" : "Production item scheduled successfully",
-      });
+      toast({ title: "Success", description: "Production item scheduled successfully" });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -89,28 +85,20 @@ export default function Production() {
       }
       toast({
         title: "Error",
-        description: editingItem ? "Failed to update production item" : "Failed to schedule production item",
+        description: "Failed to schedule production item",
         variant: "destructive",
       });
     },
   });
 
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status, startTime, endTime }: { id: number; status: string; startTime?: Date; endTime?: Date }) => {
-      const updateData: any = { status };
-      if (startTime) updateData.startTime = startTime;
-      if (endTime) updateData.endTime = endTime;
-      
-      await apiRequest("PUT", `/api/production/${id}`, updateData);
-    },
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      apiRequest("PUT", `/api/production/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/production"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/production-schedule"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({
-        title: "Success",
-        description: "Production status updated successfully",
-      });
+      setIsDialogOpen(false);
+      setEditingItem(null);
+      toast({ title: "Success", description: "Production item updated successfully" });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -126,77 +114,85 @@ export default function Production() {
       }
       toast({
         title: "Error",
-        description: "Failed to update production status",
+        description: "Failed to update production item",
         variant: "destructive",
       });
     },
   });
 
-  const handleEdit = (item: any) => {
-    setEditingItem(item);
-    const scheduledDate = new Date(item.scheduledDate).toISOString().split('T')[0];
-    const startTime = item.startTime ? new Date(item.startTime).toISOString().slice(11, 16) : "";
-    
-    form.reset({
-      productId: item.productId.toString(),
-      quantity: item.quantity.toString(),
-      scheduledDate,
-      startTime,
-      notes: item.notes || "",
-    });
-    setShowAddForm(true);
-  };
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/production/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/production"] });
+      toast({ title: "Success", description: "Production item deleted successfully" });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete production item",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const handleStatusUpdate = (id: number, currentStatus: string) => {
-    const now = new Date();
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
     
-    if (currentStatus === "scheduled") {
-      updateStatusMutation.mutate({ id, status: "in_progress", startTime: now });
-    } else if (currentStatus === "in_progress") {
-      updateStatusMutation.mutate({ id, status: "completed", endTime: now });
+    const scheduledDate = new Date(formData.get("scheduledDate") as string);
+    const startTime = formData.get("startTime") as string;
+    const endTime = formData.get("endTime") as string;
+    
+    // Combine date with times
+    const startDateTime = new Date(scheduledDate);
+    if (startTime) {
+      const [hours, minutes] = startTime.split(':');
+      startDateTime.setHours(parseInt(hours), parseInt(minutes));
+    }
+    
+    const endDateTime = new Date(scheduledDate);
+    if (endTime) {
+      const [hours, minutes] = endTime.split(':');
+      endDateTime.setHours(parseInt(hours), parseInt(minutes));
+    }
+
+    const data = {
+      productId: parseInt(formData.get("productId") as string),
+      quantity: parseInt(formData.get("quantity") as string),
+      scheduledDate: scheduledDate,
+      startTime: startTime ? startDateTime : null,
+      endTime: endTime ? endDateTime : null,
+      status: formData.get("status") as string,
+      notes: formData.get("notes") as string || null,
+    };
+
+    if (editingItem) {
+      updateMutation.mutate({ id: editingItem.id, data });
+    } else {
+      createMutation.mutate(data);
     }
   };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-      completed: "default",
-      in_progress: "secondary",
       scheduled: "outline",
-      cancelled: "destructive"
+      in_progress: "secondary", 
+      completed: "default",
+      cancelled: "destructive",
     };
-    
-    const labels: Record<string, string> = {
-      completed: "Completed",
-      in_progress: "In Progress", 
-      scheduled: "Scheduled",
-      cancelled: "Cancelled"
-    };
-
-    return (
-      <Badge variant={variants[status] || "outline"}>
-        {labels[status] || status}
-      </Badge>
-    );
+    return variants[status] || "outline";
   };
-
-  const filteredItems = productionSchedule.filter((item: any) => {
-    return statusFilter === "all" || item.status === statusFilter;
-  });
-
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-20 bg-gray-200 rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (error && isUnauthorizedError(error)) {
     toast({
@@ -211,268 +207,262 @@ export default function Production() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Production Schedule</h1>
-          <p className="text-gray-600">Plan and track your bakery production</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Production Schedule</h1>
+          <p className="text-muted-foreground">
+            Plan and track your production activities
+          </p>
         </div>
-        <Button onClick={() => setShowAddForm(true)}>
-          <i className="fas fa-plus mr-2"></i>
-          Schedule Production
-        </Button>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center space-x-4">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="scheduled">Scheduled</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Production Schedule */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Production Schedule</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {filteredItems.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3">Product</th>
-                    <th className="text-left py-3">Quantity</th>
-                    <th className="text-left py-3">Scheduled Date</th>
-                    <th className="text-left py-3">Start Time</th>
-                    <th className="text-left py-3">Status</th>
-                    <th className="text-left py-3">Assigned To</th>
-                    <th className="text-left py-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredItems.map((item: any) => (
-                    <tr key={item.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center mr-3">
-                            <i className="fas fa-cookie-bite text-primary text-sm"></i>
-                          </div>
-                          <span className="font-medium">{item.productName}</span>
-                        </div>
-                      </td>
-                      <td className="py-3">{item.quantity} items</td>
-                      <td className="py-3">
-                        {new Date(item.scheduledDate).toLocaleDateString()}
-                      </td>
-                      <td className="py-3">
-                        {item.startTime ? new Date(item.startTime).toLocaleTimeString() : 'Not started'}
-                      </td>
-                      <td className="py-3">
-                        {getStatusBadge(item.status)}
-                      </td>
-                      <td className="py-3">
-                        {item.assignedUserName || 'Unassigned'}
-                      </td>
-                      <td className="py-3">
-                        <div className="flex space-x-2">
-                          {item.status === "scheduled" && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleStatusUpdate(item.id, item.status)}
-                              disabled={updateStatusMutation.isPending}
-                            >
-                              <i className="fas fa-play mr-1"></i>
-                              Start
-                            </Button>
-                          )}
-                          {item.status === "in_progress" && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleStatusUpdate(item.id, item.status)}
-                              disabled={updateStatusMutation.isPending}
-                            >
-                              <i className="fas fa-check mr-1"></i>
-                              Complete
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(item)}
-                          >
-                            <i className="fas fa-edit"></i>
-                          </Button>
-                          {item.status !== "completed" && (
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => updateStatusMutation.mutate({ id: item.id, status: "cancelled" })}
-                              disabled={updateStatusMutation.isPending}
-                            >
-                              <i className="fas fa-times"></i>
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <i className="fas fa-industry text-6xl text-gray-300 mb-4"></i>
-              <h3 className="text-lg font-semibold text-gray-600 mb-2">No production scheduled</h3>
-              <p className="text-gray-500 mb-4">
-                {statusFilter !== "all" 
-                  ? "No items found for the selected status"
-                  : "Start by scheduling your first production batch"
-                }
-              </p>
-              <Button onClick={() => setShowAddForm(true)}>
-                <i className="fas fa-plus mr-2"></i>
-                Schedule Production
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Add/Edit Form Modal */}
-      <Dialog open={showAddForm} onOpenChange={(open) => {
-        setShowAddForm(open);
-        if (!open) {
-          setEditingItem(null);
-          form.reset();
-        }
-      }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
-              {editingItem ? "Edit Production Item" : "Schedule Production"}
-            </DialogTitle>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit((data) => createMutation.mutate(data))} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="productId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Product</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a product" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {products.map((product: any) => (
-                          <SelectItem key={product.id} value={product.id.toString()}>
-                            {product.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="24" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="scheduledDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Scheduled Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="startTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Time (Optional)</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setEditingItem(null);
+            setSelectedProduct("");
+            setSelectedStatus("scheduled");
+          }
+        }}>
+          <DialogTrigger asChild>
+            <Button
+              onClick={() => {
+                setEditingItem(null);
+                setSelectedProduct("");
+                setSelectedStatus("scheduled");
+              }}
+              className="w-full sm:w-auto"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Schedule Production
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingItem ? "Edit Production Item" : "Schedule New Production"}
+              </DialogTitle>
+              <DialogDescription>Enter production details below</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSave} className="space-y-4">
+              <div>
+                <Select
+                  value={selectedProduct}
+                  onValueChange={setSelectedProduct}
+                  defaultValue={editingItem?.productId?.toString() || ""}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Product" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((product: any) => (
+                      <SelectItem key={product.id} value={product.id.toString()}>
+                        {product.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <input type="hidden" name="productId" value={selectedProduct} />
               </div>
-
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notes (Optional)</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Special instructions..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+              <Input
+                name="quantity"
+                type="number"
+                placeholder="Quantity"
+                defaultValue={editingItem?.quantity || ""}
+                required
               />
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    setShowAddForm(false);
-                    setEditingItem(null);
-                    form.reset();
-                  }}
+              <Input
+                name="scheduledDate"
+                type="date"
+                defaultValue={
+                  editingItem?.scheduledDate
+                    ? new Date(editingItem.scheduledDate).toISOString().split("T")[0]
+                    : ""
+                }
+                required
+              />
+              <Input
+                name="startTime"
+                type="time"
+                placeholder="Start Time"
+                defaultValue={
+                  editingItem?.startTime
+                    ? new Date(editingItem.startTime).toTimeString().slice(0, 5)
+                    : ""
+                }
+              />
+              <Input
+                name="endTime"
+                type="time"
+                placeholder="End Time"
+                defaultValue={
+                  editingItem?.endTime
+                    ? new Date(editingItem.endTime).toTimeString().slice(0, 5)
+                    : ""
+                }
+              />
+              <div>
+                <Select
+                  value={selectedStatus}
+                  onValueChange={setSelectedStatus}
+                  defaultValue={editingItem?.status || "scheduled"}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+                <input type="hidden" name="status" value={selectedStatus} />
+              </div>
+              <Textarea
+                name="notes"
+                placeholder="Notes (optional)"
+                defaultValue={editingItem?.notes || ""}
+                rows={3}
+              />
+              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending && <i className="fas fa-spinner fa-spin mr-2"></i>}
+                <Button
+                  type="submit"
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
+                  className="w-full sm:w-auto"
+                >
                   {editingItem ? "Update" : "Schedule"}
                 </Button>
               </div>
             </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Production Schedule</CardTitle>
+          <CardDescription>Manage your production timeline</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="hidden md:table-cell">Time</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {schedule.map((item: any) => (
+                    <TableRow key={item.id}>
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                            <Calendar className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <div className="font-medium">{item.productName}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {item.assignedUserName && `Assigned to: ${item.assignedUserName}`}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">{item.quantity}</TableCell>
+                      <TableCell>
+                        {new Date(item.scheduledDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4 mr-1" />
+                          {item.startTime && item.endTime ? (
+                            <>
+                              {new Date(item.startTime).toLocaleTimeString([], { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                              {" - "}
+                              {new Date(item.endTime).toLocaleTimeString([], { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </>
+                          ) : (
+                            "Not set"
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadge(item.status)}>
+                          {item.status.replace('_', ' ').toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingItem(item);
+                              setSelectedProduct(item.productId?.toString() || "");
+                              setSelectedStatus(item.status || "scheduled");
+                              setIsDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteMutation.mutate(item.id)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {schedule.length === 0 && (
+                <div className="text-center py-8">
+                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                    No production scheduled
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Start by scheduling your first production item
+                  </p>
+                  <Button onClick={() => setIsDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Schedule Production
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

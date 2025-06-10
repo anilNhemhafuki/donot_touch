@@ -112,17 +112,7 @@ export default function EnhancedDashboard() {
     },
   ];
 
-  if (user && isUnauthorizedError({ message: "Unauthorized" })) {
-    toast({
-      title: "Unauthorized",
-      description: "You are logged out. Logging in again...",
-      variant: "destructive",
-    });
-    setTimeout(() => {
-      window.location.href = "/api/login";
-    }, 500);
-    return null;
-  }
+  // Handle authentication errors properly without causing render issues
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
