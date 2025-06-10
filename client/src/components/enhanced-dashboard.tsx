@@ -62,6 +62,10 @@ interface ProductionItem {
 export default function EnhancedDashboard() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const [isProductionDialogOpen, setIsProductionDialogOpen] = useState(false);
+  const [editingProduction, setEditingProduction] = useState<ProductionItem | null>(null);
+  const [productionSchedule, setProductionSchedule] = useState<ProductionItem[]>([]);
 
   const { data: stats = {} } = useQuery({
     queryKey: ["/api/dashboard/stats"],
