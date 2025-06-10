@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -44,8 +45,19 @@ export default function Assets() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<any>(null);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedCondition, setSelectedCondition] = useState("good");
+
+  // Form state
+  const [formData, setFormData] = useState({
+    name: "",
+    category: "",
+    description: "",
+    location: "",
+    condition: "good",
+    purchaseDate: "",
+    purchasePrice: "",
+    currentValue: "",
+  });
+
   const { toast } = useToast();
 
   const {
@@ -60,9 +72,9 @@ export default function Assets() {
     mutationFn: (data: any) => apiRequest("POST", "/api/assets", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
+      resetForm();
       setIsDialogOpen(false);
-      setEditingAsset(null);
-      toast({ title: "Success", description: "Asset saved successfully" });
+      toast({ title: "Success", description: "Asset created successfully" });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -78,7 +90,7 @@ export default function Assets() {
       }
       toast({
         title: "Error",
-        description: "Failed to save asset",
+        description: "Failed to create asset",
         variant: "destructive",
       });
     },
@@ -89,8 +101,8 @@ export default function Assets() {
       apiRequest("PUT", `/api/assets/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
+      resetForm();
       setIsDialogOpen(false);
-      setEditingAsset(null);
       toast({ title: "Success", description: "Asset updated successfully" });
     },
     onError: (error) => {
@@ -139,18 +151,54 @@ export default function Assets() {
     },
   });
 
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      category: "",
+      description: "",
+      location: "",
+      condition: "good",
+      purchaseDate: "",
+      purchasePrice: "",
+      currentValue: "",
+    });
+    setEditingAsset(null);
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
+
+    if (!formData.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Asset name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.category) {
+      toast({
+        title: "Error",
+        description: "Category is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const data = {
-      name: formData.get("name") as string,
-      category: formData.get("category") as string,
-      description: formData.get("description") as string || null,
-      location: formData.get("location") as string || null,
-      condition: formData.get("condition") as string || "good",
-      purchaseDate: formData.get("purchaseDate") ? new Date(formData.get("purchaseDate") as string) : null,
-      purchasePrice: formData.get("purchasePrice") ? parseFloat(formData.get("purchasePrice") as string) : null,
-      currentValue: formData.get("currentValue") ? parseFloat(formData.get("currentValue") as string) : null,
+      name: formData.name.trim(),
+      category: formData.category,
+      description: formData.description.trim() || null,
+      location: formData.location.trim() || null,
+      condition: formData.condition || "good",
+      purchaseDate: formData.purchaseDate ? new Date(formData.purchaseDate) : null,
+      purchasePrice: formData.purchasePrice ? parseFloat(formData.purchasePrice) : null,
+      currentValue: formData.currentValue ? parseFloat(formData.currentValue) : null,
     };
 
     if (editingAsset) {
@@ -158,6 +206,26 @@ export default function Assets() {
     } else {
       createMutation.mutate(data);
     }
+  };
+
+  const handleEdit = (asset: any) => {
+    setEditingAsset(asset);
+    setFormData({
+      name: asset.name || "",
+      category: asset.category || "",
+      description: asset.description || "",
+      location: asset.location || "",
+      condition: asset.condition || "good",
+      purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split("T")[0] : "",
+      purchasePrice: asset.purchasePrice ? asset.purchasePrice.toString() : "",
+      currentValue: asset.currentValue ? asset.currentValue.toString() : "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleAddNew = () => {
+    resetForm();
+    setIsDialogOpen(true);
   };
 
   const categories = [
@@ -205,7 +273,6 @@ export default function Assets() {
       }, 500);
       return null;
     }
-    // Handle other errors
     console.error("Error loading assets:", error);
   }
 
@@ -221,20 +288,11 @@ export default function Assets() {
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) {
-            setEditingAsset(null);
-            setSelectedCategory("");
-            setSelectedCondition("good");
+            resetForm();
           }
         }}>
           <DialogTrigger asChild>
-            <Button
-              onClick={() => {
-                setEditingAsset(null);
-                setSelectedCategory("");
-                setSelectedCondition("good");
-              }}
-              className="w-full sm:w-auto"
-            >
+            <Button onClick={handleAddNew} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add Asset
             </Button>
@@ -248,86 +306,80 @@ export default function Assets() {
             </DialogHeader>
             <form onSubmit={handleSave} className="space-y-4">
               <Input
-                name="name"
                 placeholder="Asset Name"
-                defaultValue={editingAsset?.name || ""}
+                value={formData.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
                 required
               />
-              <div>
-                <Select
-                  value={selectedCategory}
-                  onValueChange={setSelectedCategory}
-                  defaultValue={editingAsset?.category || ""}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <input type="hidden" name="category" value={selectedCategory} />
-              </div>
+              
+              <Select
+                value={formData.category}
+                onValueChange={(value) => handleInputChange("category", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <Textarea
-                name="description"
                 placeholder="Description"
-                defaultValue={editingAsset?.description || ""}
+                value={formData.description}
+                onChange={(e) => handleInputChange("description", e.target.value)}
                 rows={3}
               />
+
               <Input
-                name="location"
                 placeholder="Location"
-                defaultValue={editingAsset?.location || ""}
+                value={formData.location}
+                onChange={(e) => handleInputChange("location", e.target.value)}
               />
-              <div>
-                <Select
-                  value={selectedCondition}
-                  onValueChange={setSelectedCondition}
-                  defaultValue={editingAsset?.condition || "good"}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Condition" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {conditions.map((condition) => (
-                      <SelectItem key={condition} value={condition}>
-                        {condition.charAt(0).toUpperCase() + condition.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <input type="hidden" name="condition" value={selectedCondition} />
-              </div>
+
+              <Select
+                value={formData.condition}
+                onValueChange={(value) => handleInputChange("condition", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Condition" />
+                </SelectTrigger>
+                <SelectContent>
+                  {conditions.map((condition) => (
+                    <SelectItem key={condition} value={condition}>
+                      {condition.charAt(0).toUpperCase() + condition.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <Input
-                name="purchaseDate"
                 type="date"
                 placeholder="Purchase Date"
-                defaultValue={
-                  editingAsset?.purchaseDate
-                    ? new Date(editingAsset.purchaseDate)
-                        .toISOString()
-                        .split("T")[0]
-                    : ""
-                }
+                value={formData.purchaseDate}
+                onChange={(e) => handleInputChange("purchaseDate", e.target.value)}
               />
+
               <Input
-                name="purchasePrice"
                 type="number"
                 step="0.01"
                 placeholder="Purchase Price ($)"
-                defaultValue={editingAsset?.purchasePrice || ""}
+                value={formData.purchasePrice}
+                onChange={(e) => handleInputChange("purchasePrice", e.target.value)}
               />
+
               <Input
-                name="currentValue"
                 type="number"
                 step="0.01"
                 placeholder="Current Value ($)"
-                defaultValue={editingAsset?.currentValue || ""}
+                value={formData.currentValue}
+                onChange={(e) => handleInputChange("currentValue", e.target.value)}
               />
+
               <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
                 <Button
                   type="button"
@@ -339,9 +391,7 @@ export default function Assets() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={
-                    createMutation.isPending || updateMutation.isPending
-                  }
+                  disabled={createMutation.isPending || updateMutation.isPending}
                   className="w-full sm:w-auto"
                 >
                   {editingAsset ? "Update" : "Create"}
@@ -457,12 +507,7 @@ export default function Assets() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => {
-                              setEditingAsset(asset);
-                              setSelectedCategory(asset.category || "");
-                              setSelectedCondition(asset.condition || "good");
-                              setIsDialogOpen(true);
-                            }}
+                            onClick={() => handleEdit(asset)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -491,7 +536,7 @@ export default function Assets() {
                       ? "Try adjusting your search criteria"
                       : "Start by adding your first asset"}
                   </p>
-                  <Button onClick={() => setIsDialogOpen(true)}>
+                  <Button onClick={handleAddNew}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Asset
                   </Button>

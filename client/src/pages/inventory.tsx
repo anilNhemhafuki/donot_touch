@@ -135,13 +135,35 @@ export default function Inventory() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
+    
+    const name = formData.get("name") as string;
+    const unit = formData.get("unit") as string;
+    
+    if (!name?.trim()) {
+      toast({
+        title: "Error",
+        description: "Item name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!unit?.trim()) {
+      toast({
+        title: "Error",
+        description: "Unit is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const data = {
-      name: formData.get("name") as string,
+      name: name.trim(),
       currentStock: parseFloat(formData.get("currentStock") as string) || 0,
       minLevel: parseFloat(formData.get("minLevel") as string) || 0,
-      unit: formData.get("unit") as string,
+      unit: unit.trim(),
       costPerUnit: parseFloat(formData.get("costPerUnit") as string) || 0,
-      supplier: formData.get("supplier") as string || null,
+      supplier: (formData.get("supplier") as string)?.trim() || null,
     };
 
     if (editingItem) {

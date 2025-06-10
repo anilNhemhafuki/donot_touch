@@ -150,31 +150,65 @@ export default function Production() {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     
-    const scheduledDate = new Date(formData.get("scheduledDate") as string);
+    const productId = formData.get("productId") as string;
+    const quantity = formData.get("quantity") as string;
+    const scheduledDateStr = formData.get("scheduledDate") as string;
+    
+    if (!productId) {
+      toast({
+        title: "Error",
+        description: "Product is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!quantity || parseInt(quantity) <= 0) {
+      toast({
+        title: "Error",
+        description: "Valid quantity is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!scheduledDateStr) {
+      toast({
+        title: "Error",
+        description: "Scheduled date is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const scheduledDate = new Date(scheduledDateStr);
     const startTime = formData.get("startTime") as string;
     const endTime = formData.get("endTime") as string;
     
     // Combine date with times
-    const startDateTime = new Date(scheduledDate);
+    let startDateTime = null;
+    let endDateTime = null;
+    
     if (startTime) {
+      startDateTime = new Date(scheduledDate);
       const [hours, minutes] = startTime.split(':');
       startDateTime.setHours(parseInt(hours), parseInt(minutes));
     }
     
-    const endDateTime = new Date(scheduledDate);
     if (endTime) {
+      endDateTime = new Date(scheduledDate);
       const [hours, minutes] = endTime.split(':');
       endDateTime.setHours(parseInt(hours), parseInt(minutes));
     }
 
     const data = {
-      productId: parseInt(formData.get("productId") as string),
-      quantity: parseInt(formData.get("quantity") as string),
+      productId: parseInt(productId),
+      quantity: parseInt(quantity),
       scheduledDate: scheduledDate,
-      startTime: startTime ? startDateTime : null,
-      endTime: endTime ? endDateTime : null,
-      status: formData.get("status") as string,
-      notes: formData.get("notes") as string || null,
+      startTime: startDateTime,
+      endTime: endDateTime,
+      status: (formData.get("status") as string) || "scheduled",
+      notes: (formData.get("notes") as string)?.trim() || null,
     };
 
     if (editingItem) {

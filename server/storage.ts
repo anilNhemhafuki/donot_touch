@@ -1,5 +1,4 @@
 import {
-  users,
   categories,
   products,
   inventoryItems,
@@ -12,8 +11,7 @@ import {
   parties,
   assets,
   expenses,
-  type User,
-  type UpsertUser,
+  users,
   type Category,
   type InsertCategory,
   type Product,
@@ -38,6 +36,8 @@ import {
   type InsertAsset,
   type Expense,
   type InsertExpense,
+  type User,
+  type UpsertUser,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, gte, lte, sql, like } from "drizzle-orm";
@@ -655,8 +655,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Assets operations
-  async getAssets(): Promise<Asset[]> {
-    return await db.select().from(assets).orderBy(asc(assets.name));
+  async getAssets(): Promise<any[]> {
+    return await db
+      .select({
+        id: assets.id,
+        name: assets.name,
+        category: assets.category,
+        description: assets.description,
+        location: assets.location,
+        condition: assets.condition,
+        purchaseDate: assets.purchaseDate,
+        purchasePrice: assets.purchasePrice,
+        currentValue: assets.currentValue,
+        isActive: assets.isActive,
+        createdAt: assets.createdAt,
+        updatedAt: assets.updatedAt,
+      })
+      .from(assets)
+      .where(eq(assets.isActive, true))
+      .orderBy(desc(assets.createdAt));
   }
 
   async createAsset(asset: InsertAsset): Promise<Asset> {
@@ -674,7 +691,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteAsset(id: number): Promise<void> {
-    await db.delete(assets).where(eq(assets.id, id));
+    await db
+      .update(assets)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(assets.id, id));
   }
 
   // Expense operations
