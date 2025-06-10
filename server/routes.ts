@@ -535,9 +535,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin user management routes
   const isAdmin = (req: any, res: any, next: any) => {
+    console.log('Checking admin access for user:', req.user);
     if (req.user && req.user.role === 'admin') {
       return next();
     }
+    console.log('Access denied - user role:', req.user?.role);
     res.status(403).json({ message: "Access denied. Admin role required." });
   };
 

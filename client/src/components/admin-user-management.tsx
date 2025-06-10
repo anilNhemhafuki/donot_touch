@@ -28,6 +28,13 @@ export default function AdminUserManagement() {
 
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ["/api/admin/users"],
+    retry: (failureCount, error) => {
+      // Don't retry on 403/404 errors
+      if (error.message.includes('403') || error.message.includes('404')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 
   const createMutation = useMutation({
@@ -143,12 +150,27 @@ export default function AdminUserManagement() {
     return variants[role] || "outline";
   };
 
-  if (error && isUnauthorizedError(error)) {
+  if (error) {
+    if (isUnauthorizedError(error) || error.message.includes('403') || error.message.includes('404')) {
+      return (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-muted-foreground">
+              <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
+              <p>You don't have permission to access user management.</p>
+              <p className="text-sm mt-2">Contact your administrator for access.</p>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+    
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="text-center text-muted-foreground">
-            You don't have permission to access user management.
+          <div className="text-center text-red-600">
+            <p>Error loading user management: {error.message}</p>
           </div>
         </CardContent>
       </Card>
