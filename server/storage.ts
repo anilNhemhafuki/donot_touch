@@ -655,6 +655,52 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Assets operations
+  async getAssets(): Promise<Asset[]> {
+    return await db.select().from(assets).orderBy(asc(assets.name));
+  }
+
+  async createAsset(asset: InsertAsset): Promise<Asset> {
+    const [created] = await db.insert(assets).values(asset).returning();
+    return created;
+  }
+
+  async updateAsset(id: number, asset: Partial<InsertAsset>): Promise<Asset> {
+    const [updated] = await db
+      .update(assets)
+      .set({ ...asset, updatedAt: new Date() })
+      .where(eq(assets.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteAsset(id: number): Promise<void> {
+    await db.delete(assets).where(eq(assets.id, id));
+  }
+
+  // Expenses operations
+  async getExpenses(): Promise<Expense[]> {
+    return await db.select().from(expenses).orderBy(desc(expenses.date));
+  }
+
+  async createExpense(expense: InsertExpense): Promise<Expense> {
+    const [created] = await db.insert(expenses).values(expense).returning();
+    return created;
+  }
+
+  async updateExpense(id: number, expense: Partial<InsertExpense>): Promise<Expense> {
+    const [updated] = await db
+      .update(expenses)
+      .set({ ...expense, updatedAt: new Date() })
+      .where(eq(expenses.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteExpense(id: number): Promise<void> {
+    await db.delete(expenses).where(eq(expenses.id, id));
+  }
+
+  // Assets operations
   async getAssets(): Promise<any[]> {
     return await db
       .select({

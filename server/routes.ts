@@ -339,7 +339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/orders", isAuthenticated, async (req: any, res) => {
+  app.post("/api/orders", isAuthenticated, async (req, res) => {
     try {
       const { items, ...orderData } = req.body;
       const userId = req.user.id;
@@ -382,7 +382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!item.productId || !item.quantity || !item.unitPrice) {
           throw new Error("Invalid order item data");
         }
-        
+
         await storage.createOrderItem({
           orderId: order.id,
           productId: parseInt(item.productId),
@@ -620,7 +620,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Asset routes
+  // Assets endpoints
   app.get("/api/assets", isAuthenticated, async (req, res) => {
     try {
       const assets = await storage.getAssets();
@@ -633,37 +633,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/assets", isAuthenticated, async (req, res) => {
     try {
-      // Validate required fields
-      if (!req.body.name) {
+      const { name, category, description, location, condition, purchaseDate, purchasePrice, currentValue } = req.body;
+
+      if (!name || !name.trim()) {
         return res.status(400).json({ message: "Asset name is required" });
       }
 
-      if (!req.body.category) {
-        return res.status(400).json({ message: "Asset category is required" });
+      if (!category) {
+        return res.status(400).json({ message: "Category is required" });
       }
 
-      // Transform the data
-      const transformedData = {
-        name: req.body.name.trim(),
-        category: req.body.category,
-        description: req.body.description ? req.body.description.trim() : null,
-        location: req.body.location ? req.body.location.trim() : null,
-        condition: req.body.condition || "good",
-        purchaseDate: req.body.purchaseDate ? new Date(req.body.purchaseDate) : null,
-        purchasePrice: req.body.purchasePrice ? parseFloat(req.body.purchasePrice).toString() : null,
-        currentValue: req.body.currentValue ? parseFloat(req.body.currentValue).toString() : null,
-        isActive: true,
+      const assetData = {
+        name: name.trim(),
+        category,
+        description: description?.trim() || null,
+        location: location?.trim() || null,
+        condition: condition || "good",
+        purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
+        purchasePrice: purchasePrice ? parseFloat(purchasePrice) : null,
+        currentValue: currentValue ? parseFloat(currentValue) : null,
       };
 
-      console.log("Creating asset with data:", transformedData);
-      const asset = await storage.createAsset(transformedData);
+      console.log("Creating asset with data:", assetData);
+      const asset = await storage.createAsset(assetData);
       console.log("Asset created successfully:", asset);
       res.json(asset);
     } catch (error) {
       console.error("Error creating asset:", error);
       res.status(500).json({ 
-        message: "Failed to create asset",
-        error: error instanceof Error ? error.message : "Unknown error"
+        message: "Failed to create asset", 
+        error: error instanceof Error ? error.message : "Unknown error" 
       });
     }
   });
@@ -671,7 +670,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/assets/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const asset = await storage.updateAsset(id, req.body);
+      const { name, category, description, location, condition, purchaseDate, purchasePrice, currentValue } = req.body;
+
+      if (!name || !name.trim()) {
+        return res.status(400).json({ message: "Asset name is required" });
+      }
+
+      if (!category) {
+        return res.status(400).json({ message: "Category is required" });
+      }
+
+      const assetData = {
+        name: name.trim(),
+        category,
+        description: description?.trim() || null,
+        location: location?.trim() || null,
+        condition: condition || "good",
+        purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
+        purchasePrice: purchasePrice ? parseFloat(purchasePrice) : null,
+        currentValue: currentValue ? parseFloat(currentValue) : null,
+      };
+
+      const asset = await storage.updateAsset(id, assetData);
       res.json(asset);
     } catch (error) {
       console.error("Error updating asset:", error);
@@ -683,7 +703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteAsset(id);
-      res.json({ success: true });
+      res.json({ message: "Asset deleted successfully" });
     } catch (error) {
       console.error("Error deleting asset:", error);
       res.status(500).json({ message: "Failed to delete asset" });
@@ -701,47 +721,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/expenses", isAuthenticated, async (req: any, res) => {
+  app.post("/api/expenses", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const { description, amount, category, date } = req.body;
 
-      // Validate required fields
-      if (!req.body.title) {
-        return res.status(400).json({ message: "Expense title is required" });
+      if (!description || !description.trim()) {
+        return res.status(400).json({ message: "Expense description is required" });
       }
 
-      if (!req.body.category) {
-        return res.status(400).json({ message: "Expense category is required" });
-      }
-
-      if (!req.body.amount || isNaN(parseFloat(req.body.amount))) {
+      if (!amount || isNaN(parseFloat(amount))) {
         return res.status(400).json({ message: "Valid amount is required" });
       }
 
-      if (!req.body.date) {
-        return res.status(400).json({ message: "Expense date is required" });
+      if (!category) {
+        return res.status(400).json({ message: "Category is required" });
       }
 
-      // Transform the data
-      const transformedData = {
-        title: req.body.title.trim(),
-        category: req.body.category,
-        amount: parseFloat(req.body.amount).toString(),
-        date: new Date(req.body.date),
-        description: req.body.description ? req.body.description.trim() : null,
-        receipt: req.body.receipt ? req.body.receipt.trim() : null,
-        createdBy: userId,
+      const expenseData = {
+        description: description.trim(),
+        amount: parseFloat(amount).toString(),
+        category,
+        date: date ? new Date(date) : new Date(),
       };
 
-      console.log("Creating expense with data:", transformedData);
-      const expense = await storage.createExpense(transformedData);
+      console.log("Creating expense with data:", expenseData);
+      const expense = await storage.createExpense(expenseData);
       console.log("Expense created successfully:", expense);
       res.json(expense);
     } catch (error) {
       console.error("Error creating expense:", error);
       res.status(500).json({ 
-        message: "Failed to create expense",
-        error: error instanceof Error ? error.message : "Unknown error"
+        message: "Failed to create expense", 
+        error: error instanceof Error ? error.message : "Unknown error" 
       });
     }
   });
@@ -749,7 +760,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/expenses/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const expense = await storage.updateExpense(id, req.body);
+      const { description, amount, category, date } = req.body;
+
+      if (!description || !description.trim()) {
+        return res.status(400).json({ message: "Expense description is required" });
+      }
+
+      if (!amount || isNaN(parseFloat(amount))) {
+        return res.status(400).json({ message: "Valid amount is required" });
+      }
+
+      const expenseData = {
+        description: description.trim(),
+        amount: parseFloat(amount).toString(),
+        category,
+        date: date ? new Date(date) : new Date(),
+      };
+
+      const expense = await storage.updateExpense(id, expenseData);
       res.json(expense);
     } catch (error) {
       console.error("Error updating expense:", error);
@@ -761,7 +789,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteExpense(id);
-      res.json({ success: true });
+      res.json({ message: "Expense deleted successfully" });
     } catch (error) {
       console.error("Error deleting expense:", error);
       res.status(500).json({ message: "Failed to delete expense" });
@@ -896,6 +924,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/orders", isAuthenticated, async (req, res) => {
+    try {
+      const { customerId, items, ...orderData } = req.body;
+
+      console.log("Creating order with data:", { customerId, items, orderData });
+
+      if (!items || items.length === 0) {
+        return res.status(400).json({ message: "Order must have at least one item" });
+      }
+
+      // Calculate total from items
+      let calculatedTotal = 0;
+      for (const item of items) {
+        if (!item.productId || !item.quantity || !item.price) {
+          return res.status(400).json({ message: "All items must have productId, quantity, and price" });
+        }
+        calculatedTotal += parseFloat(item.price) * parseInt(item.quantity);
+      }
+
+      const order = await storage.createOrder({
+        customerId: customerId || null,
+        status: orderData.status || "pending",
+        total: calculatedTotal.toString(),
+        notes: orderData.notes || null,
+        dueDate: orderData.dueDate ? new Date(orderData.dueDate) : null,
+      });
+
+      console.log("Order created:", order);
+
+      // Add order items
+      for (const item of items) {
+        await storage.createOrderItem({
+          orderId: order.id,
+          productId: parseInt(item.productId),
+          quantity: parseInt(item.quantity),
+          price: parseFloat(item.price).toString(),
+        });
+      }
+
+      console.log("Order items added successfully");
+      res.json(order);
+    } catch (error) {
+      console.error("Error creating order:", error);
+      res.status(500).json({ 
+        message: "Failed to create order", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
   const httpServer = createServer(app);
   return httpServer;
 }
