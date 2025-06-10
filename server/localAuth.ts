@@ -79,46 +79,7 @@ export async function setupAuth(app: Express) {
     res.json({ success: true, user: req.user });
   });
 
-  // Register route
-  app.post('/api/register', async (req, res) => {
-    try {
-      const { email, password, firstName, lastName } = req.body;
-      
-      if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required' });
-      }
-
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: 'User already exists' });
-      }
-
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Create user
-      const user = await storage.upsertUser({
-        id: `user_${Date.now()}`,
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        role: 'staff'
-      });
-
-      // Log user in
-      req.login(user, (err) => {
-        if (err) {
-          return res.status(500).json({ message: 'Registration successful but login failed' });
-        }
-        res.json({ success: true, user });
-      });
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
+  
 
   // Logout route
   app.post('/api/logout', (req, res) => {
