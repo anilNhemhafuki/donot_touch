@@ -201,6 +201,44 @@ export const expenses = pgTable("expenses", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+//Bills
+export const bills = pgTable("bills", {
+  id: serial("id").primaryKey(),
+  billNumber: varchar("bill_number", { length: 50 }).notNull().unique(),
+  customerId: integer("customer_id").references(() => customers.id),
+  customerName: varchar("customer_name", { length: 255 }),
+  billDate: timestamp("bill_date").notNull(),
+  dueDate: timestamp("due_date").notNull(),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  discount: decimal("discount", { precision: 10, scale: 2 }).default("0"),
+  tax: decimal("tax", { precision: 10, scale: 2 }).default("0"),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // 'pending', 'paid', 'overdue', 'cancelled'
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+//Bill Items
+export const billItems = pgTable("bill_items", {
+  id: serial("id").primaryKey(),
+  billId: integer("bill_id").notNull().references(() => bills.id, { onDelete: "cascade" }),
+  productId: integer("product_id").references(() => products.id),
+  productName: varchar("product_name", { length: 255 }).notNull(),
+  quantity: integer("quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+});
+
+//Settings
+export const settings = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value"),
+  type: varchar("type", { length: 20 }).notNull().default("string"), // 'string', 'number', 'boolean', 'json'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),

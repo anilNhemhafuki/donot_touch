@@ -3,6 +3,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import { Receipt } from "lucide-react";
+import { Settings } from "lucide-react";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -24,6 +26,8 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
     { name: "Assets", href: "/assets", icon: "fas fa-building" },
     { name: "Expenses", href: "/expenses", icon: "fas fa-receipt" },
     { name: "Reports", href: "/reports", icon: "fas fa-chart-bar" },
+    { name: "Billing", href: "/billing", icon: "fas fa-file-invoice-dollar" },
+    { name: "Settings", href: "/settings", icon: "fas fa-cog" },
   ];
 
   const isActive = (href: string) => {

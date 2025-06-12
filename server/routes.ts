@@ -620,7 +620,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Assets endpoints
+  // Assets
   app.get("/api/assets", isAuthenticated, async (req, res) => {
     try {
       const assets = await storage.getAssets();
@@ -631,82 +631,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/assets", isAuthenticated, async (req, res) => {
+  // Bills
+  app.get("/api/bills", isAuthenticated, async (req, res) => {
     try {
-      const { name, category, description, location, condition, purchaseDate, purchasePrice, currentValue } = req.body;
-
-      if (!name || !name.trim()) {
-        return res.status(400).json({ message: "Asset name is required" });
-      }
-
-      if (!category) {
-        return res.status(400).json({ message: "Category is required" });
-      }
-
-      const assetData = {
-        name: name.trim(),
-        category,
-        description: description?.trim() || null,
-        location: location?.trim() || null,
-        condition: condition || "good",
-        purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
-        purchasePrice: purchasePrice ? parseFloat(purchasePrice) : null,
-        currentValue: currentValue ? parseFloat(currentValue) : null,
-      };
-
-      console.log("Creating asset with data:", assetData);
-      const asset = await storage.createAsset(assetData);
-      console.log("Asset created successfully:", asset);
-      res.json(asset);
+      const bills = await storage.getBills();
+      res.json(bills);
     } catch (error) {
-      console.error("Error creating asset:", error);
-      res.status(500).json({ 
-        message: "Failed to create asset", 
-        error: error instanceof Error ? error.message : "Unknown error" 
-      });
+      console.error("Error fetching bills:", error);
+      res.status(500).json({ message: "Failed to fetch bills" });
     }
   });
 
-  app.put("/api/assets/:id", isAuthenticated, async (req, res) => {
+  app.post("/api/bills", isAuthenticated, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const { name, category, description, location, condition, purchaseDate, purchasePrice, currentValue } = req.body;
-
-      if (!name || !name.trim()) {
-        return res.status(400).json({ message: "Asset name is required" });
-      }
-
-      if (!category) {
-        return res.status(400).json({ message: "Category is required" });
-      }
-
-      const assetData = {
-        name: name.trim(),
-        category,
-        description: description?.trim() || null,
-        location: location?.trim() || null,
-        condition: condition || "good",
-        purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
-        purchasePrice: purchasePrice ? parseFloat(purchasePrice) : null,
-        currentValue: currentValue ? parseFloat(currentValue) : null,
-      };
-
-      const asset = await storage.updateAsset(id, assetData);
-      res.json(asset);
+      const bill = await storage.createBill(req.body);
+      res.json(bill);
     } catch (error) {
-      console.error("Error updating asset:", error);
-      res.status(500).json({ message: "Failed to update asset" });
+      console.error("Error creating bill:", error);
+      res.status(500).json({ message: "Failed to create bill" });
     }
   });
 
-  app.delete("/api/assets/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/bills/:id", isAuthenticated, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      await storage.deleteAsset(id);
-      res.json({ message: "Asset deleted successfully" });
+      await storage.deleteBill(parseInt(req.params.id));
+      res.json({ message: "Bill deleted successfully" });
     } catch (error) {
-      console.error("Error deleting asset:", error);
-      res.status(500).json({ message: "Failed to delete asset" });
+      console.error("Error deleting bill:", error);
+      res.status(500).json({ message: "Failed to delete bill" });
+    }
+  });
+
+  // Settings
+  app.get("/api/settings", isAuthenticated, async (req, res) => {
+    try {
+      const settings = await storage.getSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+
+  app.put("/api/settings", isAuthenticated, async (req, res) => {
+    try {
+      const settings = await storage.updateSettings(req.body);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      res.status(500).json({ message: "Failed to update settings" });
     }
   });
 
@@ -891,7 +864,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Profile management routes
   app.put("/api/profile", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+            const userId = req.user.id;
       const { firstName, lastName, email, currentPassword, newPassword } = req.body;
 
       const updateData: any = {
@@ -973,7 +946,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   app.put("/api/categories/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);

@@ -12,16 +12,14 @@ import Products from "@/pages/products";
 import Inventory from "@/pages/inventory";
 import Orders from "@/pages/orders";
 import Production from "@/pages/production";
-import Reports from "@/pages/reports";
-import Customers from "@/pages/customers";
-import Parties from "@/pages/parties";
 import Assets from "@/pages/assets";
 import Expenses from "@/pages/expenses";
-import NotFound from "@/pages/not-found";
-import Sidebar from "@/components/sidebar";
-import Header from "@/components/header";
-import LoginForm from "@/components/login-form";
+import Parties from "@/pages/parties";
+import Reports from "@/pages/reports";
+import Billing from "@/pages/billing";
+import Settings from "@/pages/settings";
 import AdminUsers from "@/pages/admin-users";
+import NotFound from "@/pages/not-found";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -62,6 +60,8 @@ function Router() {
             <Route path="/assets" component={Assets} />
             <Route path="/expenses" component={Expenses} />
             <Route path="/reports" component={Reports} />
+            <Route path="/billing" component={Billing} />
+            <Route path="/settings" component={Settings} />
             <Route path="/admin/users" component={AdminUsers} />
             <Route component={NotFound} />
           </Switch>

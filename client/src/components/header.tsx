@@ -3,9 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Menu, Globe, LogOut } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Menu, Globe, LogOut, User, Settings, Calendar } from "lucide-react";
 import { Link } from "wouter";
+import ProfileEditor from "./profile-editor";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -15,6 +16,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+  
+  const getCurrentDate = () => {
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,12 +77,22 @@ export default function Header({ onMenuClick }: HeaderProps) {
             </div>
           </Link>
 
-          {/* Page title */}
+          {/* Page title and date */}
           <div className="hidden lg:block">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t("dashboard")}</h2>
-            <p className="text-gray-500 dark:text-gray-400">
-              Welcome back, {user?.firstName || 'there'}! Here's what's happening at your bakery today.
-            </p>
+            <div className="flex items-center gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t("dashboard")}</h2>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Welcome back, {user?.firstName || 'there'}! Here's what's happening at your bakery today.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
+                <Calendar className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-primary">
+                  {getCurrentDate()}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -152,6 +172,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   {t(user?.role || 'staff')}
                 </span>
               </div>
+              <div className="p-2">
+                <ProfileEditor user={user} />
+              </div>
+              <DropdownMenuItem asChild>
+                <Link href="/settings" className="flex items-center w-full">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                 <LogOut className="mr-2 h-4 w-4" />
                 {t("logout")}
