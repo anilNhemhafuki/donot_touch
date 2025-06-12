@@ -35,7 +35,7 @@ import {
   type InsertBillItem,
   type Setting,
   type InsertSetting,
-} from "@/shared/schema";
+} from "../shared/schema.js";
 import { db } from "./db";
 import { eq, desc, asc, and, gte, lte, sql, like } from "drizzle-orm";
 
