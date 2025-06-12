@@ -1,140 +1,84 @@
-import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/hooks/useAuth";
+
+const navigation = [
+  { name: "Dashboard", href: "/", icon: "fas fa-tachometer-alt" },
+  { name: "Products", href: "/products", icon: "fas fa-box" },
+  { name: "Orders", href: "/orders", icon: "fas fa-shopping-cart" },
+  { name: "Inventory", href: "/inventory", icon: "fas fa-warehouse" },
+  { name: "Production", href: "/production", icon: "fas fa-industry" },
+  { name: "Assets", href: "/assets", icon: "fas fa-tools" },
+  { name: "Expenses", href: "/expenses", icon: "fas fa-receipt" },
+  { name: "Customers", href: "/customers", icon: "fas fa-users" },
+  { name: "Parties", href: "/parties", icon: "fas fa-handshake" },
+  { name: "Reports", href: "/reports", icon: "fas fa-chart-bar" },
+];
 
 interface SidebarProps {
-  isOpen?: boolean;
-  onToggle?: () => void;
+  currentPage: string;
+  onNavigate: (page: string) => void;
 }
 
-export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
-  const [location] = useLocation();
-  const { user } = useAuth();
-
-  const navigation = [
-    { name: "Dashboard", href: "/", icon: "fas fa-chart-pie" },
-    { name: "Products", href: "/products", icon: "fas fa-cookie-bite" },
-    { name: "Inventory", href: "/inventory", icon: "fas fa-boxes" },
-    { name: "Orders", href: "/orders", icon: "fas fa-shopping-cart" },
-    { name: "Production", href: "/production", icon: "fas fa-industry" },
-    { name: "Customers", href: "/customers", icon: "fas fa-users" },
-    { name: "Parties", href: "/parties", icon: "fas fa-handshake" },
-    { name: "Assets", href: "/assets", icon: "fas fa-building" },
-    { name: "Expenses", href: "/expenses", icon: "fas fa-receipt" },
-    { name: "Reports", href: "/reports", icon: "fas fa-chart-bar" },
-  ];
-
-  const isActive = (href: string) => {
-    if (href === "/") {
-      return location === "/";
-    }
-    return location.startsWith(href);
-  };
+export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
+  const { logout } = useAuth();
 
   return (
-    <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={onToggle}
-        />
-      )}
-
-      <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50 
-        w-64 bg-white dark:bg-gray-900 shadow-lg 
-        flex-shrink-0 flex flex-col transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        {/* Mobile close button */}
-        <div className="lg:hidden flex justify-end p-4">
-          <Button variant="ghost" size="sm" onClick={onToggle}>
-            <X className="h-6 w-6" />
-          </Button>
-        </div>
-
-        {/* Logo */}
-        <div className="p-6">
-          <Link href="/" className="flex items-center space-x-3 mb-8">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <i className="fas fa-bread-slice text-white text-lg"></i>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Sweet Treats</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Bakery Management</p>
-            </div>
-          </Link>
-
-          {/* Navigation */}
-          <nav className="space-y-2">
-            {navigation.map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link 
-                  key={item.name} 
-                  href={item.href}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                    active
-                      ? "bg-primary text-white"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <i className={item.icon}></i>
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              );
-            })}
-             {/* Add admin-only items if user is admin */}
-            {user?.role === 'admin' && (
-              <Link
-                href="/admin/users"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive('/admin/users')
-                    ? "bg-primary text-white"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                <i className="fas fa-users-cog"></i>
-                <span className="font-medium">User Management</span>
-              </Link>
-            )}
-          </nav>
-        </div>
-
-        {/* User Profile */}
-        <div className="mt-auto p-6 border-t dark:border-gray-700">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-              <i className="fas fa-user text-primary text-sm"></i>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email || 'User'}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{user?.role || 'Staff'}</p>
-            </div>
-            <button 
-              onClick={async () => {
-                try {
-                  await fetch('/api/logout', { 
-                    method: 'POST', 
-                    credentials: 'include' 
-                  });
-                  window.location.reload();
-                } catch (error) {
-                  console.error('Logout failed:', error);
-                }
-              }}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              <i className="fas fa-sign-out-alt"></i>
-            </button>
+    <div className="sidebar flex h-full w-60 flex-col fixed left-0 top-0 z-40">
+      {/* Logo */}
+      <div className="sidebar-header">
+        <div className="sidebar-brand">
+          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+            <i className="fas fa-hotel text-white text-lg"></i>
+          </div>
+          <div>
+            <div className="font-semibold text-white">BakeryPro</div>
+            <div className="text-xs text-white/70">Management</div>
           </div>
         </div>
-      </aside>
-    </>
+      </div>
+
+      {/* Navigation */}
+      <ScrollArea className="sidebar-nav flex-1">
+        <nav className="space-y-1 px-2">
+          {navigation.map((item) => (
+            <button
+              key={item.name}
+              onClick={() => onNavigate(item.href.slice(1) || "dashboard")}
+              className={cn(
+                "nav-item w-full",
+                currentPage === (item.href.slice(1) || "dashboard") && "active"
+              )}
+            >
+              <i className={item.icon}></i>
+              {item.name}
+            </button>
+          ))}
+        </nav>
+      </ScrollArea>
+
+      {/* User Profile & Logout */}
+      <div className="p-4 border-t border-white/10">
+        <div className="flex items-center mb-3 px-2">
+          <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
+            <i className="fas fa-user text-white text-sm"></i>
+          </div>
+          <div>
+            <div className="text-sm font-medium text-white">Admin User</div>
+            <div className="text-xs text-white/70">admin@bakery.com</div>
+          </div>
+        </div>
+        <Button
+          onClick={logout}
+          variant="outline"
+          size="sm"
+          className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
+        >
+          <i className="fas fa-sign-out-alt mr-2"></i>
+          Logout
+        </Button>
+      </div>
+    </div>
   );
 }

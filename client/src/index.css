@@ -1,57 +1,59 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: hsl(43, 33%, 98%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(40, 8%, 95%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --background: hsl(0, 0%, 98%);
+  --foreground: hsl(224, 71%, 4%);
+  --muted: hsl(220, 14%, 96%);
+  --muted-foreground: hsl(215, 16%, 47%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --popover-foreground: hsl(224, 71%, 4%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(40, 10%, 90%);
-  --input: hsl(40, 10%, 90%);
-  --primary: hsl(220, 70%, 50%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(210, 40%, 95%);
+  --card-foreground: hsl(224, 71%, 4%);
+  --border: hsl(220, 13%, 91%);
+  --input: hsl(220, 13%, 91%);
+  --primary: hsl(221, 83%, 53%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(210, 40%, 96%);
   --secondary-foreground: hsl(222.2, 84%, 4.9%);
-  --accent: hsl(210, 40%, 95%);
+  --accent: hsl(210, 40%, 96%);
   --accent-foreground: hsl(222.2, 84%, 4.9%);
   --destructive: hsl(0, 84.2%, 60.2%);
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(30, 40%, 65%);
+  --ring: hsl(221, 83%, 53%);
   --radius: 0.5rem;
   
-  /* Bakery theme colors */
-  --bakery-brown: hsl(25, 45%, 27%);
-  --bakery-tan: hsl(30, 44%, 65%);
-  --bakery-orange: hsl(16, 100%, 60%);
-  --bakery-cream: hsl(43, 33%, 98%);
-  --bakery-accent: hsl(30, 65%, 70%);
+  /* Professional UI colors */
+  --sidebar-bg: hsl(221, 83%, 53%);
+  --sidebar-text: hsl(0, 0%, 100%);
+  --sidebar-hover: hsl(221, 83%, 60%);
+  --sidebar-active: hsl(221, 83%, 48%);
+  --dashboard-bg: hsl(220, 14%, 96%);
+  --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .dark {
-  --background: hsl(30, 10%, 8%);
-  --foreground: hsl(30, 5%, 95%);
-  --muted: hsl(30, 8%, 15%);
-  --muted-foreground: hsl(30, 5%, 60%);
-  --popover: hsl(30, 10%, 8%);
-  --popover-foreground: hsl(30, 5%, 95%);
-  --card: hsl(30, 10%, 8%);
-  --card-foreground: hsl(30, 5%, 95%);
-  --border: hsl(30, 8%, 15%);
-  --input: hsl(30, 8%, 15%);
-  --primary: hsl(30, 40%, 65%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(30, 8%, 15%);
-  --secondary-foreground: hsl(30, 5%, 95%);
-  --accent: hsl(30, 8%, 15%);
-  --accent-foreground: hsl(30, 5%, 95%);
+  --background: hsl(224, 71%, 4%);
+  --foreground: hsl(210, 40%, 98%);
+  --muted: hsl(223, 47%, 11%);
+  --muted-foreground: hsl(215, 16%, 57%);
+  --popover: hsl(224, 71%, 4%);
+  --popover-foreground: hsl(210, 40%, 98%);
+  --card: hsl(224, 71%, 4%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --border: hsl(215, 27%, 17%);
+  --input: hsl(215, 27%, 17%);
+  --primary: hsl(221, 83%, 53%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(215, 27%, 17%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+  --accent: hsl(215, 27%, 17%);
+  --accent-foreground: hsl(210, 40%, 98%);
   --destructive: hsl(0, 62.8%, 30.6%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(30, 40%, 65%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --ring: hsl(221, 83%, 53%);
 }
 
 @layer base {
@@ -61,23 +63,347 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
   }
+
+  /* Typography improvements */
+  h1 { @apply text-2xl font-semibold tracking-tight; }
+  h2 { @apply text-xl font-semibold tracking-tight; }
+  h3 { @apply text-lg font-medium tracking-tight; }
+  h4 { @apply text-base font-medium tracking-tight; }
+  
+  /* Small text improvements */
+  .text-xs { font-size: 11px; }
+  .text-sm { font-size: 13px; }
+  .text-base { font-size: 14px; }
+  .text-lg { font-size: 16px; }
+  .text-xl { font-size: 18px; }
+  .text-2xl { font-size: 24px; }
 }
 
-/* Custom bakery-themed styles */
-.bakery-gradient {
-  background: linear-gradient(135deg, var(--bakery-cream) 0%, var(--bakery-tan) 100%);
+/* Professional Sidebar Styling */
+.sidebar {
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  width: 240px;
+  min-height: 100vh;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
 }
 
-.bakery-shadow {
-  box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1), 0 2px 4px -1px rgba(139, 69, 19, 0.06);
+.sidebar-header {
+  padding: 20px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.nav-item.active {
-  background-color: var(--bakery-brown);
+.sidebar-brand {
+  font-size: 18px;
+  font-weight: 600;
   color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-nav {
+  padding: 16px 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 2px 8px;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .nav-item:hover {
-  background-color: rgba(139, 69, 19, 0.1);
+  background: var(--sidebar-hover);
+  color: white;
 }
+
+.nav-item.active {
+  background: var(--sidebar-active);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-item i {
+  width: 20px;
+  margin-right: 12px;
+  font-size: 16px;
+}
+
+/* Dashboard Layout */
+.dashboard-layout {
+  background: var(--dashboard-bg);
+  min-height: 100vh;
+}
+
+.main-content {
+  margin-left: 240px;
+  padding: 24px;
+}
+
+/* Header Styling */
+.dashboard-header {
+  background: white;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+  margin: -24px -24px 24px -24px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: var(--muted-foreground);
+  margin: 4px 0 0 0;
+}
+
+/* Stats Cards Styling */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.stat-card-header {
+  display: flex;
+  justify-content: between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.stat-card-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-card-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--primary);
+  opacity: 0.8;
+}
+
+.stat-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.stat-card-change {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.stat-card-change.positive {
+  color: hsl(142, 76%, 36%);
+}
+
+.stat-card-change.negative {
+  color: hsl(0, 84%, 60%);
+}
+
+/* Table Styling */
+.data-table {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+}
+
+.table-header {
+  background: hsl(220, 14%, 98%);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* Form Styling */
+.form-section {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.form-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 16px;
+}
+
+/* Input Styling */
+.input-field {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Button Styling */
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: hsl(221, 83%, 48%);
+}
+
+/* Performance Cards */
+.performance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.performance-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+}
+
+.performance-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.performance-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.performance-card-id {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  background: hsl(220, 14%, 96%);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.performance-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.metric-item {
+  font-size: 12px;
+}
+
+.metric-label {
+  color: var(--muted-foreground);
+  margin-bottom: 4px;
+}
+
+.metric-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -240px;
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+  
+  .main-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .performance-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Additional utility classes */
+.text-success { color: hsl(142, 76%, 36%); }
+.text-danger { color: hsl(0, 84%, 60%); }
+.text-warning { color: hsl(38, 92%, 50%); }
+.text-info { color: var(--primary); }
+
+.bg-success-light { background: hsl(142, 76%, 96%); }
+.bg-danger-light { background: hsl(0, 84%, 96%); }
+.bg-warning-light { background: hsl(38, 92%, 96%); }
+.bg-info-light { background: hsl(221, 83%, 96%); }
