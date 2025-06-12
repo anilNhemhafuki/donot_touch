@@ -49,18 +49,18 @@ export default function StatsGrid({ stats }: StatsGridProps) {
   ];
 
   return (
-    <div className="stats-grid">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {statCards.map((card, index) => (
-        <div key={index} className="stat-card">
-          <div className="flex items-start justify-between mb-3">
-            <div className="stat-card-title">{card.title}</div>
-            <div className="stat-card-icon">
-              <i className={card.icon}></i>
+        <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">{card.title}</p>
+              <p className="text-3xl font-bold text-gray-900">{card.value}</p>
+              <p className={`text-sm ${card.changeColor}`}>{card.change}</p>
             </div>
-          </div>
-          <div className="stat-card-value">{card.value}</div>
-          <div className={`stat-card-change ${card.change?.includes('+') ? 'positive' : card.change?.includes('-') ? 'negative' : ''}`}>
-            {card.change}
+            <div className={`w-12 h-12 ${card.bgColor} rounded-lg flex items-center justify-center`}>
+              <i className={`${card.icon} ${card.iconColor}`}></i>
+            </div>
           </div>
         </div>
       ))}
