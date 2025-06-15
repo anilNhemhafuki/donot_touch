@@ -978,6 +978,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete category" });
     }
   });
+
+  // Notification system routes
+  const hasNotificationAccess = (req: any, res: any, next: any) => {
+    if (req.user && ['admin', 'supervisor', 'manager'].includes(req.user.role)) {
+      return next();
+    }
+    res.status(403).json({ message: "Access denied. Admin, Supervisor, or Manager role required." });
+  };
+
+  // In-memory storage for push subscriptions (in production, use database)
+  const pushSubscriptions = new Map<string, any>();
+
+  app.post("/api/notifications/subscribe", isAuthenticated, hasNotificationAccess, async (req: any, res) => {
+    try {
+      const { subscription } = req.body;
+      const userId = req.user.id;
+      
+      pushSubscriptions.set(userId, subscription);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error saving push subscription:", error);
+      res.status(500).json({ message: "Failed to save subscription" });
+    }
+  });
+
+  app.post("/api/notifications/unsubscribe", isAuthenticated, hasNotificationAccess, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      pushSubscriptions.delete(userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing push subscription:", error);
+      res.status(500).json({ message: "Failed to remove subscription" });
+    }
+  });
+
+  app.put("/api/notifications/rules", isAuthenticated, hasNotificationAccess, async (req: any, res) => {
+    try {
+      const { rules } = req.body;
+      const userId = req.user.id;
+      
+      // In production, save rules to database
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating notification rules:", error);
+      res.status(500).json({ message: "Failed to update rules" });
+    }
+  });
+
+  app.post("/api/notifications/test", isAuthenticated, hasNotificationAccess, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const subscription = pushSubscriptions.get(userId);
+      
+      if (!subscription) {
+        return res.status(400).json({ message: "No subscription found" });
+      }
+
+      // Simulate successful notification send
+      console.log("Test notification sent to user:", userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error sending test notification:", error);
+      res.status(500).json({ message: "Failed to send test notification" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

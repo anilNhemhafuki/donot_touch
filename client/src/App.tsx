@@ -24,6 +24,10 @@ import LoginForm from "@/components/login-form";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 import Customers from "@/pages/customers";
+import NotificationSettings from "@/components/notification-settings";
+import CategoryManagement from "@/pages/category-management";
+import Sales from "@/pages/sales";
+import Purchases from "@/pages/purchases";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -69,6 +73,10 @@ function Router() {
             <Route path="/reports" component={Reports} />
             <Route path="/billing" component={Billing} />
             <Route path="/settings" component={Settings} />
+            <Route path="/notifications" component={NotificationSettings} />
+            <Route path="/categories" component={CategoryManagement} />
+            <Route path="/sales" component={Sales} />
+            <Route path="/purchases" component={Purchases} />
             <Route path="/admin/users" component={AdminUsers} />
             <Route component={NotFound} />
           </Switch>
