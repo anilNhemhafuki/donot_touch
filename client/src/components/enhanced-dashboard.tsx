@@ -12,6 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, ShoppingCart, Package, Users, AlertTriangle, Calendar, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import AdminUserManagement from "@/components/admin-user-management";
+import { isUnauthorizedError } from "@/lib/authUtils";
+
+
 
 interface ProductionItem {
   id: number;

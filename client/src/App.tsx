@@ -20,6 +20,10 @@ import Billing from "@/pages/billing";
 import Settings from "@/pages/settings";
 import AdminUsers from "@/pages/admin-users";
 import NotFound from "@/pages/not-found";
+import LoginForm from "@/components/login-form";
+import Sidebar from "@/components/sidebar";
+import Header from "@/components/header";
+import Customers from "@/pages/customers";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -35,17 +39,20 @@ function Router() {
 
   if (!user) {
     return (
-      <LoginForm 
+      <LoginForm
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-        }} 
+        }}
       />
     );
   }
 
   return (
     <div className="min-h-screen flex bg-background">
-      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+      />
       <main className="flex-1 flex flex-col lg:ml-0">
         <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         <div className="flex-1 overflow-x-hidden">
