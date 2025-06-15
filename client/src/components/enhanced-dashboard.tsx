@@ -135,7 +135,7 @@ export default function EnhancedDashboard() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">${parseFloat(order.totalAmount || 0).toFixed(2)}</p>
+                      <p className="font-semibold">Rs. {parseFloat(order.totalAmount || 0).toFixed(2)}</p>
                       <Badge variant={
                         order.status === "completed" ? "default" :
                         order.status === "in_progress" ? "secondary" : "outline"

@@ -1045,6 +1045,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sales routes (using orders as sales)
+  app.get("/api/sales", isAuthenticated, async (req, res) => {
+    try {
+      const sales = await storage.getOrders();
+      res.json(sales);
+    } catch (error) {
+      console.error("Error fetching sales:", error);
+      res.status(500).json({ message: "Failed to fetch sales" });
+    }
+  });
+
+  app.post("/api/sales", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { customerId, customerName, totalAmount, paymentMethod, status, items } = req.body;
+
+      const orderData = {
+        orderNumber: `SALE-${Date.now()}`,
+        customerName,
+        totalAmount,
+        status: status || 'completed',
+        createdBy: userId,
+        notes: `Payment: ${paymentMethod}`
+      };
+
+      const order = await storage.createOrder(orderData);
+
+      for (const item of items) {
+        await storage.createOrderItem({
+          orderId: order.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice
+        });
+      }
+
+      res.json(order);
+    } catch (error) {
+      console.error("Error creating sale:", error);
+      res.status(500).json({ message: "Failed to create sale" });
+    }
+  });
+
+  // Purchases routes (using expenses as purchases)
+  app.get("/api/purchases", isAuthenticated, async (req, res) => {
+    try {
+      const purchases = await storage.getExpenses();
+      res.json(purchases);
+    } catch (error) {
+      console.error("Error fetching purchases:", error);
+      res.status(500).json({ message: "Failed to fetch purchases" });
+    }
+  });
+
+  app.post("/api/purchases", isAuthenticated, async (req: any, res) => {
+    try {
+      const { partyId, supplierName, totalAmount, paymentMethod, status, items } = req.body;
+
+      const purchaseData = {
+        description: `Purchase from ${supplierName}`,
+        amount: totalAmount,
+        category: 'purchase',
+        date: new Date()
+      };
+
+      const purchase = await storage.createExpense(purchaseData);
+      res.json(purchase);
+    } catch (error) {
+      console.error("Error creating purchase:", error);
+      res.status(500).json({ message: "Failed to create purchase" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

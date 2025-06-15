@@ -239,7 +239,7 @@ export default function Orders() {
                       <div>
                         <span className="font-medium text-gray-700">Total:</span>
                         <div className="font-semibold text-gray-900 text-lg">
-                          ${Number(order.totalAmount).toFixed(2)}
+                          Rs. {Number(order.totalAmount).toFixed(2)}
                         </div>
                       </div>
                     </div>

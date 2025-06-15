@@ -305,7 +305,7 @@ export default function Billing() {
                       <SelectContent>
                         {products.map((product: any) => (
                           <SelectItem key={product.id} value={product.id.toString()}>
-                            {product.name} - ${product.price}
+                            {product.name} - Rs. {product.price}
                           </SelectItem>
                         ))}
                       </SelectContent>
