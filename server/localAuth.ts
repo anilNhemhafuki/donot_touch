@@ -90,23 +90,28 @@ export async function setupAuth(app: Express) {
 
   // Login route
   app.post('/api/login', (req, res, next) => {
-    console.log('Login attempt:', req.body);
+    console.log('🔐 Login attempt received:', { email: req.body.email, hasPassword: !!req.body.password });
+    
+    if (!req.body.email || !req.body.password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
     passport.authenticate('local', (err, user, info) => {
       if (err) {
-        console.error('Authentication error:', err);
+        console.error('❌ Authentication error:', err);
         return res.status(500).json({ message: 'Authentication error', error: err.message });
       }
       if (!user) {
-        console.log('Authentication failed:', info);
+        console.log('❌ Authentication failed:', info);
         return res.status(401).json({ message: info?.message || 'Invalid credentials' });
       }
       req.logIn(user, (err) => {
         if (err) {
-          console.error('Login error:', err);
+          console.error('❌ Login error:', err);
           return res.status(500).json({ message: 'Login failed', error: err.message });
         }
-        console.log('Login successful for user:', user.email);
-        res.json({ success: true, user: req.user });
+        console.log('✅ Login successful for user:', user.email);
+        res.json({ success: true, user: { id: user.id, email: user.email, role: user.role, firstName: user.firstName, lastName: user.lastName } });
       });
     })(req, res, next);
   });

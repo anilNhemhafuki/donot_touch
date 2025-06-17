@@ -1,19 +1,25 @@
 
-import { storage } from './storage';
+import { storage } from "./storage";
 
 async function initializeDatabase() {
-  console.log('🚀 Initializing database...');
-  
   try {
+    console.log('🔄 Initializing database...');
+    
     // Ensure default users exist
     await storage.ensureDefaultAdmin();
     
-    console.log('✅ Database initialization completed successfully!');
-    process.exit(0);
+    console.log('✅ Database initialization completed successfully');
   } catch (error) {
     console.error('❌ Database initialization failed:', error);
-    process.exit(1);
+    throw error;
   }
 }
 
-initializeDatabase();
+// Run initialization if this file is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  initializeDatabase()
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
+}
+
+export { initializeDatabase };

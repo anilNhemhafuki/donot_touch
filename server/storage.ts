@@ -11,6 +11,10 @@ import {
   bills,
   billItems,
   settings,
+  parties,
+  assets,
+  expenses,
+  productIngredients,
   type UpsertUser,
   type User,
   type Category,
@@ -29,12 +33,14 @@ import {
   type InsertInventoryTransaction,
   type ProductionScheduleItem,
   type InsertProductionScheduleItem,
-  type Bill,
-  type InsertBill,
-  type BillItem,
-  type InsertBillItem,
-  type Setting,
-  type InsertSetting,
+  type ProductIngredient,
+  type InsertProductIngredient,
+  type Party,
+  type InsertParty,
+  type Asset,
+  type InsertAsset,
+  type Expense,
+  type InsertExpense,
 } from "../shared/schema.js";
 import { db } from "./db";
 import { eq, desc, asc, and, gte, lte, sql, like } from "drizzle-orm";
@@ -728,36 +734,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   // User management methods
-  async getAllUsers() {
-    return await db.select({
-      id: users.id,
-      email: users.email,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      role: users.role,
-      createdAt: users.createdAt,
-    }).from(users);
-  }
-
-  async updateUser(id: string, data: any) {
-    const [updated] = await db
-      .update(users)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, id))
-      .returning();
-    return updated;
-  }
-
-  async deleteUser(id: string) {
-    await db.delete(users).where(eq(users.id, id));
-  }
-
   async getAllUsers(): Promise<User[]> {
     try {
-      const allUsers = await db.select().from(users);
+      const allUsers = await db.select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      }).from(users);
       return allUsers;
     } catch (error) {
       console.error('Error getting all users:', error);
@@ -772,6 +759,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updated;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
   }
 
   async ensureDefaultAdmin(): Promise<void> {
