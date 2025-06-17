@@ -13,6 +13,7 @@ import {
   insertAssetSchema,
   insertExpenseSchema,
 } from "@shared/schema";
+import authRoutes from "./authRoutes"; // Import the new auth routes
 
 export async function registerRoutes(app: Express): Promise<Server> {
   try {
@@ -57,6 +58,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Use the new authentication routes
+  app.use('/api/auth', authRoutes);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -918,7 +922,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!currentPassword) {
           return res.status(400).json({ message: 'Current password is required to change password' });
         }
-
         const user = await storage.getUser(userId);
         const bcrypt = require('bcrypt');
         const isValidPassword = await bcrypt.compare(currentPassword, user.password || '');

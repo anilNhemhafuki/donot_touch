@@ -44,6 +44,7 @@ import {
 } from "../shared/schema.js";
 import { db } from "./db";
 import { eq, desc, asc, and, gte, lte, sql, like } from "drizzle-orm";
+import bcrypt from "bcrypt";
 
 // Interface for storage operations
 export interface IStorage {
@@ -138,20 +139,34 @@ export interface IStorage {
   deleteUser(id: string): Promise<void>;
 }
 
-export class DatabaseStorage implements IStorage {
-  // User operations (mandatory for Replit Auth)
-  async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+export class Storage {
+  async getUserByEmail(email: string) {
+    try {
+      const result = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      return result[0] || null;
+    } catch (error) {
+      console.error("Error getting user by email:", error);
+      return null;
+    }
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
+  async getUserById(id: string) {
     try {
-      const [user] = await db.select().from(users).where(eq(users.email, email));
-      return user;
+      const result = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, id))
+        .limit(1);
+
+      return result[0] || null;
     } catch (error) {
-      console.error('Error getting user by email:', error);
-      return undefined;
+      console.error("Error getting user by ID:", error);
+      return null;
     }
   }
 
@@ -319,6 +334,7 @@ export class DatabaseStorage implements IStorage {
         notes: orders.notes,
         createdBy: orders.createdBy,
         createdAt: orders.createdAt,
+        updatedAt: orders.updatedAt,
       })
       .from(orders)
       .orderBy(desc(orders.orderDate));
@@ -339,6 +355,7 @@ export class DatabaseStorage implements IStorage {
         notes: orders.notes,
         createdBy: orders.createdBy,
         createdAt: orders.createdAt,
+        updatedAt: orders.updatedAt,
       })
       .from(orders)
       .where(eq(orders.id, id));
@@ -768,8 +785,7 @@ export class DatabaseStorage implements IStorage {
   async ensureDefaultAdmin(): Promise<void> {
     try {
       console.log('🔄 Ensuring default users exist...');
-      const bcrypt = require('bcrypt');
-      
+
       const defaultUsers = [
         {
           id: 'admin_default',
@@ -810,18 +826,11 @@ export class DatabaseStorage implements IStorage {
           console.log(`⚠️  Could not create ${user.role} user:`, error.message);
         }
       }
-
-      console.log('\n🔑 Default Login Credentials:');
-      console.log('┌─────────────────────────────────────────┐');
-      console.log('│ Admin:   admin@sweetreats.com / admin123   │');
-      console.log('│ Manager: manager@sweetreats.com / manager123 │');
-      console.log('│ Staff:   staff@sweetreats.com / staff123   │');
-      console.log('└─────────────────────────────────────────┘\n');
-
     } catch (error) {
       console.error('❌ Error ensuring default users:', error);
+      throw error;
     }
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new Storage();
