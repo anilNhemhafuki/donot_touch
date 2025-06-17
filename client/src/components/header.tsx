@@ -3,7 +3,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { Menu, Globe, LogOut, User, Settings, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import ProfileEditor from "./profile-editor";
@@ -16,13 +22,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
   const { language, setLanguage, t } = useLanguage();
-  
+
   const getCurrentDate = () => {
-    return new Date().toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -33,23 +39,28 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/logout', { 
-        method: 'POST', 
-        credentials: 'include' 
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
       });
       window.location.reload();
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     }
   };
 
   const getRoleColor = (role?: string) => {
-    switch(role) {
-      case 'admin': return 'bg-red-100 text-red-800';
-      case 'supervisor': return 'bg-blue-100 text-blue-800';
-      case 'manager': return 'bg-green-100 text-green-800';
-      case 'marketer': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+    switch (role) {
+      case "admin":
+        return "bg-red-100 text-red-800";
+      case "supervisor":
+        return "bg-blue-100 text-blue-800";
+      case "manager":
+        return "bg-green-100 text-green-800";
+      case "marketer":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -58,9 +69,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           {/* Mobile menu button */}
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="lg:hidden"
             onClick={onMenuClick}
           >
@@ -73,7 +84,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <i className="fas fa-bread-slice text-white text-sm"></i>
               </div>
-              <span className="font-bold text-gray-900 dark:text-white">Sweet Treats</span>
+              <span className="font-bold text-gray-900 dark:text-white">
+                Sweet Treats
+              </span>
             </div>
           </Link>
 
@@ -81,9 +94,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <div className="hidden lg:block">
             <div className="flex items-center gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t("dashboard")}</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {t("dashboard")}
+                </h2>
                 <p className="text-gray-500 dark:text-gray-400">
-                  Welcome back, {user?.firstName || 'there'}! Here's what's happening at your bakery today.
+                  Welcome back, {user?.firstName || "there"}! Here's what's
+                  happening at your bakery today.
                 </p>
               </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
@@ -114,14 +130,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="p-2">
                 <Globe className="h-5 w-5" />
-                <span className="hidden lg:inline ml-2">{language === 'en' ? 'English' : 'नेपाली'}</span>
+                <span className="hidden lg:inline ml-2">
+                  {language === "en" ? "English" : "नेपाली"}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setLanguage('en')}>
+              <DropdownMenuItem onClick={() => setLanguage("en")}>
                 <span className="mr-2">🇺🇸</span> English
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage('ne')}>
+              <DropdownMenuItem onClick={() => setLanguage("ne")}>
                 <span className="mr-2">🇳🇵</span> नेपाली
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -138,24 +156,18 @@ export default function Header({ onMenuClick }: HeaderProps) {
           </div>
 
           {/* User Profile */}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-3 p-2">
-                <div className="text-right hidden lg:block">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email || 'User'}
-                  </p>
-                  <div className="flex items-center justify-end space-x-2">
-                    <span className={`text-xs px-2 py-1 rounded-full ${getRoleColor(user?.role)}`}>
-                      {t(user?.role || 'staff')}
-                    </span>
-                  </div>
-                </div>
+              <Button
+                variant="ghost"
+                className="flex items-center space-x-3 p-2"
+              >
                 <div className="w-8 h-8 lg:w-10 lg:h-10 bg-primary rounded-full flex items-center justify-center">
                   {user?.profileImageUrl ? (
-                    <img 
-                      src={user.profileImageUrl} 
-                      alt="Profile" 
+                    <img
+                      src={user.profileImageUrl}
+                      alt="Profile"
                       className="w-8 h-8 lg:w-10 lg:h-10 rounded-full object-cover"
                     />
                   ) : (
@@ -166,10 +178,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-3 py-2 border-b">
-                <p className="text-sm font-medium">{user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email || 'User'}</p>
+                <p className="text-sm font-medium">
+                  {user?.firstName
+                    ? `${user.firstName} ${user.lastName || ""}`.trim()
+                    : user?.email || "User"}
+                </p>
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
-                <span className={`inline-block text-xs px-2 py-1 rounded-full mt-1 ${getRoleColor(user?.role)}`}>
-                  {t(user?.role || 'staff')}
+                <span
+                  className={`inline-block text-xs px-2 py-1 rounded-full mt-1 ${getRoleColor(user?.role)}`}
+                >
+                  {t(user?.role || "staff")}
                 </span>
               </div>
               <div className="p-2">

@@ -4,18 +4,50 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, ShoppingCart, Package, Users, AlertTriangle, Calendar, Plus } from "lucide-react";
+import {
+  TrendingUp,
+  ShoppingCart,
+  Package,
+  Users,
+  AlertTriangle,
+  Calendar,
+  Plus,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import AdminUserManagement from "@/components/admin-user-management";
 import { isUnauthorizedError } from "@/lib/authUtils";
-
-
 
 interface ProductionItem {
   id: number;
@@ -29,8 +61,11 @@ export default function EnhancedDashboard() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isProductionDialogOpen, setIsProductionDialogOpen] = useState(false);
-  const [editingProduction, setEditingProduction] = useState<ProductionItem | null>(null);
-  const [productionSchedule, setProductionSchedule] = useState<ProductionItem[]>([]);
+  const [editingProduction, setEditingProduction] =
+    useState<ProductionItem | null>(null);
+  const [productionSchedule, setProductionSchedule] = useState<
+    ProductionItem[]
+  >([]);
 
   const { data: stats = {} } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -86,9 +121,14 @@ export default function EnhancedDashboard() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's what's happening today.</p>
+          <p className="text-muted-foreground">
+            Welcome back! Here's what's happening today.
+          </p>
         </div>
-        <Button onClick={() => setIsProductionDialogOpen(true)} className="w-full sm:w-auto">
+        <Button
+          onClick={() => setIsProductionDialogOpen(true)}
+          className="w-full sm:w-auto"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Schedule Production
         </Button>
@@ -127,7 +167,10 @@ export default function EnhancedDashboard() {
             <div className="space-y-4">
               {recentOrders.length > 0 ? (
                 recentOrders.slice(0, 5).map((order: any) => (
-                  <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
                     <div>
                       <p className="font-medium">{order.customerName}</p>
                       <p className="text-sm text-muted-foreground">
@@ -135,18 +178,27 @@ export default function EnhancedDashboard() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">Rs. {parseFloat(order.totalAmount || 0).toFixed(2)}</p>
-                      <Badge variant={
-                        order.status === "completed" ? "default" :
-                        order.status === "in_progress" ? "secondary" : "outline"
-                      }>
+                      <p className="font-semibold">
+                        Rs. {parseFloat(order.totalAmount || 0).toFixed(2)}
+                      </p>
+                      <Badge
+                        variant={
+                          order.status === "completed"
+                            ? "default"
+                            : order.status === "in_progress"
+                              ? "secondary"
+                              : "outline"
+                        }
+                      >
                         {order.status}
                       </Badge>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-muted-foreground py-4">No recent orders</p>
+                <p className="text-center text-muted-foreground py-4">
+                  No recent orders
+                </p>
               )}
             </div>
           </CardContent>
@@ -165,7 +217,10 @@ export default function EnhancedDashboard() {
             <div className="space-y-4">
               {lowStockItems.length > 0 ? (
                 lowStockItems.slice(0, 5).map((item: any) => (
-                  <div key={item.id} className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg"
+                  >
                     <div>
                       <p className="font-medium text-orange-800">{item.name}</p>
                       <p className="text-sm text-orange-600">
@@ -176,7 +231,9 @@ export default function EnhancedDashboard() {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-muted-foreground py-4">All items well stocked</p>
+                <p className="text-center text-muted-foreground py-4">
+                  All items well stocked
+                </p>
               )}
             </div>
           </CardContent>
@@ -207,14 +264,23 @@ export default function EnhancedDashboard() {
                 {upcomingProduction.length > 0 ? (
                   upcomingProduction.slice(0, 5).map((item: any) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.productName}</TableCell>
+                      <TableCell className="font-medium">
+                        {item.productName}
+                      </TableCell>
                       <TableCell>{item.quantity}</TableCell>
-                      <TableCell>{new Date(item.scheduledDate).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        <Badge variant={
-                          item.status === "completed" ? "default" :
-                          item.status === "in_progress" ? "secondary" : "outline"
-                        }>
+                        {new Date(item.scheduledDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            item.status === "completed"
+                              ? "default"
+                              : item.status === "in_progress"
+                                ? "secondary"
+                                : "outline"
+                          }
+                        >
                           {item.status}
                         </Badge>
                       </TableCell>
@@ -222,7 +288,10 @@ export default function EnhancedDashboard() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                    <TableCell
+                      colSpan={4}
+                      className="text-center py-4 text-muted-foreground"
+                    >
                       No upcoming production scheduled
                     </TableCell>
                   </TableRow>
@@ -232,16 +301,6 @@ export default function EnhancedDashboard() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Admin Section */}
-      {user?.role === "admin" && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Admin Panel</h2>
-            <AdminUserManagement />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
