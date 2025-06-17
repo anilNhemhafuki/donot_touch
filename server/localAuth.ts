@@ -16,7 +16,7 @@ export function getSession() {
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET || "your-secret-key-here",
+    secret: process.env.SESSION_SECRET || "bakery-management-secret-key-2024",
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -75,8 +75,26 @@ export async function setupAuth(app: Express) {
   });
 
   // Login route
-  app.post('/api/login', passport.authenticate('local'), (req, res) => {
-    res.json({ success: true, user: req.user });
+  app.post('/api/login', (req, res, next) => {
+    console.log('Login attempt:', req.body);
+    passport.authenticate('local', (err, user, info) => {
+      if (err) {
+        console.error('Authentication error:', err);
+        return res.status(500).json({ message: 'Authentication error', error: err.message });
+      }
+      if (!user) {
+        console.log('Authentication failed:', info);
+        return res.status(401).json({ message: info?.message || 'Invalid credentials' });
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error('Login error:', err);
+          return res.status(500).json({ message: 'Login failed', error: err.message });
+        }
+        console.log('Login successful for user:', user.email);
+        res.json({ success: true, user: req.user });
+      });
+    })(req, res, next);
   });
 
   

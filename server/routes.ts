@@ -15,6 +15,9 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Ensure default admin user exists
+  await storage.ensureDefaultAdmin();
+  
   // Auth middleware
   await setupAuth(app);
 

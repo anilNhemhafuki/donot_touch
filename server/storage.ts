@@ -140,8 +140,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.email, email));
+      return user;
+    } catch (error) {
+      console.error('Error getting user by email:', error);
+      return undefined;
+    }
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -748,6 +753,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUser(id: string) {
     await db.delete(users).where(eq(users.id, id));
+  }
+
+  async ensureDefaultAdmin(): Promise<void> {
+    try {
+      const adminExists = await db
+        .select()
+        .from(users)
+        .where(eq(users.role, 'admin'))
+        .limit(1);
+
+      if (adminExists.length === 0) {
+        const bcrypt = require('bcrypt');
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+
+        await this.upsertUser({
+          id: 'admin_default',
+          email: 'admin@sweetreats.com',
+          password: hashedPassword,
+          firstName: 'Admin',
+          lastName: 'User',
+          role: 'admin'
+        });
+
+        console.log('Default admin user created: admin@sweetreats.com / admin123');
+      }
+    } catch (error) {
+      console.error('Error ensuring default admin:', error);
+    }
   }
 }
 
