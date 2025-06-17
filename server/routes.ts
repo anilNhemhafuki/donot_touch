@@ -21,6 +21,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Database test endpoint (remove in production)
+  app.get('/api/test/db', async (req, res) => {
+    try {
+      console.log('🔍 Testing database connection...');
+      
+      // Test database connection
+      const testUsers = await storage.getAllUsers();
+      console.log('✅ Database connected. Found', testUsers.length, 'users');
+      
+      // Ensure default users exist
+      await storage.ensureDefaultAdmin();
+      
+      res.json({
+        success: true,
+        message: 'Database is working',
+        userCount: testUsers.length,
+        users: testUsers.map(u => ({ id: u.id, email: u.email, role: u.role }))
+      });
+    } catch (error) {
+      console.error('❌ Database test failed:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Database test failed',
+        error: error.message
+      });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {

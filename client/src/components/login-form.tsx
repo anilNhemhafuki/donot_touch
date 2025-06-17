@@ -54,6 +54,14 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
             <CardDescription>Enter your credentials to access the system</CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md mb-4 text-sm">
+              <p className="font-medium text-blue-900 dark:text-blue-100 mb-2">Default Credentials:</p>
+              <div className="space-y-1 text-blue-800 dark:text-blue-200">
+                <p><strong>Admin:</strong> admin@sweetreats.com / admin123</p>
+                <p><strong>Manager:</strong> manager@sweetreats.com / manager123</p>
+                <p><strong>Staff:</strong> staff@sweetreats.com / staff123</p>
+              </div>
+            </div>
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <Label htmlFor="email">Email</Label>

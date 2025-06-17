@@ -22,8 +22,9 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // Set to true in production with HTTPS
+      secure: process.env.NODE_ENV === 'production', // Secure in production
       maxAge: sessionTtl,
+      sameSite: 'lax'
     },
   });
 }
@@ -39,18 +40,31 @@ export async function setupAuth(app: Express) {
     passwordField: 'password'
   }, async (email, password, done) => {
     try {
+      console.log('🔍 Attempting login for email:', email);
+      
       const user = await storage.getUserByEmail(email);
       if (!user) {
-        return done(null, false, { message: 'Invalid credentials' });
+        console.log('❌ User not found:', email);
+        return done(null, false, { message: 'Invalid email or password' });
       }
 
-      const isValidPassword = await bcrypt.compare(password, user.password || '');
+      console.log('✅ User found:', user.email, 'Role:', user.role);
+
+      if (!user.password) {
+        console.log('❌ User has no password set:', email);
+        return done(null, false, { message: 'Account not properly configured' });
+      }
+
+      const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
-        return done(null, false, { message: 'Invalid credentials' });
+        console.log('❌ Invalid password for user:', email);
+        return done(null, false, { message: 'Invalid email or password' });
       }
 
+      console.log('✅ Login successful for user:', user.email);
       return done(null, user);
     } catch (error) {
+      console.error('❌ Authentication error:', error);
       return done(error);
     }
   }));

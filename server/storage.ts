@@ -755,31 +755,80 @@ export class DatabaseStorage implements IStorage {
     await db.delete(users).where(eq(users.id, id));
   }
 
+  async getAllUsers(): Promise<User[]> {
+    try {
+      const allUsers = await db.select().from(users);
+      return allUsers;
+    } catch (error) {
+      console.error('Error getting all users:', error);
+      return [];
+    }
+  }
+
+  async updateUser(id: string, userData: Partial<UpsertUser>): Promise<User> {
+    const [updated] = await db
+      .update(users)
+      .set({ ...userData, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  }
+
   async ensureDefaultAdmin(): Promise<void> {
     try {
-      const adminExists = await db
-        .select()
-        .from(users)
-        .where(eq(users.role, 'admin'))
-        .limit(1);
-
-      if (adminExists.length === 0) {
-        const bcrypt = require('bcrypt');
-        const hashedPassword = await bcrypt.hash('admin123', 10);
-
-        await this.upsertUser({
+      console.log('🔄 Ensuring default users exist...');
+      const bcrypt = require('bcrypt');
+      
+      const defaultUsers = [
+        {
           id: 'admin_default',
           email: 'admin@sweetreats.com',
-          password: hashedPassword,
+          password: await bcrypt.hash('admin123', 10),
           firstName: 'Admin',
           lastName: 'User',
           role: 'admin'
-        });
+        },
+        {
+          id: 'manager_default',
+          email: 'manager@sweetreats.com',
+          password: await bcrypt.hash('manager123', 10),
+          firstName: 'Manager',
+          lastName: 'User',
+          role: 'manager'
+        },
+        {
+          id: 'staff_default',
+          email: 'staff@sweetreats.com',
+          password: await bcrypt.hash('staff123', 10),
+          firstName: 'Staff',
+          lastName: 'User',
+          role: 'staff'
+        }
+      ];
 
-        console.log('Default admin user created: admin@sweetreats.com / admin123');
+      for (const user of defaultUsers) {
+        try {
+          const existingUser = await this.getUserByEmail(user.email);
+          if (!existingUser) {
+            await db.insert(users).values(user);
+            console.log(`✅ Created ${user.role} user: ${user.email}`);
+          } else {
+            console.log(`✅ ${user.role} user already exists: ${user.email}`);
+          }
+        } catch (error) {
+          console.log(`⚠️  Could not create ${user.role} user:`, error.message);
+        }
       }
+
+      console.log('\n🔑 Default Login Credentials:');
+      console.log('┌─────────────────────────────────────────┐');
+      console.log('│ Admin:   admin@sweetreats.com / admin123   │');
+      console.log('│ Manager: manager@sweetreats.com / manager123 │');
+      console.log('│ Staff:   staff@sweetreats.com / staff123   │');
+      console.log('└─────────────────────────────────────────┘\n');
+
     } catch (error) {
-      console.error('Error ensuring default admin:', error);
+      console.error('❌ Error ensuring default users:', error);
     }
   }
 }
