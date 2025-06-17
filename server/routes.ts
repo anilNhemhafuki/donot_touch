@@ -16,20 +16,7 @@ import {
 import authRoutes from "./authRoutes"; // Import the new auth routes
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  try {
-    console.log('🔧 Setting up routes...');
-    
-    // Ensure default admin user exists
-    await storage.ensureDefaultAdmin();
-    
-    // Auth middleware
-    await setupAuth(app);
-    
-    console.log('✅ Routes configured successfully');
-  } catch (error) {
-    console.error('❌ Route setup failed:', error);
-    throw error;
-  }
+  console.log('🔧 Setting up routes...');
 
   // Database test endpoint (remove in production)
   app.get('/api/test/db', async (req, res) => {
