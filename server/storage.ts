@@ -133,6 +133,15 @@ export interface IStorage {
   updateExpense(id: number, expense: Partial<InsertExpense>): Promise<Expense>;
   deleteExpense(id: number): Promise<void>;
 
+  // Bills operations
+  getBills(): Promise<any[]>;
+  createBill(bill: any): Promise<any>;
+  deleteBill(id: number): Promise<void>;
+
+  // Settings operations
+  getSettings(): Promise<any>;
+  updateSettings(settings: any): Promise<any>;
+
   // User management methods
   getAllUsers(): Promise<any[]>;
   updateUser(id: string, data: any): Promise<any>;
@@ -140,7 +149,12 @@ export interface IStorage {
 }
 
 export class Storage {
-  async getUserByEmail(email: string) {
+  async getUser(id: string): Promise<User | undefined> {
+    const user = await this.getUserById(id);
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
     try {
       const result = await db
         .select()
@@ -148,7 +162,7 @@ export class Storage {
         .where(eq(users.email, email))
         .limit(1);
 
-      return result[0] || null;
+      return result[0] || undefined;
     } catch (error) {
       console.error("Error getting user by email:", error);
       return null;
@@ -780,6 +794,56 @@ export class Storage {
 
   async deleteUser(id: string): Promise<void> {
     await db.delete(users).where(eq(users.id, id));
+  }
+
+  // Bills operations
+  async getBills(): Promise<any[]> {
+    try {
+      return await db.select().from(bills).orderBy(desc(bills.createdAt));
+    } catch (error) {
+      console.error('Error getting bills:', error);
+      return [];
+    }
+  }
+
+  async createBill(bill: any): Promise<any> {
+    const [created] = await db.insert(bills).values(bill).returning();
+    return created;
+  }
+
+  async deleteBill(id: number): Promise<void> {
+    await db.delete(bills).where(eq(bills.id, id));
+  }
+
+  // Settings operations
+  async getSettings(): Promise<any> {
+    try {
+      const result = await db.select().from(settings).limit(1);
+      return result[0] || {};
+    } catch (error) {
+      console.error('Error getting settings:', error);
+      return {};
+    }
+  }
+
+  async updateSettings(settingsData: any): Promise<any> {
+    try {
+      const existing = await this.getSettings();
+      if (existing.id) {
+        const [updated] = await db
+          .update(settings)
+          .set({ ...settingsData, updatedAt: new Date() })
+          .where(eq(settings.id, existing.id))
+          .returning();
+        return updated;
+      } else {
+        const [created] = await db.insert(settings).values(settingsData).returning();
+        return created;
+      }
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      throw error;
+    }
   }
 
   async ensureDefaultAdmin(): Promise<void> {

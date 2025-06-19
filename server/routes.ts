@@ -13,7 +13,7 @@ import {
   insertAssetSchema,
   insertExpenseSchema,
 } from "@shared/schema";
-import authRoutes from "./authRoutes"; // Import the new auth routes
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log('🔧 Setting up routes...');
@@ -46,8 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Use the new authentication routes
-  app.use('/api/auth', authRoutes);
+
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
