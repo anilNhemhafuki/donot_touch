@@ -13,7 +13,7 @@
   --card-foreground: hsl(20, 14.3%, 4.1%);
   --border: hsl(40, 10%, 90%);
   --input: hsl(40, 10%, 90%);
-  --primary: hsl(220, 70%, 50%);
+  --primary: hsl(201, 30%, 45%);
   --primary-foreground: hsl(0, 0%, 100%);
   --secondary: hsl(210, 40%, 95%);
   --secondary-foreground: hsl(222.2, 84%, 4.9%);
@@ -23,7 +23,7 @@
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
   --ring: hsl(30, 40%, 65%);
   --radius: 0.5rem;
-  
+
   /* Bakery theme colors */
   --bakery-brown: hsl(25, 45%, 27%);
   --bakery-tan: hsl(30, 44%, 65%);

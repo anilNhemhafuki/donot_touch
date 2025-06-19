@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Bell, BellOff, TestTube } from 'lucide-react';
+import ThemeSettings from './theme-settings';
 
 export default function NotificationSettings() {
   const { toast } = useToast();
@@ -263,6 +264,9 @@ export default function NotificationSettings() {
           ))}
         </CardContent>
       </Card>
+
+      {/* Theme Settings */}
+      <ThemeSettings />
     </div>
   );
 }

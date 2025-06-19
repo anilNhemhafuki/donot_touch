@@ -141,6 +141,8 @@ export interface IStorage {
   // Settings operations
   getSettings(): Promise<any>;
   updateSettings(settings: any): Promise<any>;
+  updateOrCreateSetting(key: string, value: string): Promise<any>;
+  getProductionScheduleByDate(date: string): Promise<any[]>;
 
   // User management methods
   getAllUsers(): Promise<any[]>;
@@ -843,6 +845,68 @@ export class Storage {
     } catch (error) {
       console.error('Error updating settings:', error);
       throw error;
+    }
+  }
+
+  async updateOrCreateSetting(key: string, value: string): Promise<any> {
+    try {
+      const existing = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
+      
+      if (existing.length > 0) {
+        const [updated] = await db
+          .update(settings)
+          .set({ value, updatedAt: new Date() })
+          .where(eq(settings.key, key))
+          .returning();
+        return updated;
+      } else {
+        const [created] = await db.insert(settings).values({
+          key,
+          value,
+          type: 'string'
+        }).returning();
+        return created;
+      }
+    } catch (error) {
+      console.error('Error updating/creating setting:', error);
+      throw error;
+    }
+  }
+
+  async getProductionScheduleByDate(date: string): Promise<any[]> {
+    try {
+      const scheduleDate = new Date(date);
+      const nextDay = new Date(scheduleDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      const result = await db
+        .select({
+          id: productionSchedule.id,
+          productId: productionSchedule.productId,
+          productName: products.name,
+          scheduledDate: productionSchedule.scheduledDate,
+          targetAmount: productionSchedule.targetAmount,
+          unit: productionSchedule.unit,
+          targetPackets: productionSchedule.targetPackets,
+          priority: productionSchedule.priority,
+          status: productionSchedule.status,
+          notes: productionSchedule.notes,
+          assignedTo: productionSchedule.assignedTo,
+        })
+        .from(productionSchedule)
+        .leftJoin(products, eq(productionSchedule.productId, products.id))
+        .where(
+          and(
+            gte(productionSchedule.scheduledDate, scheduleDate),
+            lte(productionSchedule.scheduledDate, nextDay)
+          )
+        )
+        .orderBy(asc(productionSchedule.scheduledDate));
+
+      return result;
+    } catch (error) {
+      console.error('Error getting production schedule by date:', error);
+      return [];
     }
   }
 

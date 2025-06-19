@@ -96,6 +96,10 @@ export const orders = pgTable("orders", {
   customerName: varchar("customer_name", { length: 200 }).notNull(),
   customerEmail: varchar("customer_email", { length: 200 }),
   customerPhone: varchar("customer_phone", { length: 50 }),
+  deliveryDate: timestamp("delivery_date"),
+  deliveryAddress: text("delivery_address"),
+  specialInstructions: text("special_instructions"),
+  orderType: varchar("order_type", { length: 50 }).default("walk_in"), // walk_in, online, phone
   status: varchar("status", { length: 50 }).default("pending").notNull(), // pending, in_progress, completed, cancelled
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   orderDate: timestamp("order_date").defaultNow(),
@@ -123,9 +127,13 @@ export const productionSchedule = pgTable("production_schedule", {
   productId: integer("product_id").references(() => products.id).notNull(),
   quantity: integer("quantity").notNull(),
   scheduledDate: timestamp("scheduled_date").notNull(),
+  targetAmount: decimal("target_amount", { precision: 10, scale: 2 }),
+  unit: varchar("unit", { length: 20 }).default("packets"), // kg, packets
+  targetPackets: integer("target_packets"),
+  priority: varchar("priority", { length: 20 }).default("medium"), // low, medium, high
   startTime: timestamp("start_time"),
   endTime: timestamp("end_time"),
-  status: varchar("status", { length: 50 }).default("scheduled").notNull(), // scheduled, in_progress, completed, cancelled
+  status: varchar("status", { length: 50 }).default("pending").notNull(), // pending, in_progress, completed, cancelled, delayed
   assignedTo: varchar("assigned_to").references(() => users.id),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),

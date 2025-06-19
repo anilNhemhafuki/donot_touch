@@ -1148,6 +1148,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public order form endpoint (no authentication required)
+  app.post('/api/public/orders', async (req, res) => {
+    try {
+      const { customerName, customerEmail, customerPhone, deliveryDate, deliveryAddress, specialInstructions, items } = req.body;
+      
+      // Generate order number
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+      
+      // Calculate total amount
+      const totalAmount = items.reduce((sum: number, item: any) => sum + item.totalPrice, 0);
+      
+      // Create order
+      const order = await storage.createOrder({
+        orderNumber,
+        customerName,
+        customerEmail,
+        customerPhone,
+        deliveryDate: new Date(deliveryDate),
+        deliveryAddress,
+        specialInstructions,
+        totalAmount: totalAmount.toString(),
+        status: 'pending',
+        orderType: 'online',
+        createdBy: 'public_order'
+      });
+
+      // Create order items
+      for (const item of items) {
+        await storage.createOrderItem({
+          orderId: order.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice.toString(),
+          totalPrice: item.totalPrice.toString(),
+        });
+      }
+
+      // TODO: Send notification to admin about new order
+      console.log('📦 New public order received:', orderNumber);
+
+      res.json({ 
+        success: true, 
+        orderNumber,
+        message: 'Order submitted successfully! We will contact you soon.' 
+      });
+    } catch (error) {
+      console.error('Error creating public order:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to submit order. Please try again.' 
+      });
+    }
+  });
+
+  // Enhanced production schedule endpoints
+  app.get('/api/production-schedule/:date', isAuthenticated, async (req, res) => {
+    try {
+      const { date } = req.params;
+      const scheduleItems = await storage.getProductionScheduleByDate(date);
+      res.json(scheduleItems);
+    } catch (error) {
+      console.error('Error fetching production schedule:', error);
+      res.status(500).json({ message: 'Failed to fetch production schedule' });
+    }
+  });
+
+  app.post('/api/production-schedule', isAuthenticated, async (req, res) => {
+    try {
+      const { productId, scheduledDate, targetAmount, unit, priority, notes, targetPackets } = req.body;
+      
+      const scheduleItem = await storage.createProductionScheduleItem({
+        productId,
+        scheduledDate: new Date(scheduledDate),
+        targetAmount: targetAmount.toString(),
+        unit,
+        targetPackets,
+        priority,
+        notes,
+        status: 'pending',
+        assignedTo: (req as any).user?.id
+      });
+
+      res.json(scheduleItem);
+    } catch (error) {
+      console.error('Error creating production schedule:', error);
+      res.status(500).json({ message: 'Failed to create production schedule' });
+    }
+  });
+
+  app.put('/api/production-schedule/:id', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      
+      if (updateData.scheduledDate) {
+        updateData.scheduledDate = new Date(updateData.scheduledDate);
+      }
+      if (updateData.targetAmount) {
+        updateData.targetAmount = updateData.targetAmount.toString();
+      }
+
+      const updatedItem = await storage.updateProductionScheduleItem(parseInt(id), updateData);
+      res.json(updatedItem);
+    } catch (error) {
+      console.error('Error updating production schedule:', error);
+      res.status(500).json({ message: 'Failed to update production schedule' });
+    }
+  });
+
+  // Theme settings endpoint
+  app.put('/api/settings', isAuthenticated, async (req, res) => {
+    try {
+      const { themeColor } = req.body;
+      
+      if (themeColor) {
+        await storage.updateOrCreateSetting('themeColor', themeColor);
+      }
+
+      const updatedSettings = await storage.getSettings();
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      res.status(500).json({ message: 'Failed to update settings' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
