@@ -28,6 +28,7 @@ import NotificationSettings from "@/components/notification-settings";
 import CategoryManagement from "@/pages/category-management";
 import Sales from "@/pages/sales";
 import Purchases from "@/pages/purchases";
+import PublicOrderForm from "@/components/public-order-form";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -41,16 +42,26 @@ function Router() {
     );
   }
 
-  if (!user) {
-    return (
-      <LoginForm
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-        }}
-      />
-    );
-  }
+  // Public routes (no authentication required)
+  return (
+    <Switch>
+      <Route path="/order" component={PublicOrderForm} />
+      <Route path="*">
+        {!user ? (
+          <LoginForm
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+            }}
+          />
+        ) : (
+          <AuthenticatedApp sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        )}
+      </Route>
+    </Switch>
+  );
+}
 
+function AuthenticatedApp({ sidebarOpen, setSidebarOpen }: { sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }) {
   return (
     <div className="min-h-screen flex bg-background">
       <Sidebar

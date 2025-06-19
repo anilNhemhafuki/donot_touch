@@ -10,9 +10,64 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings2, Building, Bell, Shield, Palette, Database } from "lucide-react";
+import { Settings2, Building, Bell, Shield, Palette, Database, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+
+const THEME_COLORS = [
+  { name: "Blue Steel", value: "#507e96", description: "Professional blue-gray" },
+  { name: "Golden Yellow", value: "#ffca44", description: "Warm sunshine yellow" },
+  { name: "Forest Green", value: "#0f6863", description: "Rich forest green" },
+  { name: "Cherry Red", value: "#e40126", description: "Bold cherry red" },
+  { name: "Warm Bronze", value: "#c1853b", description: "Elegant bronze tone" },
+  { name: "Coffee Brown", value: "#7B4019", description: "Rich coffee brown" },
+  { name: "Orange Sunset", value: "#FF7D29", description: "Vibrant sunset orange" }
+];
+
+function ThemeColorSelector({ settings, onUpdate }: { settings: any; onUpdate: (data: any) => void }) {
+  const currentTheme = settings?.themeColor || "#507e96";
+
+  const handleColorSelect = (color: string) => {
+    onUpdate({ themeColor: color });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {THEME_COLORS.map((color) => (
+          <div
+            key={color.value}
+            className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
+              currentTheme === color.value
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/50'
+            }`}
+            onClick={() => handleColorSelect(color.value)}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                style={{ backgroundColor: color.value }}
+              />
+              <div className="flex-1">
+                <h4 className="font-medium text-sm">{color.name}</h4>
+                <p className="text-xs text-muted-foreground">{color.description}</p>
+              </div>
+            </div>
+            {currentTheme === color.value && (
+              <Check className="absolute top-2 right-2 h-4 w-4 text-primary" />
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="pt-4 border-t">
+        <p className="text-sm text-muted-foreground">
+          Current theme color will be applied to buttons, links, and accent elements throughout the application.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function Settings() {
   const { user } = useAuth();
@@ -92,8 +147,9 @@ export default function Settings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="theme">Theme</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="backup">Backup</TabsTrigger>
@@ -189,6 +245,60 @@ export default function Settings() {
                   Save General Settings
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="theme">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="h-5 w-5" />
+                Theme Colors
+              </CardTitle>
+              <CardDescription>
+                Choose a theme color for your bakery management system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ThemeColorSelector settings={settings} onUpdate={updateSettingsMutation.mutate} />
+            </CardContent>
+          </Card>
+          
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                Public Order Form
+              </CardTitle>
+              <CardDescription>
+                Allow customers to place orders without logging in
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <h4 className="font-medium text-sm mb-2">Public Order Form URL</h4>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 p-2 bg-background rounded border text-sm">
+                      {window.location.origin}/order
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/order`);
+                        toast({ title: "Copied", description: "URL copied to clipboard" });
+                      }}
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Share this URL with customers to allow them to place orders directly
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
