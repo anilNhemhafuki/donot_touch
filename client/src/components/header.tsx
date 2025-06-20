@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Menu, Globe, LogOut, User, Settings, Calendar } from "lucide-react";
+import { Menu, Globe, LogOut, User, Settings, Calendar, Bell } from "lucide-react";
 import { Link } from "wouter";
 import ProfileEditor from "./profile-editor";
 
@@ -146,14 +146,87 @@ export default function Header({ onMenuClick }: HeaderProps) {
           </DropdownMenu>
 
           {/* Notifications */}
-          <div className="relative hidden lg:block">
-            <Button variant="ghost" size="sm" className="relative p-2">
-              <i className="fas fa-bell text-lg"></i>
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                3
-              </span>
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="relative p-2">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                  3
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <div className="p-4 border-b">
+                <h3 className="font-semibold">Notifications</h3>
+              </div>
+              <div className="max-h-96 overflow-y-auto">
+                <DropdownMenuItem className="p-4 flex flex-col items-start">
+                  <div className="flex items-center w-full">
+                    <div className="h-2 w-2 bg-red-500 rounded-full mr-2"></div>
+                    <span className="font-medium">Low Stock Alert</span>
+                    <span className="text-xs text-muted-foreground ml-auto">2 min ago</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">Flour inventory is running low (5kg remaining)</p>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="p-4 flex flex-col items-start">
+                  <div className="flex items-center w-full">
+                    <div className="h-2 w-2 bg-blue-500 rounded-full mr-2"></div>
+                    <span className="font-medium">New Order</span>
+                    <span className="text-xs text-muted-foreground ml-auto">1 hour ago</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">Order #1234 received from John Doe</p>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="p-4 flex flex-col items-start">
+                  <div className="flex items-center w-full">
+                    <div className="h-2 w-2 bg-green-500 rounded-full mr-2"></div>
+                    <span className="font-medium">Production Complete</span>
+                    <span className="text-xs text-muted-foreground ml-auto">3 hours ago</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">Chocolate cake batch completed successfully</p>
+                </DropdownMenuItem>
+              </div>
+              <div className="p-2 border-t">
+                <Button variant="ghost" className="w-full text-sm">
+                  View All Notifications
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Mobile Notifications */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="relative p-2 lg:hidden">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                  3
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <div className="p-4 border-b">
+                <h3 className="font-semibold">Notifications</h3>
+              </div>
+              <div className="max-h-96 overflow-y-auto">
+                <DropdownMenuItem className="p-4 flex flex-col items-start">
+                  <div className="flex items-center w-full">
+                    <div className="h-2 w-2 bg-red-500 rounded-full mr-2"></div>
+                    <span className="font-medium">Low Stock Alert</span>
+                    <span className="text-xs text-muted-foreground ml-auto">2 min ago</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">Flour inventory is running low</p>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="p-4 flex flex-col items-start">
+                  <div className="flex items-center w-full">
+                    <div className="h-2 w-2 bg-blue-500 rounded-full mr-2"></div>
+                    <span className="font-medium">New Order</span>
+                    <span className="text-xs text-muted-foreground ml-auto">1 hour ago</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">Order #1234 received</p>
+                </DropdownMenuItem>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* User Profile */}
 

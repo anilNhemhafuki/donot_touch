@@ -151,7 +151,12 @@ export default function PublicOrderForm() {
     }
 
     const orderData = {
-      ...data,
+      customerName: data.customerName,
+      customerEmail: data.customerEmail,
+      customerPhone: data.customerPhone,
+      deliveryDate: data.deliveryDate,
+      deliveryAddress: data.deliveryAddress,
+      specialInstructions: data.specialInstructions || '',
       items: orderItems.map(item => ({
         productId: item.productId,
         quantity: item.quantity,

@@ -13,8 +13,11 @@
   --card-foreground: hsl(20, 14.3%, 4.1%);
   --border: hsl(40, 10%, 90%);
   --input: hsl(40, 10%, 90%);
-  --primary: hsl(201, 30%, 45%);
+  --primary: var(--theme-color, hsl(201, 30%, 45%));
   --primary-foreground: hsl(0, 0%, 100%);
+  
+  /* Dynamic theme color - will be updated by JavaScript */
+  --theme-color: hsl(201, 30%, 45%);
   --secondary: hsl(210, 40%, 95%);
   --secondary-foreground: hsl(222.2, 84%, 4.9%);
   --accent: hsl(210, 40%, 95%);

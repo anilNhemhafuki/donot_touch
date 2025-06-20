@@ -35,12 +35,10 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
   const navigationSections = [
     {
       id: "core",
-      title: "Core Operations",
       items: [
         { name: "Dashboard", href: "/", icon: "fas fa-chart-pie" },
         { name: "Products", href: "/products", icon: "fas fa-cookie-bite" },
         { name: "Inventory", href: "/inventory", icon: "fas fa-boxes" },
-        { name: "Orders", href: "/orders", icon: "fas fa-shopping-cart" },
         { name: "Production", href: "/production", icon: "fas fa-industry" },
       ],
     },
@@ -48,6 +46,7 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
       id: "transactions",
       title: "Transactions",
       items: [
+        { name: "Orders", href: "/orders", icon: "fas fa-shopping-cart" },
         { name: "Sales", href: "/sales", icon: "fas fa-cash-register" },
         { name: "Purchases", href: "/purchases", icon: "fas fa-shopping-bag" },
       ],
@@ -76,7 +75,6 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
     },
     {
       id: "settings",
-      title: "Settings",
       items: [
         { name: "Settings", href: "/settings", icon: "fas fa-cog" },
         { name: "Notifications", href: "/notifications", icon: "fas fa-bell" },
@@ -137,42 +135,70 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
         {/* Scrollable Navigation */}
         <div className="h-full flex-1 overflow-y-auto px-6 pb-6">
           <nav className="space-y-1">
-            {navigationSections.map((section) => (
-              <div key={section.id} className="mb-4">
-                <Collapsible
-                  open={openSections.includes(section.id)}
-                  onOpenChange={() => toggleSection(section.id)}
-                >
-                  <CollapsibleTrigger className="flex items-center justify-between w-full px-2 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md">
-                    <span>{section.title}</span>
-                    {openSections.includes(section.id) ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-1 space-y-1">
-                    {section.items.map((item) => {
-                      const active = isActive(item.href);
-                      return (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          className={`flex items-center space-x-3 px-4 py-2 ml-2 rounded-lg transition-colors text-sm ${
-                            active
-                              ? "bg-primary text-white"
-                              : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-                          }`}
-                        >
-                          <i className={item.icon}></i>
-                          <span className="font-medium">{item.name}</span>
-                        </Link>
-                      );
-                    })}
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
-            ))}
+            {/* Render top-level items directly without Collapsible */}
+            {navigationSections
+              .filter(
+                (section) => section.id === "core", // Add other top-level sections here if needed
+              )
+              .flatMap((section) =>
+                section.items.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors text-sm ${
+                        active
+                          ? "bg-primary text-white"
+                          : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                      }`}
+                    >
+                      <i className={item.icon}></i>
+                      <span className="font-medium">{item.name}</span>
+                    </Link>
+                  );
+                }),
+              )}
+
+            {/* Render remaining grouped sections inside Collapsible */}
+            {navigationSections
+              .filter((section) => section.id !== "core")
+              .map((section) => (
+                <div key={section.id} className="mb-4">
+                  <Collapsible
+                    open={openSections.includes(section.id)}
+                    onOpenChange={() => toggleSection(section.id)}
+                  >
+                    <CollapsibleTrigger className="flex items-center justify-between w-full px-2 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md">
+                      <span>{section.title}</span>
+                      {openSections.includes(section.id) ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-1 space-y-1">
+                      {section.items.map((item) => {
+                        const active = isActive(item.href);
+                        return (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            className={`flex items-center space-x-3 px-4 py-2 ml-2 rounded-lg transition-colors text-sm ${
+                              active
+                                ? "bg-primary text-white"
+                                : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                            }`}
+                          >
+                            <i className={item.icon}></i>
+                            <span className="font-medium">{item.name}</span>
+                          </Link>
+                        );
+                      })}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              ))}
 
             {/* Admin-only section */}
             {(user?.role === "admin" ||

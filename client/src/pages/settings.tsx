@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Settings2, Building, Bell, Shield, Palette, Database, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+
+// Function to convert hex to HSL
+function hexToHsl(hex: string) {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h, s, l = (max + min) / 2;
+
+  if (max === min) {
+    h = s = 0;
+  } else {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+      default: h = 0;
+    }
+    h /= 6;
+  }
+
+  return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
+}
+
+// Function to apply theme color
+function applyThemeColor(color: string) {
+  const hslColor = hexToHsl(color);
+  document.documentElement.style.setProperty('--theme-color', hslColor);
+}
 
 const THEME_COLORS = [
   { name: "Blue Steel", value: "#507e96", description: "Professional blue-gray" },
@@ -30,8 +63,17 @@ function ThemeColorSelector({ settings, onUpdate }: { settings: any; onUpdate: (
 
   const handleColorSelect = (color: string) => {
     setSelectedColor(color);
+    applyThemeColor(color);
     onUpdate({ themeColor: color });
   };
+
+  // Apply theme color on component mount if settings exist
+  React.useEffect(() => {
+    if (settings?.themeColor) {
+      applyThemeColor(settings.themeColor);
+      setSelectedColor(settings.themeColor);
+    }
+  }, [settings?.themeColor]);
 
   return (
     <div className="space-y-4">
