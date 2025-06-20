@@ -26,8 +26,10 @@ const THEME_COLORS = [
 
 function ThemeColorSelector({ settings, onUpdate }: { settings: any; onUpdate: (data: any) => void }) {
   const currentTheme = settings?.themeColor || "#507e96";
+  const [selectedColor, setSelectedColor] = useState(currentTheme);
 
   const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
     onUpdate({ themeColor: color });
   };
 
@@ -38,7 +40,7 @@ function ThemeColorSelector({ settings, onUpdate }: { settings: any; onUpdate: (
           <div
             key={color.value}
             className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
-              currentTheme === color.value
+              selectedColor === color.value
                 ? 'border-primary bg-primary/5'
                 : 'border-border hover:border-primary/50'
             }`}
@@ -54,7 +56,7 @@ function ThemeColorSelector({ settings, onUpdate }: { settings: any; onUpdate: (
                 <p className="text-xs text-muted-foreground">{color.description}</p>
               </div>
             </div>
-            {currentTheme === color.value && (
+            {selectedColor === color.value && (
               <Check className="absolute top-2 right-2 h-4 w-4 text-primary" />
             )}
           </div>
@@ -74,7 +76,7 @@ export default function Settings() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("general");
 
-  const { data: settings = {} } = useQuery({
+  const { data: settings = {}, isLoading: settingsLoading } = useQuery({
     queryKey: ["/api/settings"],
   });
 

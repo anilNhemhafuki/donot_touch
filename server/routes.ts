@@ -705,7 +705,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/settings", isAuthenticated, async (req, res) => {
     try {
+      console.log('Updating settings with data:', req.body);
+      
+      // Handle theme color specifically
+      if (req.body.themeColor) {
+        await storage.updateOrCreateSetting('themeColor', req.body.themeColor);
+      }
+      
+      // Handle other settings
       const settings = await storage.updateSettings(req.body);
+      console.log('Updated settings:', settings);
       res.json(settings);
     } catch (error) {
       console.error("Error updating settings:", error);
@@ -1257,22 +1266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Theme settings endpoint
-  app.put('/api/settings', isAuthenticated, async (req, res) => {
-    try {
-      const { themeColor } = req.body;
-      
-      if (themeColor) {
-        await storage.updateOrCreateSetting('themeColor', themeColor);
-      }
 
-      const updatedSettings = await storage.getSettings();
-      res.json(updatedSettings);
-    } catch (error) {
-      console.error('Error updating settings:', error);
-      res.status(500).json({ message: 'Failed to update settings' });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;

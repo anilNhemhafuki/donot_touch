@@ -820,8 +820,29 @@ export class Storage {
   // Settings operations
   async getSettings(): Promise<any> {
     try {
-      const result = await db.select().from(settings).limit(1);
-      return result[0] || {};
+      const result = await db.select().from(settings);
+      const settingsObj: any = {};
+      
+      result.forEach(setting => {
+        let value: any = setting.value;
+        
+        // Parse based on type
+        if (setting.type === 'boolean') {
+          value = value === 'true';
+        } else if (setting.type === 'number') {
+          value = parseFloat(value || '0');
+        } else if (setting.type === 'json') {
+          try {
+            value = JSON.parse(value || '{}');
+          } catch {
+            value = {};
+          }
+        }
+        
+        settingsObj[setting.key] = value;
+      });
+      
+      return settingsObj;
     } catch (error) {
       console.error('Error getting settings:', error);
       return {};
@@ -830,18 +851,16 @@ export class Storage {
 
   async updateSettings(settingsData: any): Promise<any> {
     try {
-      const existing = await this.getSettings();
-      if (existing.id) {
-        const [updated] = await db
-          .update(settings)
-          .set({ ...settingsData, updatedAt: new Date() })
-          .where(eq(settings.id, existing.id))
-          .returning();
-        return updated;
-      } else {
-        const [created] = await db.insert(settings).values(settingsData).returning();
-        return created;
+      const updatedSettings: any = {};
+      
+      for (const [key, value] of Object.entries(settingsData)) {
+        if (value !== undefined && value !== null) {
+          await this.updateOrCreateSetting(key, String(value));
+          updatedSettings[key] = value;
+        }
       }
+      
+      return await this.getSettings();
     } catch (error) {
       console.error('Error updating settings:', error);
       throw error;
