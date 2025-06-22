@@ -3,24 +3,11 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertOrderSchema } from "@shared/schema";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -34,15 +21,11 @@ const orderFormSchema = z.object({
   totalAmount: z.string().min(1, "Total amount is required"),
   dueDate: z.string().optional(),
   notes: z.string().optional(),
-  items: z
-    .array(
-      z.object({
-        productId: z.string().min(1, "Product is required"),
-        quantity: z.string().min(1, "Quantity is required"),
-        unitPrice: z.string().min(1, "Unit price is required"),
-      }),
-    )
-    .min(1, "At least one item is required"),
+  items: z.array(z.object({
+    productId: z.string().min(1, "Product is required"),
+    quantity: z.string().min(1, "Quantity is required"),
+    unitPrice: z.string().min(1, "Unit price is required"),
+  })).min(1, "At least one item is required"),
 });
 
 interface OrderFormProps {
@@ -85,14 +68,8 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
 
       const transformedData = {
         customerName: data.customerName.trim(),
-        customerEmail:
-          data.customerEmail && data.customerEmail.trim()
-            ? data.customerEmail.trim()
-            : null,
-        customerPhone:
-          data.customerPhone && data.customerPhone.trim()
-            ? data.customerPhone.trim()
-            : null,
+        customerEmail: data.customerEmail && data.customerEmail.trim() ? data.customerEmail.trim() : null,
+        customerPhone: data.customerPhone && data.customerPhone.trim() ? data.customerPhone.trim() : null,
         totalAmount: data.totalAmount,
         dueDate: data.dueDate || null,
         notes: data.notes && data.notes.trim() ? data.notes.trim() : null,
@@ -109,9 +86,7 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
-      queryClient.invalidateQueries({
-        queryKey: ["/api/dashboard/recent-orders"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       form.reset();
       toast({
@@ -146,7 +121,7 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
     const total = items.reduce((sum, item) => {
       const quantity = parseFloat(item.quantity || "0");
       const unitPrice = parseFloat(item.unitPrice || "0");
-      return sum + quantity * unitPrice;
+      return sum + (quantity * unitPrice);
     }, 0);
 
     form.setValue("totalAmount", total.toFixed(2));
@@ -168,10 +143,7 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-        className="space-y-6"
-      >
+      <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
         {/* Customer Information */}
         <Card>
           <CardHeader>
@@ -200,11 +172,7 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="customer@example.com"
-                        {...field}
-                      />
+                      <Input type="email" placeholder="customer@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -233,13 +201,11 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Order Items</CardTitle>
-              <Button
-                type="button"
-                variant="outline"
+              <Button 
+                type="button" 
+                variant="outline" 
                 size="sm"
-                onClick={() =>
-                  append({ productId: "", quantity: "", unitPrice: "" })
-                }
+                onClick={() => append({ productId: "", quantity: "", unitPrice: "" })}
               >
                 Add Item
               </Button>
@@ -247,21 +213,18 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg"
-              >
+              <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg">
                 <FormField
                   control={form.control}
                   name={`items.${index}.productId`}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Product</FormLabel>
-                      <Select
+                      <Select 
                         onValueChange={(value) => {
                           field.onChange(value);
                           updateItemPrice(index, value);
-                        }}
+                        }} 
                         value={field.value}
                       >
                         <FormControl>
@@ -271,10 +234,7 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
                         </FormControl>
                         <SelectContent>
                           {products.map((product: any) => (
-                            <SelectItem
-                              key={product.id}
-                              value={product.id.toString()}
-                            >
+                            <SelectItem key={product.id} value={product.id.toString()}>
                               {product.name}
                             </SelectItem>
                           ))}
@@ -292,10 +252,10 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
                     <FormItem>
                       <FormLabel>Quantity</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="1"
-                          {...field}
+                        <Input 
+                          type="number" 
+                          placeholder="1" 
+                          {...field} 
                           onChange={(e) => {
                             field.onChange(e);
                             calculateTotal();
@@ -314,10 +274,10 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
                     <FormItem>
                       <FormLabel>Unit Price ($)</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="8.50"
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="8.50" 
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
@@ -363,10 +323,10 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
                   <FormItem>
                     <FormLabel>Total Amount ($)</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...field}
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        {...field} 
                         readOnly
                         className="bg-gray-50 font-semibold text-lg"
                       />
@@ -398,10 +358,7 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Special instructions or requests..."
-                      {...field}
-                    />
+                    <Textarea placeholder="Special instructions or requests..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
