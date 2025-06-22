@@ -1,10 +1,23 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { z } from "zod";
@@ -14,12 +27,22 @@ const costCalculatorSchema = z.object({
   productName: z.string().min(1, "Product name is required"),
   categoryId: z.string().optional(),
   laborCost: z.string().min(0, "Labor cost must be positive").default("0"),
-  overheadPercentage: z.string().min(0, "Overhead must be positive").default("15"),
-  profitMargin: z.string().min(0, "Profit margin must be positive").default("25"),
-  ingredients: z.array(z.object({
-    inventoryItemId: z.string().min(1, "Ingredient is required"),
-    quantity: z.string().min(1, "Quantity is required"),
-  })).min(1, "At least one ingredient is required"),
+  overheadPercentage: z
+    .string()
+    .min(0, "Overhead must be positive")
+    .default("15"),
+  profitMargin: z
+    .string()
+    .min(0, "Profit margin must be positive")
+    .default("25"),
+  ingredients: z
+    .array(
+      z.object({
+        inventoryItemId: z.string().min(1, "Ingredient is required"),
+        quantity: z.string().min(1, "Quantity is required"),
+      }),
+    )
+    .min(1, "At least one ingredient is required"),
 });
 
 interface CostCalculatorProps {
@@ -64,22 +87,27 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
   const calculateCosts = () => {
     const ingredients = form.getValues("ingredients");
     const laborCost = parseFloat(form.getValues("laborCost") || "0");
-    const overheadPercentage = parseFloat(form.getValues("overheadPercentage") || "0");
+    const overheadPercentage = parseFloat(
+      form.getValues("overheadPercentage") || "0",
+    );
     const profitMargin = parseFloat(form.getValues("profitMargin") || "0");
 
     // Calculate ingredient cost
     const ingredientCost = ingredients.reduce((total, ingredient) => {
-      const item = inventoryItems.find((inv: any) => inv.id.toString() === ingredient.inventoryItemId);
+      const item = inventoryItems.find(
+        (inv: any) => inv.id.toString() === ingredient.inventoryItemId,
+      );
       if (item && ingredient.quantity) {
         const quantity = parseFloat(ingredient.quantity);
         const costPerUnit = parseFloat(item.costPerUnit);
-        return total + (quantity * costPerUnit);
+        return total + quantity * costPerUnit;
       }
       return total;
     }, 0);
 
     // Calculate overhead cost
-    const overheadCost = (ingredientCost + laborCost) * (overheadPercentage / 100);
+    const overheadCost =
+      (ingredientCost + laborCost) * (overheadPercentage / 100);
 
     // Calculate total cost
     const totalCost = ingredientCost + laborCost + overheadCost;
@@ -88,7 +116,10 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
     const suggestedPrice = totalCost / (1 - profitMargin / 100);
 
     // Calculate actual margin
-    const margin = suggestedPrice > 0 ? ((suggestedPrice - totalCost) / suggestedPrice) * 100 : 0;
+    const margin =
+      suggestedPrice > 0
+        ? ((suggestedPrice - totalCost) / suggestedPrice) * 100
+        : 0;
 
     setCalculations({
       ingredientCost,
@@ -108,12 +139,12 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
       price: calculations.suggestedPrice,
       cost: calculations.totalCost,
       margin: calculations.margin,
-      ingredients: formData.ingredients.map(ing => ({
+      ingredients: formData.ingredients.map((ing) => ({
         inventoryItemId: parseInt(ing.inventoryItemId),
         quantity: parseFloat(ing.quantity),
       })),
     };
-    
+
     onSave?.(productData);
   };
 
@@ -135,7 +166,10 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                     <FormItem>
                       <FormLabel>Product Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Chocolate Chip Cookies" {...field} />
+                        <Input
+                          placeholder="Chocolate Chip Cookies"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -148,7 +182,10 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select category" />
@@ -156,7 +193,10 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                         </FormControl>
                         <SelectContent>
                           {categories.map((category: any) => (
-                            <SelectItem key={category.id} value={category.id.toString()}>
+                            <SelectItem
+                              key={category.id}
+                              value={category.id.toString()}
+                            >
                               {category.name}
                             </SelectItem>
                           ))}
@@ -175,9 +215,9 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Ingredients & Costs</CardTitle>
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   size="sm"
                   onClick={() => append({ inventoryItemId: "", quantity: "" })}
                 >
@@ -188,18 +228,21 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg">
+                <div
+                  key={field.id}
+                  className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg"
+                >
                   <FormField
                     control={form.control}
                     name={`ingredients.${index}.inventoryItemId`}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Ingredient</FormLabel>
-                        <Select 
+                        <Select
                           onValueChange={(value) => {
                             field.onChange(value);
                             calculateCosts();
-                          }} 
+                          }}
                           value={field.value}
                         >
                           <FormControl>
@@ -209,8 +252,13 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                           </FormControl>
                           <SelectContent>
                             {inventoryItems.map((item: any) => (
-                              <SelectItem key={item.id} value={item.id.toString()}>
-                                {item.name} (${Number(item.costPerUnit).toFixed(2)}/{item.unit})
+                              <SelectItem
+                                key={item.id}
+                                value={item.id.toString()}
+                              >
+                                {item.name} ($
+                                {Number(item.costPerUnit).toFixed(2)}/
+                                {item.unit})
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -227,10 +275,10 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                       <FormItem>
                         <FormLabel>Quantity</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01" 
-                            placeholder="2.5" 
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="2.5"
                             {...field}
                             onChange={(e) => {
                               field.onChange(e);
@@ -276,10 +324,10 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                     <FormItem>
                       <FormLabel>Labor Cost ($)</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="5.00" 
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="5.00"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
@@ -299,10 +347,10 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                     <FormItem>
                       <FormLabel>Overhead (%)</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.1" 
-                          placeholder="15" 
+                        <Input
+                          type="number"
+                          step="0.1"
+                          placeholder="15"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
@@ -322,10 +370,10 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                     <FormItem>
                       <FormLabel>Target Profit Margin (%)</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.1" 
-                          placeholder="25" 
+                        <Input
+                          type="number"
+                          step="0.1"
+                          placeholder="25"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
@@ -385,7 +433,10 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
           <i className="fas fa-calculator mr-2"></i>
           Recalculate
         </Button>
-        <Button onClick={handleSaveProduct} disabled={!form.getValues("productName")}>
+        <Button
+          onClick={handleSaveProduct}
+          disabled={!form.getValues("productName")}
+        >
           <i className="fas fa-save mr-2"></i>
           Save as Product
         </Button>

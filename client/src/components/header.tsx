@@ -97,11 +97,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                   {t("dashboard")}
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Welcome back, {user?.firstName || "there"}! Here's what's
-                  happening at your bakery today.
-                </p>
+                
               </div>
+              
               <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
                 <Calendar className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium text-primary">
@@ -124,7 +122,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             />
             <i className="fas fa-search absolute left-3 top-3 text-gray-400"></i>
           </form>
-
+  
           {/* Language Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
