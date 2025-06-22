@@ -1,16 +1,35 @@
-
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings2, Building, Bell, Shield, Palette, Database, Check } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Settings2,
+  Building,
+  Bell,
+  Shield,
+  Palette,
+  Database,
+  Check,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -22,7 +41,9 @@ function hexToHsl(hex: string) {
 
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
-  let h, s, l = (max + min) / 2;
+  let h,
+    s,
+    l = (max + min) / 2;
 
   if (max === min) {
     h = s = 0;
@@ -30,10 +51,17 @@ function hexToHsl(hex: string) {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
     switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-      default: h = 0;
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+      default:
+        h = 0;
     }
     h /= 6;
   }
@@ -44,20 +72,38 @@ function hexToHsl(hex: string) {
 // Function to apply theme color
 function applyThemeColor(color: string) {
   const hslColor = hexToHsl(color);
-  document.documentElement.style.setProperty('--theme-color', hslColor);
+  document.documentElement.style.setProperty("--theme-color", hslColor);
 }
 
 const THEME_COLORS = [
-  { name: "Blue Steel", value: "#507e96", description: "Professional blue-gray" },
-  { name: "Golden Yellow", value: "#ffca44", description: "Warm sunshine yellow" },
+  {
+    name: "Blue Steel",
+    value: "#507e96",
+    description: "Professional blue-gray",
+  },
+  {
+    name: "Golden Yellow",
+    value: "#ffca44",
+    description: "Warm sunshine yellow",
+  },
   { name: "Forest Green", value: "#0f6863", description: "Rich forest green" },
   { name: "Cherry Red", value: "#e40126", description: "Bold cherry red" },
   { name: "Warm Bronze", value: "#c1853b", description: "Elegant bronze tone" },
   { name: "Coffee Brown", value: "#7B4019", description: "Rich coffee brown" },
-  { name: "Orange Sunset", value: "#FF7D29", description: "Vibrant sunset orange" }
+  {
+    name: "Orange Sunset",
+    value: "#FF7D29",
+    description: "Vibrant sunset orange",
+  },
 ];
 
-function ThemeColorSelector({ settings, onUpdate }: { settings: any; onUpdate: (data: any) => void }) {
+function ThemeColorSelector({
+  settings,
+  onUpdate,
+}: {
+  settings: any;
+  onUpdate: (data: any) => void;
+}) {
   const currentTheme = settings?.themeColor || "#507e96";
   const [selectedColor, setSelectedColor] = useState(currentTheme);
 
@@ -83,8 +129,8 @@ function ThemeColorSelector({ settings, onUpdate }: { settings: any; onUpdate: (
             key={color.value}
             className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
               selectedColor === color.value
-                ? 'border-primary bg-primary/5'
-                : 'border-border hover:border-primary/50'
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50"
             }`}
             onClick={() => handleColorSelect(color.value)}
           >
@@ -95,7 +141,9 @@ function ThemeColorSelector({ settings, onUpdate }: { settings: any; onUpdate: (
               />
               <div className="flex-1">
                 <h4 className="font-medium text-sm">{color.name}</h4>
-                <p className="text-xs text-muted-foreground">{color.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {color.description}
+                </p>
               </div>
             </div>
             {selectedColor === color.value && (
@@ -106,7 +154,8 @@ function ThemeColorSelector({ settings, onUpdate }: { settings: any; onUpdate: (
       </div>
       <div className="pt-4 border-t">
         <p className="text-sm text-muted-foreground">
-          Current theme color will be applied to buttons, links, and accent elements throughout the application.
+          Current theme color will be applied to buttons, links, and accent
+          elements throughout the application.
         </p>
       </div>
     </div>
@@ -140,7 +189,7 @@ export default function Settings() {
   const handleSaveGeneral = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    
+
     const data = {
       companyName: formData.get("companyName"),
       companyAddress: formData.get("companyAddress"),
@@ -156,7 +205,7 @@ export default function Settings() {
   const handleSaveNotifications = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    
+
     const data = {
       emailNotifications: formData.get("emailNotifications") === "on",
       lowStockAlerts: formData.get("lowStockAlerts") === "on",
@@ -170,7 +219,7 @@ export default function Settings() {
   const handleSaveSecurity = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    
+
     const data = {
       twoFactorAuth: formData.get("twoFactorAuth") === "on",
       sessionTimeout: parseInt(formData.get("sessionTimeout") as string),
@@ -186,11 +235,17 @@ export default function Settings() {
         <Settings2 className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
-          <p className="text-muted-foreground">Manage your system preferences</p>
+          <p className="text-muted-foreground">
+            Manage your system preferences
+          </p>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="theme">Theme</TabsTrigger>
@@ -218,7 +273,9 @@ export default function Settings() {
                     <Input
                       id="companyName"
                       name="companyName"
-                      defaultValue={settings.companyName || "Sweet Treats Bakery"}
+                      defaultValue={
+                        settings.companyName || "M.A.P. tech Pvt. Ltd."
+                      }
                       required
                     />
                   </div>
@@ -228,7 +285,6 @@ export default function Settings() {
                       id="companyPhone"
                       name="companyPhone"
                       defaultValue={settings.companyPhone || ""}
-                      placeholder="+1 (555) 123-4567"
                     />
                   </div>
                 </div>
@@ -238,7 +294,6 @@ export default function Settings() {
                     id="companyAddress"
                     name="companyAddress"
                     defaultValue={settings.companyAddress || ""}
-                    placeholder="123 Main Street, City, State 12345"
                     rows={3}
                   />
                 </div>
@@ -250,21 +305,31 @@ export default function Settings() {
                       name="companyEmail"
                       type="email"
                       defaultValue={settings.companyEmail || ""}
-                      placeholder="info@sweettreats.com"
                     />
                   </div>
                   <div>
                     <Label htmlFor="timezone">Timezone</Label>
-                    <Select name="timezone" defaultValue={settings.timezone || "UTC"}>
+                    <Select
+                      name="timezone"
+                      defaultValue={settings.timezone || "UTC"}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="UTC">UTC</SelectItem>
-                        <SelectItem value="America/New_York">Eastern Time</SelectItem>
-                        <SelectItem value="America/Chicago">Central Time</SelectItem>
-                        <SelectItem value="America/Denver">Mountain Time</SelectItem>
-                        <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
+                        <SelectItem value="America/New_York">
+                          Eastern Time
+                        </SelectItem>
+                        <SelectItem value="America/Chicago">
+                          Central Time
+                        </SelectItem>
+                        <SelectItem value="America/Denver">
+                          Mountain Time
+                        </SelectItem>
+                        <SelectItem value="America/Los_Angeles">
+                          Pacific Time
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -272,7 +337,10 @@ export default function Settings() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="currency">Currency</Label>
-                    <Select name="currency" defaultValue={settings.currency || "USD"}>
+                    <Select
+                      name="currency"
+                      defaultValue={settings.currency || "USD"}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -285,7 +353,10 @@ export default function Settings() {
                     </Select>
                   </div>
                 </div>
-                <Button type="submit" disabled={updateSettingsMutation.isPending}>
+                <Button
+                  type="submit"
+                  disabled={updateSettingsMutation.isPending}
+                >
                   Save General Settings
                 </Button>
               </form>
@@ -305,10 +376,13 @@ export default function Settings() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ThemeColorSelector settings={settings} onUpdate={updateSettingsMutation.mutate} />
+              <ThemeColorSelector
+                settings={settings}
+                onUpdate={updateSettingsMutation.mutate}
+              />
             </CardContent>
           </Card>
-          
+
           <Card className="mt-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -322,7 +396,9 @@ export default function Settings() {
             <CardContent>
               <div className="space-y-4">
                 <div className="p-4 bg-muted/50 rounded-lg">
-                  <h4 className="font-medium text-sm mb-2">Public Order Form URL</h4>
+                  <h4 className="font-medium text-sm mb-2">
+                    Public Order Form URL
+                  </h4>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 p-2 bg-background rounded border text-sm">
                       {window.location.origin}/order
@@ -331,15 +407,21 @@ export default function Settings() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/order`);
-                        toast({ title: "Copied", description: "URL copied to clipboard" });
+                        navigator.clipboard.writeText(
+                          `${window.location.origin}/order`,
+                        );
+                        toast({
+                          title: "Copied",
+                          description: "URL copied to clipboard",
+                        });
                       }}
                     >
                       Copy
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Share this URL with customers to allow them to place orders directly
+                    Share this URL with customers to allow them to place orders
+                    directly
                   </p>
                 </div>
               </div>
@@ -362,7 +444,9 @@ export default function Settings() {
               <form onSubmit={handleSaveNotifications} className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="emailNotifications">Email Notifications</Label>
+                    <Label htmlFor="emailNotifications">
+                      Email Notifications
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Receive notifications via email
                     </p>
@@ -388,7 +472,9 @@ export default function Settings() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="orderNotifications">Order Notifications</Label>
+                    <Label htmlFor="orderNotifications">
+                      Order Notifications
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Receive alerts for new orders
                     </p>
@@ -401,7 +487,9 @@ export default function Settings() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="productionReminders">Production Reminders</Label>
+                    <Label htmlFor="productionReminders">
+                      Production Reminders
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Get reminders for scheduled production
                     </p>
@@ -412,7 +500,10 @@ export default function Settings() {
                     defaultChecked={settings.productionReminders !== false}
                   />
                 </div>
-                <Button type="submit" disabled={updateSettingsMutation.isPending}>
+                <Button
+                  type="submit"
+                  disabled={updateSettingsMutation.isPending}
+                >
                   Save Notification Settings
                 </Button>
               </form>
@@ -435,7 +526,9 @@ export default function Settings() {
               <form onSubmit={handleSaveSecurity} className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="twoFactorAuth">Two-Factor Authentication</Label>
+                    <Label htmlFor="twoFactorAuth">
+                      Two-Factor Authentication
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Add an extra layer of security to your account
                     </p>
@@ -447,7 +540,9 @@ export default function Settings() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="sessionTimeout">Session Timeout (minutes)</Label>
+                  <Label htmlFor="sessionTimeout">
+                    Session Timeout (minutes)
+                  </Label>
                   <Input
                     id="sessionTimeout"
                     name="sessionTimeout"
@@ -462,18 +557,28 @@ export default function Settings() {
                 </div>
                 <div>
                   <Label htmlFor="passwordPolicy">Password Policy</Label>
-                  <Select name="passwordPolicy" defaultValue={settings.passwordPolicy || "medium"}>
+                  <Select
+                    name="passwordPolicy"
+                    defaultValue={settings.passwordPolicy || "medium"}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="low">Low - 6+ characters</SelectItem>
-                      <SelectItem value="medium">Medium - 8+ characters with mixed case</SelectItem>
-                      <SelectItem value="high">High - 12+ characters with symbols</SelectItem>
+                      <SelectItem value="medium">
+                        Medium - 8+ characters with mixed case
+                      </SelectItem>
+                      <SelectItem value="high">
+                        High - 12+ characters with symbols
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" disabled={updateSettingsMutation.isPending}>
+                <Button
+                  type="submit"
+                  disabled={updateSettingsMutation.isPending}
+                >
                   Save Security Settings
                 </Button>
               </form>
@@ -494,13 +599,14 @@ export default function Settings() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Automatic Backups</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  Automatic Backups
+                </h3>
                 <p className="text-muted-foreground mb-4">
-                  Your data is automatically backed up daily. Last backup: {new Date().toLocaleDateString()}
+                  Your data is automatically backed up daily. Last backup:{" "}
+                  {new Date().toLocaleDateString()}
                 </p>
-                <Button variant="outline">
-                  Download Latest Backup
-                </Button>
+                <Button variant="outline">Download Latest Backup</Button>
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-2">Export Data</h3>
@@ -516,11 +622,10 @@ export default function Settings() {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Reset Data</h3>
                 <p className="text-muted-foreground mb-4">
-                  <strong>Warning:</strong> This will permanently delete all your data. This action cannot be undone.
+                  <strong>Warning:</strong> This will permanently delete all
+                  your data. This action cannot be undone.
                 </p>
-                <Button variant="destructive">
-                  Reset All Data
-                </Button>
+                <Button variant="destructive">Reset All Data</Button>
               </div>
             </CardContent>
           </Card>

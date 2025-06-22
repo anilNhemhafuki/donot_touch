@@ -1,4 +1,3 @@
-
 import { db } from "./db";
 import { units } from "@shared/schema";
 
@@ -39,8 +38,8 @@ async function initializeUnits() {
   }
 }
 
-// Run if called directly
-if (require.main === module) {
+// Run if this file is executed directly (ESM-safe check)
+if (import.meta.url === process.argv[1]) {
   initializeUnits()
     .then(() => process.exit(0))
     .catch((error) => {

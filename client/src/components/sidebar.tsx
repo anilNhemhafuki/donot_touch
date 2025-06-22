@@ -21,7 +21,7 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
   const { user } = useAuth();
   const [openSections, setOpenSections] = useState<string[]>([
     "core",
-    "transactions",
+    "Finance",
   ]);
 
   const toggleSection = (section: string) => {
@@ -37,18 +37,33 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
       id: "core",
       items: [
         { name: "Dashboard", href: "/", icon: "fas fa-chart-pie" },
+        { name: "Settings", href: "/settings", icon: "fas fa-cog" },
+        { name: "Notifications", href: "/notifications", icon: "fas fa-bell" },
+      ],
+    },
+    {
+      id: "Inventory",
+      title: "Inventory",
+      items: [
         { name: "Products", href: "/products", icon: "fas fa-cookie-bite" },
         { name: "Inventory", href: "/inventory", icon: "fas fa-boxes" },
         { name: "Production", href: "/production", icon: "fas fa-industry" },
       ],
     },
+
     {
-      id: "transactions",
-      title: "Transactions",
+      id: "Finance",
+      title: "Finance",
       items: [
+        { name: "Day Book", href: "/daybook", icon: "fas fa-shopping-cart" },
         { name: "Orders", href: "/orders", icon: "fas fa-shopping-cart" },
         { name: "Sales", href: "/sales", icon: "fas fa-cash-register" },
         { name: "Purchases", href: "/purchases", icon: "fas fa-shopping-bag" },
+        {
+          name: "Income & Expenses",
+          href: "/expenses",
+          icon: "fas fa-receipt",
+        },
       ],
     },
     {
@@ -58,7 +73,6 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
         { name: "Customers", href: "/customers", icon: "fas fa-users" },
         { name: "Parties", href: "/parties", icon: "fas fa-handshake" },
         { name: "Assets", href: "/assets", icon: "fas fa-building" },
-        { name: "Expenses", href: "/expenses", icon: "fas fa-receipt" },
       ],
     },
     {
@@ -67,17 +81,10 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
       items: [
         { name: "Reports", href: "/reports", icon: "fas fa-chart-bar" },
         {
-          name: "Billing",
+          name: "Billing & Subscription",
           href: "/billing",
           icon: "fas fa-file-invoice-dollar",
         },
-      ],
-    },
-    {
-      id: "settings",
-      items: [
-        { name: "Settings", href: "/settings", icon: "fas fa-cog" },
-        { name: "Notifications", href: "/notifications", icon: "fas fa-bell" },
       ],
     },
   ];
@@ -147,7 +154,7 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors text-sm ${
+                      className={`flex items-center px-4 py-2 rounded-lg transition-colors text-sm ${
                         active
                           ? "bg-primary text-white"
                           : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
@@ -169,29 +176,46 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                     open={openSections.includes(section.id)}
                     onOpenChange={() => toggleSection(section.id)}
                   >
-                    <CollapsibleTrigger className="flex items-center justify-between w-full px-2 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md">
+                    <CollapsibleTrigger className="flex items-center w-full px-2 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md">
+                      {/* Icon */}
+                      <i
+                        className={section.icon}
+                        style={{ marginRight: "8px" }}
+                      ></i>
+                      {/* Title */}
                       <span>{section.title}</span>
+                      {/* Arrow Icon */}
                       {openSections.includes(section.id) ? (
                         <ChevronDown className="h-4 w-4" />
                       ) : (
                         <ChevronRight className="h-4 w-4" />
                       )}
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-1 space-y-1">
+                    <CollapsibleContent className="mt-1 space-y-1 border-l-4 border-transparent">
                       {section.items.map((item) => {
                         const active = isActive(item.href);
                         return (
                           <Link
                             key={item.name}
                             href={item.href}
-                            className={`flex items-center space-x-3 px-4 py-2 ml-2 rounded-lg transition-colors text-sm ${
+                            className={`font-normal flex items-center space-x-2 px-4 py-2 ml-2 rounded-lg transition-colors text-sm ${
                               active
-                                ? "bg-primary text-white"
-                                : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                                ? "bg-primary text-white font-normal"
+                                : "text-gray-600 font-normal dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
                             }`}
                           >
+                            {/* Bullet Point */}
+                            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                            {/* Icon */}
                             <i className={item.icon}></i>
+                            {/* Name */}
                             <span className="font-medium">{item.name}</span>
+                            {/* New Badge (if applicable) */}
+                            {item.new && (
+                              <span className="ml-2 px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">
+                                New
+                              </span>
+                            )}
                           </Link>
                         );
                       })}

@@ -1,29 +1,58 @@
-
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
-import { Calendar, Clock, Package, Scale, Target, Plus, Edit, Trash2, Minus } from 'lucide-react';
-import { format, addDays, startOfDay } from 'date-fns';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Calendar,
+  Clock,
+  Package,
+  Scale,
+  Target,
+  Plus,
+  Edit,
+  Trash2,
+  Minus,
+} from "lucide-react";
+import { format, addDays, startOfDay } from "date-fns";
 
 const productionScheduleSchema = z.object({
-  scheduledDate: z.string().min(1, 'Please select a date'),
-  priority: z.enum(['low', 'medium', 'high'], { required_error: 'Please select priority' }),
+  scheduledDate: z.string().min(1, "Please select a date"),
+  priority: z.enum(["low", "medium", "high"], {
+    required_error: "Please select priority",
+  }),
   notes: z.string().optional(),
-  products: z.array(z.object({
-    productId: z.number().min(1, 'Please select a product'),
-    targetAmount: z.number().min(0.1, 'Target amount must be at least 0.1'),
-    unit: z.enum(['kg', 'packets'], { required_error: 'Please select a unit' }),
-  })).min(1, 'At least one product is required'),
+  products: z
+    .array(
+      z.object({
+        productId: z.number().min(1, "Please select a product"),
+        targetAmount: z.number().min(0.1, "Target amount must be at least 0.1"),
+        unit: z.enum(["kg", "packets"], {
+          required_error: "Please select a unit",
+        }),
+      }),
+    )
+    .min(1, "At least one product is required"),
 });
 
 type ProductionScheduleData = z.infer<typeof productionScheduleSchema>;
@@ -34,10 +63,10 @@ interface ProductionItem {
   productName: string;
   scheduledDate: string;
   targetAmount: number;
-  unit: 'kg' | 'packets';
+  unit: "kg" | "packets";
   targetPackets?: number;
   packetsPerKg?: number;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
   status: string;
   notes?: string;
   assignedTo?: string;
@@ -46,53 +75,55 @@ interface ProductionItem {
 export default function EnhancedProductionSchedule() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [selectedDate, setSelectedDate] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
   const [editingItem, setEditingItem] = useState<ProductionItem | null>(null);
 
   const { data: products = [] } = useQuery({
-    queryKey: ['/api/products'],
+    queryKey: ["/api/products"],
   });
 
   const { data: productionSchedule = [] } = useQuery({
-    queryKey: ['/api/production-schedule', selectedDate],
+    queryKey: ["/api/production-schedule", selectedDate],
   });
 
   const { data: todaySchedule = [] } = useQuery({
-    queryKey: ['/api/production-schedule/today'],
+    queryKey: ["/api/production-schedule/today"],
   });
 
   const form = useForm<ProductionScheduleData>({
     resolver: zodResolver(productionScheduleSchema),
     defaultValues: {
       scheduledDate: selectedDate,
-      priority: 'medium',
-      notes: '',
-      products: [{ productId: 0, targetAmount: 1, unit: 'kg' }],
+      priority: "medium",
+      notes: "",
+      products: [{ productId: 0, targetAmount: 1, unit: "kg" }],
     },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: 'products',
+    name: "products",
   });
 
   const createScheduleMutation = useMutation({
     mutationFn: async (data: ProductionScheduleData) => {
-      const response = await fetch('/api/production-schedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/production-schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to create schedule item');
+      if (!response.ok) throw new Error("Failed to create schedule item");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/production-schedule'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production-schedule"] });
       form.reset({
         scheduledDate: selectedDate,
-        priority: 'medium',
-        notes: '',
-        products: [{ productId: 0, targetAmount: 1, unit: 'kg' }],
+        priority: "medium",
+        notes: "",
+        products: [{ productId: 0, targetAmount: 1, unit: "kg" }],
       });
       toast({
         title: "Schedule Created",
@@ -109,17 +140,23 @@ export default function EnhancedProductionSchedule() {
   });
 
   const updateScheduleMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<ProductionScheduleData> }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: Partial<ProductionScheduleData>;
+    }) => {
       const response = await fetch(`/api/production-schedule/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to update schedule item');
+      if (!response.ok) throw new Error("Failed to update schedule item");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/production-schedule'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production-schedule"] });
       setEditingItem(null);
       toast({
         title: "Schedule Updated",
@@ -138,12 +175,12 @@ export default function EnhancedProductionSchedule() {
   const deleteScheduleMutation = useMutation({
     mutationFn: async (id: number) => {
       const response = await fetch(`/api/production-schedule/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-      if (!response.ok) throw new Error('Failed to delete schedule item');
+      if (!response.ok) throw new Error("Failed to delete schedule item");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/production-schedule'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production-schedule"] });
       toast({
         title: "Schedule Deleted",
         description: "Production schedule item has been removed.",
@@ -173,28 +210,31 @@ export default function EnhancedProductionSchedule() {
           scheduledDate: data.scheduledDate,
           targetAmount: product.targetAmount,
           unit: product.unit,
-          targetPackets: product.unit === 'kg' ? calculatePackets(product.productId, product.targetAmount) : product.targetAmount,
+          targetPackets:
+            product.unit === "kg"
+              ? calculatePackets(product.productId, product.targetAmount)
+              : product.targetAmount,
           priority: data.priority,
           notes: data.notes,
         };
 
-        const response = await fetch('/api/production-schedule', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/production-schedule", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(scheduleData),
         });
-        
-        if (!response.ok) throw new Error('Failed to create schedule item');
+
+        if (!response.ok) throw new Error("Failed to create schedule item");
       }
-      
-      queryClient.invalidateQueries({ queryKey: ['/api/production-schedule'] });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/production-schedule"] });
       form.reset({
         scheduledDate: selectedDate,
-        priority: 'medium',
-        notes: '',
-        products: [{ productId: 0, targetAmount: 1, unit: 'kg' }],
+        priority: "medium",
+        notes: "",
+        products: [{ productId: 0, targetAmount: 1, unit: "kg" }],
       });
-      
+
       toast({
         title: "Schedule Created",
         description: "Production schedule items have been added successfully.",
@@ -213,12 +253,14 @@ export default function EnhancedProductionSchedule() {
     form.reset({
       scheduledDate: item.scheduledDate,
       priority: item.priority,
-      notes: item.notes || '',
-      products: [{ 
-        productId: item.productId, 
-        targetAmount: item.targetAmount, 
-        unit: item.unit 
-      }],
+      notes: item.notes || "",
+      products: [
+        {
+          productId: item.productId,
+          targetAmount: item.targetAmount,
+          unit: item.unit,
+        },
+      ],
     });
   };
 
@@ -226,33 +268,42 @@ export default function EnhancedProductionSchedule() {
     setEditingItem(null);
     form.reset({
       scheduledDate: selectedDate,
-      priority: 'medium',
-      notes: '',
-      products: [{ productId: 0, targetAmount: 1, unit: 'kg' }],
+      priority: "medium",
+      notes: "",
+      products: [{ productId: 0, targetAmount: 1, unit: "kg" }],
     });
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "high":
+        return "bg-red-100 text-red-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "low":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'pending': return 'bg-gray-100 text-gray-800';
-      case 'delayed': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "in_progress":
+        return "bg-blue-100 text-blue-800";
+      case "pending":
+        return "bg-gray-100 text-gray-800";
+      case "delayed":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   useEffect(() => {
-    form.setValue('scheduledDate', selectedDate);
+    form.setValue("scheduledDate", selectedDate);
   }, [selectedDate, form]);
 
   return (
@@ -265,12 +316,14 @@ export default function EnhancedProductionSchedule() {
             Today's Production Schedule
           </CardTitle>
           <CardDescription>
-            {format(new Date(), 'EEEE, MMMM do, yyyy')}
+            {format(new Date(), "EEEE, MMMM do, yyyy")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {todaySchedule.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No production scheduled for today</p>
+            <p className="text-gray-500 text-center py-4">
+              No production scheduled for today
+            </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {todaySchedule.map((item: ProductionItem) => (
@@ -284,15 +337,19 @@ export default function EnhancedProductionSchedule() {
                   <div className="space-y-1 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
                       <Target className="h-4 w-4" />
-                      <span>{item.targetAmount} {item.unit}</span>
-                      {item.unit === 'kg' && item.targetPackets && (
-                        <span className="text-gray-400">({item.targetPackets} packets)</span>
+                      <span>
+                        {item.targetAmount} {item.unit}
+                      </span>
+                      {item.unit === "kg" && item.targetPackets && (
+                        <span className="text-gray-400">
+                          ({item.targetPackets} packets)
+                        </span>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
                       <Badge className={getStatusColor(item.status)}>
-                        {item.status.replace('_', ' ')}
+                        {item.status.replace("_", " ")}
                       </Badge>
                     </div>
                   </div>
@@ -310,7 +367,9 @@ export default function EnhancedProductionSchedule() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              {editingItem ? 'Edit Schedule Item' : 'Add Multiple Products to Schedule'}
+              {editingItem
+                ? "Edit Schedule Item"
+                : "Add Multiple Products to Schedule"}
             </CardTitle>
             <CardDescription>
               Schedule multiple products for production on the same date
@@ -322,8 +381,8 @@ export default function EnhancedProductionSchedule() {
                 <Label>Scheduled Date</Label>
                 <Input
                   type="date"
-                  {...form.register('scheduledDate')}
-                  min={format(new Date(), 'yyyy-MM-dd')}
+                  {...form.register("scheduledDate")}
+                  min={format(new Date(), "yyyy-MM-dd")}
                 />
                 {form.formState.errors.scheduledDate && (
                   <p className="text-sm text-red-600 mt-1">
@@ -335,8 +394,10 @@ export default function EnhancedProductionSchedule() {
               <div>
                 <Label>Priority</Label>
                 <Select
-                  value={form.watch('priority')}
-                  onValueChange={(value: 'low' | 'medium' | 'high') => form.setValue('priority', value)}
+                  value={form.watch("priority")}
+                  onValueChange={(value: "low" | "medium" | "high") =>
+                    form.setValue("priority", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -357,7 +418,9 @@ export default function EnhancedProductionSchedule() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => append({ productId: 0, targetAmount: 1, unit: 'kg' })}
+                    onClick={() =>
+                      append({ productId: 0, targetAmount: 1, unit: "kg" })
+                    }
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Add Product
@@ -365,7 +428,10 @@ export default function EnhancedProductionSchedule() {
                 </div>
 
                 {fields.map((field, index) => (
-                  <div key={field.id} className="p-4 border rounded-lg space-y-3">
+                  <div
+                    key={field.id}
+                    className="p-4 border rounded-lg space-y-3"
+                  >
                     <div className="flex items-center justify-between">
                       <span className="font-medium">Product {index + 1}</span>
                       {fields.length > 1 && (
@@ -384,15 +450,27 @@ export default function EnhancedProductionSchedule() {
                       <div>
                         <Label>Product</Label>
                         <Select
-                          value={form.watch(`products.${index}.productId`)?.toString() || ''}
-                          onValueChange={(value) => form.setValue(`products.${index}.productId`, parseInt(value))}
+                          value={
+                            form
+                              .watch(`products.${index}.productId`)
+                              ?.toString() || ""
+                          }
+                          onValueChange={(value) =>
+                            form.setValue(
+                              `products.${index}.productId`,
+                              parseInt(value),
+                            )
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select product" />
                           </SelectTrigger>
                           <SelectContent>
                             {products.map((product: any) => (
-                              <SelectItem key={product.id} value={product.id.toString()}>
+                              <SelectItem
+                                key={product.id}
+                                value={product.id.toString()}
+                              >
                                 {product.name}
                                 {product.packetsPerKg && (
                                   <span className="text-gray-500 ml-2">
@@ -410,7 +488,9 @@ export default function EnhancedProductionSchedule() {
                         <Input
                           type="number"
                           step="0.1"
-                          {...form.register(`products.${index}.targetAmount`, { valueAsNumber: true })}
+                          {...form.register(`products.${index}.targetAmount`, {
+                            valueAsNumber: true,
+                          })}
                           placeholder="Enter amount"
                         />
                       </div>
@@ -419,7 +499,9 @@ export default function EnhancedProductionSchedule() {
                         <Label>Unit</Label>
                         <Select
                           value={form.watch(`products.${index}.unit`)}
-                          onValueChange={(value: 'kg' | 'packets') => form.setValue(`products.${index}.unit`, value)}
+                          onValueChange={(value: "kg" | "packets") =>
+                            form.setValue(`products.${index}.unit`, value)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -443,19 +525,20 @@ export default function EnhancedProductionSchedule() {
                     </div>
 
                     {/* Packet Calculation Preview */}
-                    {form.watch(`products.${index}.unit`) === 'kg' && 
-                     form.watch(`products.${index}.productId`) && 
-                     form.watch(`products.${index}.targetAmount`) && (
-                      <div className="p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-blue-800">
-                          <Package className="h-4 w-4 inline mr-1" />
-                          Estimated packets needed: {calculatePackets(
-                            form.watch(`products.${index}.productId`), 
-                            form.watch(`products.${index}.targetAmount`)
-                          )}
-                        </p>
-                      </div>
-                    )}
+                    {form.watch(`products.${index}.unit`) === "kg" &&
+                      form.watch(`products.${index}.productId`) &&
+                      form.watch(`products.${index}.targetAmount`) && (
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                          <p className="text-sm text-blue-800">
+                            <Package className="h-4 w-4 inline mr-1" />
+                            Estimated packets needed:{" "}
+                            {calculatePackets(
+                              form.watch(`products.${index}.productId`),
+                              form.watch(`products.${index}.targetAmount`),
+                            )}
+                          </p>
+                        </div>
+                      )}
                   </div>
                 ))}
               </div>
@@ -463,7 +546,7 @@ export default function EnhancedProductionSchedule() {
               <div>
                 <Label>Notes (Optional)</Label>
                 <Textarea
-                  {...form.register('notes')}
+                  {...form.register("notes")}
                   placeholder="Additional notes or instructions"
                 />
               </div>
@@ -471,10 +554,13 @@ export default function EnhancedProductionSchedule() {
               <div className="flex gap-2">
                 <Button
                   type="submit"
-                  disabled={createScheduleMutation.isPending || updateScheduleMutation.isPending}
+                  disabled={
+                    createScheduleMutation.isPending ||
+                    updateScheduleMutation.isPending
+                  }
                   className="flex-1"
                 >
-                  {editingItem ? 'Update Schedule' : 'Add to Schedule'}
+                  {editingItem ? "Update Schedule" : "Add to Schedule"}
                 </Button>
                 {editingItem && (
                   <Button type="button" variant="outline" onClick={cancelEdit}>
@@ -500,14 +586,15 @@ export default function EnhancedProductionSchedule() {
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  min={format(new Date(), 'yyyy-MM-dd')}
+                  min={format(new Date(), "yyyy-MM-dd")}
                 />
               </div>
 
               <div className="space-y-3">
                 {productionSchedule.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">
-                    No production scheduled for {format(new Date(selectedDate), 'MMM dd, yyyy')}
+                    No production scheduled for{" "}
+                    {format(new Date(selectedDate), "MMM dd, yyyy")}
                   </p>
                 ) : (
                   productionSchedule.map((item: ProductionItem) => (
@@ -520,7 +607,7 @@ export default function EnhancedProductionSchedule() {
                               <Target className="h-4 w-4" />
                               {item.targetAmount} {item.unit}
                             </span>
-                            {item.unit === 'kg' && item.targetPackets && (
+                            {item.unit === "kg" && item.targetPackets && (
                               <span className="text-gray-400">
                                 ({item.targetPackets} packets)
                               </span>
@@ -531,11 +618,13 @@ export default function EnhancedProductionSchedule() {
                               {item.priority}
                             </Badge>
                             <Badge className={getStatusColor(item.status)}>
-                              {item.status.replace('_', ' ')}
+                              {item.status.replace("_", " ")}
                             </Badge>
                           </div>
                           {item.notes && (
-                            <p className="text-sm text-gray-600 mt-2">{item.notes}</p>
+                            <p className="text-sm text-gray-600 mt-2">
+                              {item.notes}
+                            </p>
                           )}
                         </div>
                         <div className="flex gap-1">
@@ -549,7 +638,9 @@ export default function EnhancedProductionSchedule() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => deleteScheduleMutation.mutate(item.id)}
+                            onClick={() =>
+                              deleteScheduleMutation.mutate(item.id)
+                            }
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

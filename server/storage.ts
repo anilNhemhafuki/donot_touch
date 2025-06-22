@@ -59,7 +59,10 @@ export interface IStorage {
   // Category operations
   getCategories(): Promise<Category[]>;
   createCategory(category: InsertCategory): Promise<Category>;
-  updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category>;
+  updateCategory(
+    id: number,
+    category: Partial<InsertCategory>,
+  ): Promise<Category>;
   deleteCategory(id: number): Promise<void>;
 
   // Product operations
@@ -72,7 +75,9 @@ export interface IStorage {
 
   // Product ingredients operations
   getProductIngredients(productId: number): Promise<ProductIngredient[]>;
-  createProductIngredient(ingredient: InsertProductIngredient): Promise<ProductIngredient>;
+  createProductIngredient(
+    ingredient: InsertProductIngredient,
+  ): Promise<ProductIngredient>;
   deleteProductIngredients(productId: number): Promise<void>;
 
   // Inventory operations
@@ -80,7 +85,10 @@ export interface IStorage {
   getInventoryItemById(id: number): Promise<InventoryItem | undefined>;
   getLowStockItems(): Promise<InventoryItem[]>;
   createInventoryItem(item: InsertInventoryItem): Promise<InventoryItem>;
-  updateInventoryItem(id: number, item: Partial<InsertInventoryItem>): Promise<InventoryItem>;
+  updateInventoryItem(
+    id: number,
+    item: Partial<InsertInventoryItem>,
+  ): Promise<InventoryItem>;
   deleteInventoryItem(id: number): Promise<void>;
 
   // Order operations
@@ -99,12 +107,19 @@ export interface IStorage {
   // Production schedule operations
   getProductionSchedule(): Promise<any[]>;
   getTodayProductionSchedule(): Promise<any[]>;
-  createProductionScheduleItem(item: InsertProductionScheduleItem): Promise<ProductionScheduleItem>;
-  updateProductionScheduleItem(id: number, item: Partial<InsertProductionScheduleItem>): Promise<ProductionScheduleItem>;
+  createProductionScheduleItem(
+    item: InsertProductionScheduleItem,
+  ): Promise<ProductionScheduleItem>;
+  updateProductionScheduleItem(
+    id: number,
+    item: Partial<InsertProductionScheduleItem>,
+  ): Promise<ProductionScheduleItem>;
   deleteProductionScheduleItem(id: number): Promise<void>;
 
   // Inventory transaction operations
-  createInventoryTransaction(transaction: InsertInventoryTransaction): Promise<InventoryTransaction>;
+  createInventoryTransaction(
+    transaction: InsertInventoryTransaction,
+  ): Promise<InventoryTransaction>;
   getInventoryTransactions(itemId?: number): Promise<any[]>;
 
   // Analytics operations
@@ -115,7 +130,10 @@ export interface IStorage {
   getCustomers(): Promise<Customer[]>;
   getCustomerById(id: number): Promise<Customer | undefined>;
   createCustomer(customer: InsertCustomer): Promise<Customer>;
-  updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer>;
+  updateCustomer(
+    id: number,
+    customer: Partial<InsertCustomer>,
+  ): Promise<Customer>;
   deleteCustomer(id: number): Promise<void>;
 
   // Parties operations
@@ -218,7 +236,10 @@ export class Storage {
     return created;
   }
 
-  async updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category> {
+  async updateCategory(
+    id: number,
+    category: Partial<InsertCategory>,
+  ): Promise<Category> {
     const [updated] = await db
       .update(categories)
       .set(category)
@@ -233,11 +254,18 @@ export class Storage {
 
   // Product operations
   async getProducts(): Promise<Product[]> {
-    return await db.select().from(products).where(eq(products.isActive, true)).orderBy(asc(products.name));
+    return await db
+      .select()
+      .from(products)
+      .where(eq(products.isActive, true))
+      .orderBy(asc(products.name));
   }
 
   async getProductById(id: number): Promise<Product | undefined> {
-    const [product] = await db.select().from(products).where(eq(products.id, id));
+    const [product] = await db
+      .select()
+      .from(products)
+      .where(eq(products.id, id));
     return product;
   }
 
@@ -265,7 +293,10 @@ export class Storage {
     return created;
   }
 
-  async updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product> {
+  async updateProduct(
+    id: number,
+    product: Partial<InsertProduct>,
+  ): Promise<Product> {
     const [updated] = await db
       .update(products)
       .set({ ...product, updatedAt: new Date() })
@@ -275,7 +306,10 @@ export class Storage {
   }
 
   async deleteProduct(id: number): Promise<void> {
-    await db.update(products).set({ isActive: false }).where(eq(products.id, id));
+    await db
+      .update(products)
+      .set({ isActive: false })
+      .where(eq(products.id, id));
   }
 
   // Product ingredients operations
@@ -292,22 +326,36 @@ export class Storage {
         costPerUnit: inventoryItems.costPerUnit,
       })
       .from(productIngredients)
-      .innerJoin(inventoryItems, eq(productIngredients.inventoryItemId, inventoryItems.id))
+      .innerJoin(
+        inventoryItems,
+        eq(productIngredients.inventoryItemId, inventoryItems.id),
+      )
       .where(eq(productIngredients.productId, productId));
   }
 
-  async createProductIngredient(ingredient: InsertProductIngredient): Promise<ProductIngredient> {
-    const [created] = await db.insert(productIngredients).values(ingredient).returning();
+  async createProductIngredient(
+    ingredient: InsertProductIngredient,
+  ): Promise<ProductIngredient> {
+    const [created] = await db
+      .insert(productIngredients)
+      .values(ingredient)
+      .returning();
     return created;
   }
 
   async deleteProductIngredients(productId: number): Promise<void> {
-    await db.delete(productIngredients).where(eq(productIngredients.productId, productId));
+    await db
+      .delete(productIngredients)
+      .where(eq(productIngredients.productId, productId));
   }
 
   // Inventory operations
   async getUnits() {
-    return await db.select().from(units).where(eq(units.isActive, true)).orderBy(units.name);
+    return await db
+      .select()
+      .from(units)
+      .where(eq(units.isActive, true))
+      .orderBy(units.name);
   }
 
   async createUnit(data: InsertUnit) {
@@ -316,31 +364,35 @@ export class Storage {
   }
 
   async getInventoryItems() {
-    return await db.select({
-      id: inventoryItems.id,
-      name: inventoryItems.name,
-      currentStock: inventoryItems.currentStock,
-      minLevel: inventoryItems.minLevel,
-      unit: inventoryItems.unit,
-      unitId: inventoryItems.unitId,
-      costPerUnit: inventoryItems.costPerUnit,
-      supplier: inventoryItems.supplier,
-      company: inventoryItems.company,
-      lastRestocked: inventoryItems.lastRestocked,
-      dateAdded: inventoryItems.dateAdded,
-      dateUpdated: inventoryItems.dateUpdated,
-      createdAt: inventoryItems.createdAt,
-      updatedAt: inventoryItems.updatedAt,
-      unitName: units.name,
-      unitAbbreviation: units.abbreviation,
-    })
-    .from(inventoryItems)
-    .leftJoin(units, eq(inventoryItems.unitId, units.id))
-    .orderBy(inventoryItems.name);
+    return await db
+      .select({
+        id: inventoryItems.id,
+        name: inventoryItems.name,
+        currentStock: inventoryItems.currentStock,
+        minLevel: inventoryItems.minLevel,
+        unit: inventoryItems.unit,
+        unitId: inventoryItems.unitId,
+        costPerUnit: inventoryItems.costPerUnit,
+        supplier: inventoryItems.supplier,
+        company: inventoryItems.company,
+        lastRestocked: inventoryItems.lastRestocked,
+        dateAdded: inventoryItems.dateAdded,
+        dateUpdated: inventoryItems.dateUpdated,
+        createdAt: inventoryItems.createdAt,
+        updatedAt: inventoryItems.updatedAt,
+        unitName: units.name,
+        unitAbbreviation: units.abbreviation,
+      })
+      .from(inventoryItems)
+      .leftJoin(units, eq(inventoryItems.unitId, units.id))
+      .orderBy(inventoryItems.name);
   }
 
   async getInventoryItemById(id: number): Promise<InventoryItem | undefined> {
-    const [item] = await db.select().from(inventoryItems).where(eq(inventoryItems.id, id));
+    const [item] = await db
+      .select()
+      .from(inventoryItems)
+      .where(eq(inventoryItems.id, id));
     return item;
   }
 
@@ -530,18 +582,26 @@ export class Storage {
       .where(
         and(
           gte(productionSchedule.scheduledDate, today),
-          lte(productionSchedule.scheduledDate, tomorrow)
-        )
+          lte(productionSchedule.scheduledDate, tomorrow),
+        ),
       )
       .orderBy(asc(productionSchedule.startTime));
   }
 
-  async createProductionScheduleItem(item: InsertProductionScheduleItem): Promise<ProductionScheduleItem> {
-    const [created] = await db.insert(productionSchedule).values(item).returning();
+  async createProductionScheduleItem(
+    item: InsertProductionScheduleItem,
+  ): Promise<ProductionScheduleItem> {
+    const [created] = await db
+      .insert(productionSchedule)
+      .values(item)
+      .returning();
     return created;
   }
 
-  async updateProductionScheduleItem(id: number, item: Partial<InsertProductionScheduleItem>): Promise<ProductionScheduleItem> {
+  async updateProductionScheduleItem(
+    id: number,
+    item: Partial<InsertProductionScheduleItem>,
+  ): Promise<ProductionScheduleItem> {
     const [updated] = await db
       .update(productionSchedule)
       .set({ ...item, updatedAt: new Date() })
@@ -555,8 +615,13 @@ export class Storage {
   }
 
   // Inventory transaction operations
-  async createInventoryTransaction(transaction: InsertInventoryTransaction): Promise<InventoryTransaction> {
-    const [created] = await db.insert(inventoryTransactions).values(transaction).returning();
+  async createInventoryTransaction(
+    transaction: InsertInventoryTransaction,
+  ): Promise<InventoryTransaction> {
+    const [created] = await db
+      .insert(inventoryTransactions)
+      .values(transaction)
+      .returning();
     return created;
   }
 
@@ -575,11 +640,16 @@ export class Storage {
         createdAt: inventoryTransactions.createdAt,
       })
       .from(inventoryTransactions)
-      .innerJoin(inventoryItems, eq(inventoryTransactions.inventoryItemId, inventoryItems.id))
+      .innerJoin(
+        inventoryItems,
+        eq(inventoryTransactions.inventoryItemId, inventoryItems.id),
+      )
       .leftJoin(users, eq(inventoryTransactions.createdBy, users.id));
 
     if (itemId) {
-      return await query.where(eq(inventoryTransactions.inventoryItemId, itemId)).orderBy(desc(inventoryTransactions.createdAt));
+      return await query
+        .where(eq(inventoryTransactions.inventoryItemId, itemId))
+        .orderBy(desc(inventoryTransactions.createdAt));
     }
 
     return await query.orderBy(desc(inventoryTransactions.createdAt));
@@ -603,8 +673,8 @@ export class Storage {
         and(
           gte(orders.orderDate, today),
           lte(orders.orderDate, tomorrow),
-          eq(orders.status, "completed")
-        )
+          eq(orders.status, "completed"),
+        ),
       );
 
     // Total products in stock
@@ -625,8 +695,8 @@ export class Storage {
         and(
           gte(productionSchedule.scheduledDate, today),
           lte(productionSchedule.scheduledDate, tomorrow),
-          eq(productionSchedule.status, "completed")
-        )
+          eq(productionSchedule.status, "completed"),
+        ),
       );
 
     return {
@@ -653,8 +723,8 @@ export class Storage {
         and(
           gte(orders.orderDate, start),
           lte(orders.orderDate, end),
-          eq(orders.status, "completed")
-        )
+          eq(orders.status, "completed"),
+        ),
       )
       .groupBy(sql`DATE(${orders.orderDate})`)
       .orderBy(sql`DATE(${orders.orderDate})`);
@@ -673,20 +743,20 @@ export class Storage {
         and(
           gte(orders.orderDate, start),
           lte(orders.orderDate, end),
-          eq(orders.status, "completed")
-        )
+          eq(orders.status, "completed"),
+        ),
       )
       .groupBy(products.id, products.name)
       .orderBy(desc(sql`SUM(${orderItems.totalPrice})`))
       .limit(10);
 
     return {
-      salesData: salesData.map(row => ({
+      salesData: salesData.map((row) => ({
         date: row.date,
         sales: Number(row.totalSales),
         orders: Number(row.orderCount),
       })),
-      topProducts: topProducts.map(row => ({
+      topProducts: topProducts.map((row) => ({
         name: row.productName,
         quantity: Number(row.totalQuantity),
         revenue: Number(row.totalRevenue),
@@ -700,7 +770,10 @@ export class Storage {
   }
 
   async getCustomerById(id: number): Promise<Customer | undefined> {
-    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+    const [customer] = await db
+      .select()
+      .from(customers)
+      .where(eq(customers.id, id));
     return customer;
   }
 
@@ -709,7 +782,10 @@ export class Storage {
     return created;
   }
 
-  async updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer> {
+  async updateCustomer(
+    id: number,
+    customer: Partial<InsertCustomer>,
+  ): Promise<Customer> {
     const [updated] = await db
       .update(customers)
       .set({ ...customer, updatedAt: new Date() })
@@ -798,7 +874,10 @@ export class Storage {
     return created;
   }
 
-  async updateExpense(id: number, expense: Partial<InsertExpense>): Promise<Expense> {
+  async updateExpense(
+    id: number,
+    expense: Partial<InsertExpense>,
+  ): Promise<Expense> {
     const [updated] = await db
       .update(expenses)
       .set({ ...expense, updatedAt: new Date() })
@@ -814,18 +893,20 @@ export class Storage {
   // User management methods
   async getAllUsers(): Promise<User[]> {
     try {
-      const allUsers = await db.select({
-        id: users.id,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        role: users.role,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-      }).from(users);
+      const allUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        })
+        .from(users);
       return allUsers;
     } catch (error) {
-      console.error('Error getting all users:', error);
+      console.error("Error getting all users:", error);
       return [];
     }
   }
@@ -848,7 +929,7 @@ export class Storage {
     try {
       return await db.select().from(bills).orderBy(desc(bills.createdAt));
     } catch (error) {
-      console.error('Error getting bills:', error);
+      console.error("Error getting bills:", error);
       return [];
     }
   }
@@ -868,17 +949,17 @@ export class Storage {
       const result = await db.select().from(settings);
       const settingsObj: any = {};
 
-      result.forEach(setting => {
+      result.forEach((setting) => {
         let value: any = setting.value;
 
         // Parse based on type
-        if (setting.type === 'boolean') {
-          value = value === 'true';
-        } else if (setting.type === 'number') {
-          value = parseFloat(value || '0');
-        } else if (setting.type === 'json') {
+        if (setting.type === "boolean") {
+          value = value === "true";
+        } else if (setting.type === "number") {
+          value = parseFloat(value || "0");
+        } else if (setting.type === "json") {
           try {
-            value = JSON.parse(value || '{}');
+            value = JSON.parse(value || "{}");
           } catch {
             value = {};
           }
@@ -889,7 +970,7 @@ export class Storage {
 
       return settingsObj;
     } catch (error) {
-      console.error('Error getting settings:', error);
+      console.error("Error getting settings:", error);
       return {};
     }
   }
@@ -907,14 +988,18 @@ export class Storage {
 
       return await this.getSettings();
     } catch (error) {
-      console.error('Error updating settings:', error);
+      console.error("Error updating settings:", error);
       throw error;
     }
   }
 
   async updateOrCreateSetting(key: string, value: string): Promise<any> {
     try {
-      const existing = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
+      const existing = await db
+        .select()
+        .from(settings)
+        .where(eq(settings.key, key))
+        .limit(1);
 
       if (existing.length > 0) {
         const [updated] = await db
@@ -924,15 +1009,18 @@ export class Storage {
           .returning();
         return updated;
       } else {
-        const [created] = await db.insert(settings).values({
-          key,
-          value,
-          type: 'string'
-        }).returning();
+        const [created] = await db
+          .insert(settings)
+          .values({
+            key,
+            value,
+            type: "string",
+          })
+          .returning();
         return created;
       }
     } catch (error) {
-      console.error('Error updating/creating setting:', error);
+      console.error("Error updating/creating setting:", error);
       throw error;
     }
   }
@@ -958,51 +1046,51 @@ export class Storage {
           assignedTo: productionSchedule.assignedTo,
         })
         .from(productionSchedule)
-        Implementing the changes for retrieving units and updating inventory items to include unit information and dates.        .leftJoin(products, eq(productionSchedule.productId, products.id))
+        .leftJoin(products, eq(productionSchedule.productId, products.id))
         .where(
           and(
             gte(productionSchedule.scheduledDate, scheduleDate),
-            lte(productionSchedule.scheduledDate, nextDay)
-          )
+            lte(productionSchedule.scheduledDate, nextDay),
+          ),
         )
         .orderBy(asc(productionSchedule.scheduledDate));
 
       return result;
     } catch (error) {
-      console.error('Error getting production schedule by date:', error);
+      console.error("Error getting production schedule by date:", error);
       return [];
     }
   }
 
   async ensureDefaultAdmin(): Promise<void> {
     try {
-      console.log('🔄 Ensuring default users exist...');
+      console.log("🔄 Ensuring default users exist...");
 
       const defaultUsers = [
         {
-          id: 'admin_default',
-          email: 'admin@sweetreats.com',
-          password: await bcrypt.hash('admin123', 10),
-          firstName: 'Admin',
-          lastName: 'User',
-          role: 'admin'
+          id: "admin_default",
+          email: "admin@sweetreats.com",
+          password: await bcrypt.hash("admin123", 10),
+          firstName: "Admin",
+          lastName: "User",
+          role: "admin",
         },
         {
-          id: 'manager_default',
-          email: 'manager@sweetreats.com',
-          password: await bcrypt.hash('manager123', 10),
-          firstName: 'Manager',
-          lastName: 'User',
-          role: 'manager'
+          id: "manager_default",
+          email: "manager@sweetreats.com",
+          password: await bcrypt.hash("manager123", 10),
+          firstName: "Manager",
+          lastName: "User",
+          role: "manager",
         },
         {
-          id: 'staff_default',
-          email: 'staff@sweetreats.com',
-          password: await bcrypt.hash('staff123', 10),
-          firstName: 'Staff',
-          lastName: 'User',
-          role: 'staff'
-        }
+          id: "staff_default",
+          email: "staff@sweetreats.com",
+          password: await bcrypt.hash("staff123", 10),
+          firstName: "Staff",
+          lastName: "User",
+          role: "staff",
+        },
       ];
 
       for (const user of defaultUsers) {
@@ -1019,7 +1107,7 @@ export class Storage {
         }
       }
     } catch (error) {
-      console.error('❌ Error ensuring default users:', error);
+      console.error("❌ Error ensuring default users:", error);
       throw error;
     }
   }

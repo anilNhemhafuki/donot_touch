@@ -4,8 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import ProductForm from "@/components/product-form";
 import CostCalculator from "@/components/cost-calculator";
 import { queryClient } from "@/lib/queryClient";
@@ -21,7 +32,11 @@ export default function Products() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const { toast } = useToast();
 
-  const { data: products = [], isLoading, error } = useQuery({
+  const {
+    data: products = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["/api/products"],
   });
 
@@ -61,25 +76,30 @@ export default function Products() {
   });
 
   const filteredProducts = products.filter((product: any) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || product.categoryId?.toString() === selectedCategory;
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "all" ||
+      product.categoryId?.toString() === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   const getCategoryBadge = (categoryName: string) => {
     const colors: Record<string, string> = {
-      "Breads": "bg-blue-100 text-blue-800",
-      "Pastries": "bg-purple-100 text-purple-800", 
-      "Cakes": "bg-pink-100 text-pink-800",
-      "Cookies": "bg-orange-100 text-orange-800",
+      Breads: "bg-blue-100 text-blue-800",
+      Pastries: "bg-purple-100 text-purple-800",
+      Cakes: "bg-pink-100 text-pink-800",
+      Cookies: "bg-orange-100 text-orange-800",
     };
     return colors[categoryName] || "bg-gray-100 text-gray-800";
   };
 
   const getStockStatus = (stock: number) => {
-    if (stock === 0) return { label: "Out of Stock", class: "bg-red-100 text-red-800" };
-    if (stock < 10) return { label: "Low Stock", class: "bg-yellow-100 text-yellow-800" };
+    if (stock === 0)
+      return { label: "Out of Stock", class: "bg-red-100 text-red-800" };
+    if (stock < 10)
+      return { label: "Low Stock", class: "bg-yellow-100 text-yellow-800" };
     return { label: "In Stock", class: "bg-green-100 text-green-800" };
   };
 
@@ -89,7 +109,7 @@ export default function Products() {
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map(i => (
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="h-48 bg-gray-200 rounded-lg"></div>
             ))}
           </div>
@@ -115,14 +135,15 @@ export default function Products() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Product Catalog</h1>
-          <p className="text-gray-600">Manage your bakery products and recipes</p>
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+            Product Catalog
+          </h1>
+          <p className="text-gray-600">
+            Manage your bakery products and recipes
+          </p>
         </div>
         <div className="flex space-x-2">
-          <Button 
-            onClick={() => setShowCostCalculator(true)}
-            variant="outline"
-          >
+          <Button onClick={() => setShowCostCalculator(true)} variant="outline">
             <i className="fas fa-calculator mr-2"></i>
             Cost Calculator
           </Button>
@@ -145,7 +166,10 @@ export default function Products() {
                 className="w-full"
               />
             </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
@@ -170,7 +194,10 @@ export default function Products() {
             const margin = Number(product.margin);
 
             return (
-              <Card key={product.id} className="hover:shadow-lg transition-shadow">
+              <Card
+                key={product.id}
+                className="hover:shadow-lg transition-shadow"
+              >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
@@ -178,9 +205,13 @@ export default function Products() {
                         <i className="fas fa-cookie-bite text-primary"></i>
                       </div>
                       <div>
-                        <CardTitle className="text-lg">{product.name}</CardTitle>
+                        <CardTitle className="text-lg">
+                          {product.name}
+                        </CardTitle>
                         {product.categoryName && (
-                          <Badge className={getCategoryBadge(product.categoryName)}>
+                          <Badge
+                            className={getCategoryBadge(product.categoryName)}
+                          >
                             {product.categoryName}
                           </Badge>
                         )}
@@ -191,13 +222,17 @@ export default function Products() {
 
                 <CardContent className="space-y-4">
                   {product.description && (
-                    <p className="text-sm text-gray-600">{product.description}</p>
+                    <p className="text-sm text-gray-600">
+                      {product.description}
+                    </p>
                   )}
 
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Price:</span>
-                      <span className="font-semibold">${Number(product.price).toFixed(2)}</span>
+                      <span className="font-semibold">
+                        ${Number(product.price).toFixed(2)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Cost:</span>
@@ -205,7 +240,9 @@ export default function Products() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Margin:</span>
-                      <span className={`font-medium ${margin > 50 ? 'text-green-600' : margin > 25 ? 'text-yellow-600' : 'text-red-600'}`}>
+                      <span
+                        className={`font-medium ${margin > 50 ? "text-green-600" : margin > 25 ? "text-yellow-600" : "text-red-600"}`}
+                      >
                         {margin.toFixed(1)}%
                       </span>
                     </div>
@@ -216,14 +253,16 @@ export default function Products() {
                       {stockStatus.label}
                     </Badge>
                     {product.sku && (
-                      <span className="text-xs text-gray-500">SKU: {product.sku}</span>
+                      <span className="text-xs text-gray-500">
+                        SKU: {product.sku}
+                      </span>
                     )}
                   </div>
 
                   <div className="flex space-x-2 pt-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="flex-1"
                       onClick={() => {
                         setEditingProduct(product);
@@ -233,9 +272,9 @@ export default function Products() {
                       <i className="fas fa-edit mr-1"></i>
                       Edit
                     </Button>
-                    <Button 
-                      size="sm" 
-                      variant="destructive" 
+                    <Button
+                      size="sm"
+                      variant="destructive"
                       onClick={() => deleteProductMutation.mutate(product.id)}
                       disabled={deleteProductMutation.isPending}
                     >
@@ -250,12 +289,13 @@ export default function Products() {
         ) : (
           <div className="col-span-full text-center py-12">
             <i className="fas fa-cookie-bite text-6xl text-gray-300 mb-4"></i>
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">No products found</h3>
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">
+              No products found
+            </h3>
             <p className="text-gray-500 mb-4">
-              {searchQuery || selectedCategory !== "all" 
+              {searchQuery || selectedCategory !== "all"
                 ? "Try adjusting your search criteria"
-                : "Start by adding your first product"
-              }
+                : "Start by adding your first product"}
             </p>
             <Button onClick={() => setShowProductForm(true)}>
               <i className="fas fa-plus mr-2"></i>
@@ -266,17 +306,20 @@ export default function Products() {
       </div>
 
       {/* Product Form Modal */}
-      <Dialog open={showProductForm} onOpenChange={(open) => {
-        setShowProductForm(open);
-        if (!open) setEditingProduct(null);
-      }}>
+      <Dialog
+        open={showProductForm}
+        onOpenChange={(open) => {
+          setShowProductForm(open);
+          if (!open) setEditingProduct(null);
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingProduct ? "Edit Product" : "Add New Product"}
             </DialogTitle>
           </DialogHeader>
-          <ProductForm 
+          <ProductForm
             product={editingProduct}
             onSuccess={() => {
               setShowProductForm(false);
@@ -292,11 +335,13 @@ export default function Products() {
           <DialogHeader>
             <DialogTitle>Product Cost Calculator</DialogTitle>
           </DialogHeader>
-          <CostCalculator onSave={(productData) => {
-            setShowCostCalculator(false);
-            setEditingProduct(productData);
-            setShowProductForm(true);
-          }} />
+          <CostCalculator
+            onSave={(productData) => {
+              setShowCostCalculator(false);
+              setEditingProduct(productData);
+              setShowProductForm(true);
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>

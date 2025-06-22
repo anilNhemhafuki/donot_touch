@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -139,10 +138,12 @@ export default function Customers() {
     const formData = new FormData(e.target as HTMLFormElement);
     const data = {
       name: formData.get("name") as string,
-      email: formData.get("email") as string || null,
-      phone: formData.get("phone") as string || null,
-      address: formData.get("address") as string || null,
-      remainingBalance: formData.get("remainingBalance") ? parseFloat(formData.get("remainingBalance") as string) : 0,
+      email: (formData.get("email") as string) || null,
+      phone: (formData.get("phone") as string) || null,
+      address: (formData.get("address") as string) || null,
+      remainingBalance: formData.get("remainingBalance")
+        ? parseFloat(formData.get("remainingBalance") as string)
+        : 0,
     };
 
     if (editingCustomer) {
@@ -152,10 +153,11 @@ export default function Customers() {
     }
   };
 
-  const filteredCustomers = (customers as any[]).filter((customer: any) =>
-    customer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.phone?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCustomers = (customers as any[]).filter(
+    (customer: any) =>
+      customer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.phone?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const getBalanceBadge = (balance: any) => {
@@ -163,7 +165,10 @@ export default function Customers() {
     if (amount > 0) {
       return { variant: "default" as const, text: `+$${amount.toFixed(2)}` };
     } else if (amount < 0) {
-      return { variant: "destructive" as const, text: `-$${Math.abs(amount).toFixed(2)}` };
+      return {
+        variant: "destructive" as const,
+        text: `-$${Math.abs(amount).toFixed(2)}`,
+      };
     }
     return { variant: "secondary" as const, text: "$0.00" };
   };
@@ -184,17 +189,22 @@ export default function Customers() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Customer Management</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">
+            Customer Management
+          </h1>
           <p className="text-muted-foreground">
             Manage your customer relationships and balances
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingCustomer(null);
-          }
-        }}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) {
+              setEditingCustomer(null);
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button
               onClick={() => setEditingCustomer(null)}
@@ -209,7 +219,9 @@ export default function Customers() {
               <DialogTitle>
                 {editingCustomer ? "Edit Customer" : "Add New Customer"}
               </DialogTitle>
-              <DialogDescription>Enter customer details below</DialogDescription>
+              <DialogDescription>
+                Enter customer details below
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSave} className="space-y-4">
               <Input
@@ -301,7 +313,9 @@ export default function Customers() {
                 </TableHeader>
                 <TableBody>
                   {filteredCustomers.map((customer: any) => {
-                    const balanceInfo = getBalanceBadge(customer.remainingBalance);
+                    const balanceInfo = getBalanceBadge(
+                      customer.remainingBalance,
+                    );
                     return (
                       <TableRow key={customer.id}>
                         <TableCell>

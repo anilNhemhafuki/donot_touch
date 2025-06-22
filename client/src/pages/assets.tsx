@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -166,7 +165,7 @@ export default function Assets() {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -196,9 +195,15 @@ export default function Assets() {
       description: formData.description.trim() || null,
       location: formData.location.trim() || null,
       condition: formData.condition || "good",
-      purchaseDate: formData.purchaseDate ? new Date(formData.purchaseDate) : null,
-      purchasePrice: formData.purchasePrice ? parseFloat(formData.purchasePrice) : null,
-      currentValue: formData.currentValue ? parseFloat(formData.currentValue) : null,
+      purchaseDate: formData.purchaseDate
+        ? new Date(formData.purchaseDate)
+        : null,
+      purchasePrice: formData.purchasePrice
+        ? parseFloat(formData.purchasePrice)
+        : null,
+      currentValue: formData.currentValue
+        ? parseFloat(formData.currentValue)
+        : null,
     };
 
     if (editingAsset) {
@@ -216,7 +221,9 @@ export default function Assets() {
       description: asset.description || "",
       location: asset.location || "",
       condition: asset.condition || "good",
-      purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split("T")[0] : "",
+      purchaseDate: asset.purchaseDate
+        ? new Date(asset.purchaseDate).toISOString().split("T")[0]
+        : "",
       purchasePrice: asset.purchasePrice ? asset.purchasePrice.toString() : "",
       currentValue: asset.currentValue ? asset.currentValue.toString() : "",
     });
@@ -280,17 +287,22 @@ export default function Assets() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Asset Management</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">
+            Asset Management
+          </h1>
           <p className="text-muted-foreground">
             Track and manage your business assets
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            resetForm();
-          }
-        }}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) {
+              resetForm();
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button onClick={handleAddNew} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
@@ -311,7 +323,7 @@ export default function Assets() {
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 required
               />
-              
+
               <Select
                 value={formData.category}
                 onValueChange={(value) => handleInputChange("category", value)}
@@ -331,7 +343,9 @@ export default function Assets() {
               <Textarea
                 placeholder="Description"
                 value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
                 rows={3}
               />
 
@@ -361,7 +375,9 @@ export default function Assets() {
                 type="date"
                 placeholder="Purchase Date"
                 value={formData.purchaseDate}
-                onChange={(e) => handleInputChange("purchaseDate", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("purchaseDate", e.target.value)
+                }
               />
 
               <Input
@@ -369,7 +385,9 @@ export default function Assets() {
                 step="0.01"
                 placeholder="Purchase Price ($)"
                 value={formData.purchasePrice}
-                onChange={(e) => handleInputChange("purchasePrice", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("purchasePrice", e.target.value)
+                }
               />
 
               <Input
@@ -377,7 +395,9 @@ export default function Assets() {
                 step="0.01"
                 placeholder="Current Value ($)"
                 value={formData.currentValue}
-                onChange={(e) => handleInputChange("currentValue", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("currentValue", e.target.value)
+                }
               />
 
               <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
@@ -391,7 +411,9 @@ export default function Assets() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
                   className="w-full sm:w-auto"
                 >
                   {editingAsset ? "Update" : "Create"}

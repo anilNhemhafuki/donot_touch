@@ -1,13 +1,26 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Tag } from 'lucide-react';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Plus, Edit, Trash2, Tag } from "lucide-react";
 
 interface Category {
   id: number;
@@ -23,78 +36,100 @@ export default function CategoryManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    description: ''
+    name: "",
+    description: "",
   });
 
   const { data: categories = [], isLoading } = useQuery({
-    queryKey: ['/api/categories'],
+    queryKey: ["/api/categories"],
   });
 
   const createMutation = useMutation({
     mutationFn: async (data: { name: string; description?: string }) => {
-      const response = await fetch('/api/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+      const response = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to create category');
+      if (!response.ok) throw new Error("Failed to create category");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       toast({ title: "Success", description: "Category created successfully" });
       handleCloseDialog();
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to create category", variant: "destructive" });
-    }
+      toast({
+        title: "Error",
+        description: "Failed to create category",
+        variant: "destructive",
+      });
+    },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: { name: string; description?: string } }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: { name: string; description?: string };
+    }) => {
       const response = await fetch(`/api/categories/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to update category');
+      if (!response.ok) throw new Error("Failed to update category");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       toast({ title: "Success", description: "Category updated successfully" });
       handleCloseDialog();
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to update category", variant: "destructive" });
-    }
+      toast({
+        title: "Error",
+        description: "Failed to update category",
+        variant: "destructive",
+      });
+    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       const response = await fetch(`/api/categories/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
+        method: "DELETE",
+        credentials: "include",
       });
-      if (!response.ok) throw new Error('Failed to delete category');
+      if (!response.ok) throw new Error("Failed to delete category");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       toast({ title: "Success", description: "Category deleted successfully" });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to delete category", variant: "destructive" });
-    }
+      toast({
+        title: "Error",
+        description: "Failed to delete category",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      toast({ title: "Error", description: "Category name is required", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Category name is required",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -109,7 +144,7 @@ export default function CategoryManagement() {
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      description: category.description || ''
+      description: category.description || "",
     });
     setIsDialogOpen(true);
   };
@@ -117,11 +152,11 @@ export default function CategoryManagement() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingCategory(null);
-    setFormData({ name: '', description: '' });
+    setFormData({ name: "", description: "" });
   };
 
   const handleDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this category?')) {
+    if (confirm("Are you sure you want to delete this category?")) {
       deleteMutation.mutate(id);
     }
   };
@@ -138,7 +173,9 @@ export default function CategoryManagement() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Category Management</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">
+            Category Management
+          </h1>
           <p className="text-muted-foreground">
             Organize your products, inventory, and transactions with categories
           </p>
@@ -152,9 +189,13 @@ export default function CategoryManagement() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingCategory ? 'Edit Category' : 'Create New Category'}</DialogTitle>
+              <DialogTitle>
+                {editingCategory ? "Edit Category" : "Create New Category"}
+              </DialogTitle>
               <DialogDescription>
-                {editingCategory ? 'Update the category details' : 'Add a new category to organize your data'}
+                {editingCategory
+                  ? "Update the category details"
+                  : "Add a new category to organize your data"}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -163,7 +204,9 @@ export default function CategoryManagement() {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="Enter category name"
                   required
                 />
@@ -173,17 +216,28 @@ export default function CategoryManagement() {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   placeholder="Enter category description (optional)"
                   rows={3}
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCloseDialog}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingCategory ? 'Update' : 'Create'} Category
+                <Button
+                  type="submit"
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
+                >
+                  {editingCategory ? "Update" : "Create"} Category
                 </Button>
               </div>
             </form>

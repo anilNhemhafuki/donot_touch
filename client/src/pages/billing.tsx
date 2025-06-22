@@ -1,16 +1,49 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Download, Printer, Eye, Edit, Trash2 } from "lucide-react";
+import {
+  Plus,
+  FileText,
+  Download,
+  Printer,
+  Eye,
+  Edit,
+  Trash2,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
@@ -18,7 +51,9 @@ export default function Billing() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBill, setEditingBill] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState("");
-  const [billItems, setBillItems] = useState([{ productId: "", quantity: 1, unitPrice: 0 }]);
+  const [billItems, setBillItems] = useState([
+    { productId: "", quantity: 1, unitPrice: 0 },
+  ]);
   const { toast } = useToast();
 
   const { data: bills = [], isLoading } = useQuery({
@@ -101,13 +136,16 @@ export default function Billing() {
   };
 
   const calculateTotal = () => {
-    return billItems.reduce((total, item) => total + (item.quantity * item.unitPrice), 0);
+    return billItems.reduce(
+      (total, item) => total + item.quantity * item.unitPrice,
+      0,
+    );
   };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    
+
     if (!selectedCustomer) {
       toast({
         title: "Error",
@@ -117,7 +155,7 @@ export default function Billing() {
       return;
     }
 
-    if (billItems.length === 0 || billItems.some(item => !item.productId)) {
+    if (billItems.length === 0 || billItems.some((item) => !item.productId)) {
       toast({
         title: "Error",
         description: "At least one product is required",
@@ -140,7 +178,7 @@ export default function Billing() {
   };
 
   const printBill = (bill: any) => {
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     if (printWindow) {
       printWindow.document.write(generateBillHTML(bill));
       printWindow.document.close();
@@ -150,9 +188,9 @@ export default function Billing() {
 
   const downloadBill = (bill: any) => {
     const billHTML = generateBillHTML(bill);
-    const blob = new Blob([billHTML], { type: 'text/html' });
+    const blob = new Blob([billHTML], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `bill_${bill.billNumber}.html`;
     document.body.appendChild(a);
@@ -198,14 +236,20 @@ export default function Billing() {
               </tr>
             </thead>
             <tbody>
-              ${bill.items?.map((item: any) => `
+              ${
+                bill.items
+                  ?.map(
+                    (item: any) => `
                 <tr>
                   <td>${item.productName}</td>
                   <td>${item.quantity}</td>
                   <td>$${item.unitPrice.toFixed(2)}</td>
                   <td>$${(item.quantity * item.unitPrice).toFixed(2)}</td>
                 </tr>
-              `).join('') || ''}
+              `,
+                  )
+                  .join("") || ""
+              }
             </tbody>
           </table>
           <div class="total">
@@ -214,14 +258,17 @@ export default function Billing() {
             <p>Tax: $${bill.tax.toFixed(2)}</p>
             <p><strong>Total: $${bill.totalAmount.toFixed(2)}</strong></p>
           </div>
-          ${bill.notes ? `<div style="margin-top: 20px;"><strong>Notes:</strong> ${bill.notes}</div>` : ''}
+          ${bill.notes ? `<div style="margin-top: 20px;"><strong>Notes:</strong> ${bill.notes}</div>` : ""}
         </body>
       </html>
     `;
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+    const variants: Record<
+      string,
+      "default" | "secondary" | "destructive" | "outline"
+    > = {
       paid: "default",
       pending: "secondary",
       overdue: "destructive",
@@ -234,13 +281,18 @@ export default function Billing() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Billing System</h1>
-          <p className="text-muted-foreground">Create and manage customer bills</p>
+          <h1 className="text-xl sm:text-2xl font-semibold">Billing System</h1>
+          <p className="text-muted-foreground">
+            Create and manage customer bills
+          </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) resetForm();
-        }}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
             <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
@@ -264,7 +316,10 @@ export default function Billing() {
                     </SelectTrigger>
                     <SelectContent>
                       {customers.map((customer: any) => (
-                        <SelectItem key={customer.id} value={customer.id.toString()}>
+                        <SelectItem
+                          key={customer.id}
+                          value={customer.id.toString()}
+                        >
                           {customer.name}
                         </SelectItem>
                       ))}
@@ -284,7 +339,7 @@ export default function Billing() {
                 placeholder="Due Date"
                 required
               />
-              
+
               <div className="space-y-2">
                 <label className="text-sm font-medium">Bill Items</label>
                 {billItems.map((item, index) => (
@@ -293,7 +348,9 @@ export default function Billing() {
                       value={item.productId}
                       onValueChange={(value) => {
                         updateBillItem(index, "productId", value);
-                        const product = products.find((p: any) => p.id.toString() === value);
+                        const product = products.find(
+                          (p: any) => p.id.toString() === value,
+                        );
                         if (product) {
                           updateBillItem(index, "unitPrice", product.price);
                         }
@@ -304,7 +361,10 @@ export default function Billing() {
                       </SelectTrigger>
                       <SelectContent>
                         {products.map((product: any) => (
-                          <SelectItem key={product.id} value={product.id.toString()}>
+                          <SelectItem
+                            key={product.id}
+                            value={product.id.toString()}
+                          >
                             {product.name} - Rs. {product.price}
                           </SelectItem>
                         ))}
@@ -314,7 +374,13 @@ export default function Billing() {
                       type="number"
                       placeholder="Qty"
                       value={item.quantity}
-                      onChange={(e) => updateBillItem(index, "quantity", parseInt(e.target.value) || 1)}
+                      onChange={(e) =>
+                        updateBillItem(
+                          index,
+                          "quantity",
+                          parseInt(e.target.value) || 1,
+                        )
+                      }
                       className="w-20"
                     />
                     <Input
@@ -322,7 +388,13 @@ export default function Billing() {
                       step="0.01"
                       placeholder="Price"
                       value={item.unitPrice}
-                      onChange={(e) => updateBillItem(index, "unitPrice", parseFloat(e.target.value) || 0)}
+                      onChange={(e) =>
+                        updateBillItem(
+                          index,
+                          "unitPrice",
+                          parseFloat(e.target.value) || 0,
+                        )
+                      }
                       className="w-24"
                     />
                     {billItems.length > 1 && (
@@ -365,11 +437,7 @@ export default function Billing() {
                 />
               </div>
 
-              <Textarea
-                name="notes"
-                placeholder="Notes (optional)"
-                rows={3}
-              />
+              <Textarea name="notes" placeholder="Notes (optional)" rows={3} />
 
               <div className="text-right">
                 <p className="text-lg font-semibold">
@@ -385,10 +453,7 @@ export default function Billing() {
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending}
-                >
+                <Button type="submit" disabled={createMutation.isPending}>
                   Create Bill
                 </Button>
               </div>
@@ -424,10 +489,16 @@ export default function Billing() {
                 <TableBody>
                   {bills.map((bill: any) => (
                     <TableRow key={bill.id}>
-                      <TableCell className="font-medium">{bill.billNumber}</TableCell>
+                      <TableCell className="font-medium">
+                        {bill.billNumber}
+                      </TableCell>
                       <TableCell>{bill.customerName}</TableCell>
-                      <TableCell>{new Date(bill.billDate).toLocaleDateString()}</TableCell>
-                      <TableCell>{new Date(bill.dueDate).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {new Date(bill.billDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(bill.dueDate).toLocaleDateString()}
+                      </TableCell>
                       <TableCell>${bill.totalAmount.toFixed(2)}</TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadge(bill.status)}>

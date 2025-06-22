@@ -27,7 +27,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Package, AlertTriangle } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Package,
+  AlertTriangle,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
@@ -37,7 +44,11 @@ export default function Inventory() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const { toast } = useToast();
 
-  const { data: items = [], isLoading, error } = useQuery({
+  const {
+    data: items = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["/api/inventory"],
     retry: (failureCount, error) => {
       if (isUnauthorizedError(error)) return false;
@@ -56,7 +67,7 @@ export default function Inventory() {
       const inventoryData = {
         ...data,
         dateAdded: new Date().toISOString(),
-        lastRestocked: new Date().toISOString()
+        lastRestocked: new Date().toISOString(),
       };
       return apiRequest("POST", "/api/inventory", inventoryData);
     },
@@ -64,7 +75,10 @@ export default function Inventory() {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/low-stock"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({ title: "Success", description: "Inventory item saved successfully" });
+      toast({
+        title: "Success",
+        description: "Inventory item saved successfully",
+      });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -92,7 +106,7 @@ export default function Inventory() {
       // Add today's date for inventory updates
       const updateData = {
         ...data.values,
-        dateUpdated: new Date().toISOString()
+        dateUpdated: new Date().toISOString(),
       };
       return apiRequest("PUT", `/api/inventory/${data.id}`, updateData);
     },
@@ -102,7 +116,10 @@ export default function Inventory() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setIsDialogOpen(false);
       setEditingItem(null);
-      toast({ title: "Success", description: "Inventory item updated successfully" });
+      toast({
+        title: "Success",
+        description: "Inventory item updated successfully",
+      });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -128,7 +145,10 @@ export default function Inventory() {
     mutationFn: (id: number) => apiRequest("DELETE", `/api/inventory/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      toast({ title: "Success", description: "Inventory item deleted successfully" });
+      toast({
+        title: "Success",
+        description: "Inventory item deleted successfully",
+      });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -192,9 +212,10 @@ export default function Inventory() {
     }
   };
 
-  const filteredItems = (items as any[]).filter((item: any) =>
-    item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.supplier?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredItems = (items as any[]).filter(
+    (item: any) =>
+      item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.supplier?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const getStockBadge = (item: any) => {
@@ -225,17 +246,22 @@ export default function Inventory() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Inventory Management</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">
+            Inventory Management
+          </h1>
           <p className="text-muted-foreground">
             Track your ingredients and raw materials
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingItem(null);
-          }
-        }}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) {
+              setEditingItem(null);
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button
               onClick={() => setEditingItem(null)}
@@ -380,10 +406,12 @@ export default function Inventory() {
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">
-                            {parseFloat(item.currentStock || 0).toFixed(2)} {item.unit}
+                            {parseFloat(item.currentStock || 0).toFixed(2)}{" "}
+                            {item.unit}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            Min: {parseFloat(item.minLevel || 0).toFixed(2)} {item.unit}
+                            Min: {parseFloat(item.minLevel || 0).toFixed(2)}{" "}
+                            {item.unit}
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">

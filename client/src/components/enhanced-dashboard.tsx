@@ -120,7 +120,7 @@ export default function EnhancedDashboard() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">Dashboard</h1>
           <p className="text-muted-foreground">
             Welcome back! Here's what's happening today.
           </p>

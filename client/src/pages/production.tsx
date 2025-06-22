@@ -46,18 +46,16 @@ export default function Production() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Production Schedule</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">
+            Production Schedule
+          </h1>
           <p className="text-muted-foreground">
             Plan and track your production activities
           </p>
         </div>
         <Dialog open={false} onOpenChange={() => {}}>
           <DialogTrigger asChild>
-            <Button
-              onClick={() => {
-              }}
-              className="w-full sm:w-auto"
-            >
+            <Button onClick={() => {}} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Schedule Production
             </Button>
@@ -67,7 +65,9 @@ export default function Production() {
               <DialogTitle>
                 {"" ? "Edit Production Item" : "Schedule New Production"}
               </DialogTitle>
-              <DialogDescription>Enter production details below</DialogDescription>
+              <DialogDescription>
+                Enter production details below
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={() => {}} className="space-y-4">
               <div>
@@ -79,8 +79,7 @@ export default function Production() {
                   <SelectTrigger>
                     <SelectValue placeholder="Select Product" />
                   </SelectTrigger>
-                  <SelectContent>
-                  </SelectContent>
+                  <SelectContent></SelectContent>
                 </Select>
                 <input type="hidden" name="productId" value={""} />
               </div>
@@ -95,9 +94,7 @@ export default function Production() {
                 name="scheduledDate"
                 type="date"
                 defaultValue={
-                  ""
-                    ? new Date("").toISOString().split("T")[0]
-                    : ""
+                  "" ? new Date("").toISOString().split("T")[0] : ""
                 }
                 required
               />
@@ -105,21 +102,13 @@ export default function Production() {
                 name="startTime"
                 type="time"
                 placeholder="Start Time"
-                defaultValue={
-                  ""
-                    ? new Date("").toTimeString().slice(0, 5)
-                    : ""
-                }
+                defaultValue={"" ? new Date("").toTimeString().slice(0, 5) : ""}
               />
               <Input
                 name="endTime"
                 type="time"
                 placeholder="End Time"
-                defaultValue={
-                  ""
-                    ? new Date("").toTimeString().slice(0, 5)
-                    : ""
-                }
+                defaultValue={"" ? new Date("").toTimeString().slice(0, 5) : ""}
               />
               <div>
                 <Select
@@ -156,9 +145,7 @@ export default function Production() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={
-                    false || false
-                  }
+                  disabled={false || false}
                   className="w-full sm:w-auto"
                 >
                   {"" ? "Update" : "Schedule"}

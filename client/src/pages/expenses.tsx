@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -151,7 +150,7 @@ export default function Expenses() {
       category: formData.get("category") as string,
       amount: parseFloat(formData.get("amount") as string) || 0,
       date: new Date(formData.get("date") as string),
-      description: formData.get("description") as string || null,
+      description: (formData.get("description") as string) || null,
     };
 
     if (editingExpense) {
@@ -183,7 +182,10 @@ export default function Expenses() {
   });
 
   const getCategoryBadge = (category: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+    const variants: Record<
+      string,
+      "default" | "secondary" | "destructive" | "outline"
+    > = {
       utilities: "default",
       rent: "secondary",
       supplies: "outline",
@@ -213,18 +215,23 @@ export default function Expenses() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Expense Management</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">
+            Expense Management
+          </h1>
           <p className="text-muted-foreground">
             Track and manage your business expenses
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingExpense(null);
-            setSelectedCategory("");
-          }
-        }}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) {
+              setEditingExpense(null);
+              setSelectedCategory("");
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button
               onClick={() => {
@@ -363,9 +370,7 @@ export default function Expenses() {
                       Category
                     </TableHead>
                     <TableHead>Amount</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Date
-                    </TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>

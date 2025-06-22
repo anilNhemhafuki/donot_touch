@@ -148,12 +148,12 @@ export default function Parties() {
     const data = {
       name: formData.get("name") as string,
       type: formData.get("type") as string,
-      email: formData.get("email") as string || null,
-      phone: formData.get("phone") as string || null,
-      address: formData.get("address") as string || null,
-      contactPerson: formData.get("contactPerson") as string || null,
-      taxId: formData.get("taxId") as string || null,
-      notes: formData.get("notes") as string || null,
+      email: (formData.get("email") as string) || null,
+      phone: (formData.get("phone") as string) || null,
+      address: (formData.get("address") as string) || null,
+      contactPerson: (formData.get("contactPerson") as string) || null,
+      taxId: (formData.get("taxId") as string) || null,
+      notes: (formData.get("notes") as string) || null,
       isActive: true,
     };
 
@@ -177,8 +177,7 @@ export default function Parties() {
       party.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       party.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       party.contactPerson?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType =
-      typeFilter === "all" || party.type === typeFilter;
+    const matchesType = typeFilter === "all" || party.type === typeFilter;
     return matchesSearch && matchesType;
   });
 
@@ -204,7 +203,6 @@ export default function Parties() {
     return { variant: "secondary" as const, text: "$0.00" };
   };
 
-
   if (error) {
     if (isUnauthorizedError(error)) {
       toast({
@@ -224,18 +222,23 @@ export default function Parties() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Parties Management</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">
+            Parties Management
+          </h1>
           <p className="text-muted-foreground">
             Manage suppliers, vendors, and business partners
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingParty(null);
-            setSelectedType("");
-          }
-        }}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) {
+              setEditingParty(null);
+              setSelectedType("");
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button
               onClick={() => {
@@ -274,7 +277,8 @@ export default function Parties() {
                   <SelectContent>
                     {partyTypes.map((type) => (
                       <SelectItem key={type} value={type}>
-                        {type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')}
+                        {type.charAt(0).toUpperCase() +
+                          type.slice(1).replace("_", " ")}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -360,7 +364,8 @@ export default function Parties() {
                   <SelectItem value="all">All Types</SelectItem>
                   {partyTypes.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')}
+                      {type.charAt(0).toUpperCase() +
+                        type.slice(1).replace("_", " ")}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -401,7 +406,7 @@ export default function Parties() {
                           <div>
                             <div className="font-medium">{party.name}</div>
                             <div className="text-sm text-muted-foreground sm:hidden">
-                              {party.type?.replace('_', ' ')}
+                              {party.type?.replace("_", " ")}
                             </div>
                           </div>
                         </div>
@@ -409,16 +414,16 @@ export default function Parties() {
                       <TableCell>
                         <Badge variant={getTypeBadge(party.type)}>
                           {party.type?.charAt(0).toUpperCase() +
-                            party.type?.slice(1).replace('_', ' ')}
+                            party.type?.slice(1).replace("_", " ")}
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         <div className="text-sm">
-                          {party.email && (
-                            <div>{party.email}</div>
-                          )}
+                          {party.email && <div>{party.email}</div>}
                           {party.phone && (
-                            <div className="text-muted-foreground">{party.phone}</div>
+                            <div className="text-muted-foreground">
+                              {party.phone}
+                            </div>
                           )}
                         </div>
                       </TableCell>
@@ -426,7 +431,9 @@ export default function Parties() {
                         {party.contactPerson || "N/A"}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={party.isActive ? "default" : "secondary"}>
+                        <Badge
+                          variant={party.isActive ? "default" : "secondary"}
+                        >
                           {party.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
