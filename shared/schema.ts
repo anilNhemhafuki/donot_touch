@@ -66,17 +66,30 @@ export const products = pgTable("products", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Units table
+export const units = pgTable("units", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+  abbreviation: varchar("abbreviation", { length: 10 }).notNull(),
+  type: varchar("type", { length: 20 }).notNull(), // weight, volume, count
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Inventory items (ingredients)
 export const inventoryItems = pgTable("inventory_items", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 200 }).notNull(),
   currentStock: decimal("current_stock", { precision: 10, scale: 2 }).notNull(),
   minLevel: decimal("min_level", { precision: 10, scale: 2 }).notNull(),
-  unit: varchar("unit", { length: 50 }).notNull(), // lbs, kg, dozen, etc.
+  unitId: integer("unit_id").references(() => units.id),
+  unit: varchar("unit", { length: 50 }).notNull(), // fallback for existing data
   costPerUnit: decimal("cost_per_unit", { precision: 10, scale: 2 }).notNull(),
   supplier: varchar("supplier", { length: 200 }),
   company: varchar("company", { length: 200 }),
   lastRestocked: timestamp("last_restocked"),
+  dateAdded: timestamp("date_added").defaultNow(),
+  dateUpdated: timestamp("date_updated").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -269,7 +282,15 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   productionTasks: many(productionSchedule),
 }));
 
-export const inventoryItemsRelations = relations(inventoryItems, ({ many }) => ({
+export const unitsRelations = relations(units, ({ many }) => ({
+  inventoryItems: many(inventoryItems),
+}));
+
+export const inventoryItemsRelations = relations(inventoryItems, ({ one, many }) => ({
+  unit: one(units, {
+    fields: [inventoryItems.unitId],
+    references: [units.id],
+  }),
   productIngredients: many(productIngredients),
   transactions: many(inventoryTransactions),
 }));
@@ -336,6 +357,9 @@ export type InsertCategory = typeof categories.$inferInsert;
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = typeof products.$inferInsert;
 
+export type Unit = typeof units.$inferSelect;
+export type InsertUnit = typeof units.$inferInsert;
+
 export type InventoryItem = typeof inventoryItems.$inferSelect;
 export type InsertInventoryItem = typeof inventoryItems.$inferInsert;
 
@@ -369,6 +393,7 @@ export type InsertExpense = typeof expenses.$inferInsert;
 // Schemas
 export const insertCategorySchema = createInsertSchema(categories);
 export const insertProductSchema = createInsertSchema(products);
+export const insertUnitSchema = createInsertSchema(units);
 export const insertInventoryItemSchema = createInsertSchema(inventoryItems);
 export const insertProductIngredientSchema = createInsertSchema(productIngredients);
 export const insertOrderSchema = createInsertSchema(orders);

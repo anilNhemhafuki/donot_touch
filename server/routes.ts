@@ -263,6 +263,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Units
+  app.get("/api/units", isAuthenticated, async (req, res) => {
+    try {
+      const units = await storage.getUnits();
+      res.json(units);
+    } catch (error) {
+      console.error("Error fetching units:", error);
+      res.status(500).json({ message: "Failed to fetch units" });
+    }
+  });
+
+  app.post("/api/units", isAuthenticated, async (req, res) => {
+    try {
+      if (!req.body.name) {
+        return res.status(400).json({ message: "Unit name is required" });
+      }
+
+      const transformedData = {
+        name: req.body.name.trim(),
+        abbreviation: req.body.abbreviation ? req.body.abbreviation.trim() : req.body.name.slice(0, 3).toLowerCase(),
+        type: req.body.type || "count",
+        isActive: true,
+      };
+
+      const unit = await storage.createUnit(transformedData);
+      res.json(unit);
+    } catch (error) {
+      console.error("Error creating unit:", error);
+      res.status(500).json({ 
+        message: "Failed to create unit",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Inventory
   app.get("/api/inventory", isAuthenticated, async (req, res) => {
     try {

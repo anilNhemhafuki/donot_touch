@@ -2,46 +2,49 @@ import {
   users,
   categories,
   products,
-  customers,
+  inventoryItems,
+  units,
+  productIngredients,
   orders,
   orderItems,
-  inventoryItems,
-  inventoryTransactions,
   productionSchedule,
-  bills,
-  billItems,
-  settings,
+  inventoryTransactions,
+  customers,
   parties,
   assets,
   expenses,
-  productIngredients,
-  type UpsertUser,
+  bills,
+  billItems,
+  settings,
   type User,
+  type UpsertUser,
   type Category,
   type InsertCategory,
   type Product,
   type InsertProduct,
-  type Customer,
-  type InsertCustomer,
+  type InventoryItem,
+  type InsertInventoryItem,
+  type Unit,
+  type InsertUnit,
+  type ProductIngredient,
+  type InsertProductIngredient,
   type Order,
   type InsertOrder,
   type OrderItem,
   type InsertOrderItem,
-  type InventoryItem,
-  type InsertInventoryItem,
-  type InventoryTransaction,
-  type InsertInventoryTransaction,
   type ProductionScheduleItem,
   type InsertProductionScheduleItem,
-  type ProductIngredient,
-  type InsertProductIngredient,
+  type InventoryTransaction,
+  type InsertInventoryTransaction,
+  type Customer,
+  type InsertCustomer,
   type Party,
   type InsertParty,
   type Asset,
   type InsertAsset,
   type Expense,
   type InsertExpense,
-} from "../shared/schema.js";
+} from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, gte, lte, sql, like } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -148,6 +151,10 @@ export interface IStorage {
   getAllUsers(): Promise<any[]>;
   updateUser(id: string, data: any): Promise<any>;
   deleteUser(id: string): Promise<void>;
+
+  //Unit
+  getUnits(): Promise<Unit[]>;
+  createUnit(data: InsertUnit): Promise<Unit>;
 }
 
 export class Storage {
@@ -299,8 +306,37 @@ export class Storage {
   }
 
   // Inventory operations
-  async getInventoryItems(): Promise<InventoryItem[]> {
-    return await db.select().from(inventoryItems).orderBy(asc(inventoryItems.name));
+  async getUnits() {
+    return await db.select().from(units).where(eq(units.isActive, true)).orderBy(units.name);
+  }
+
+  async createUnit(data: InsertUnit) {
+    const [unit] = await db.insert(units).values(data).returning();
+    return unit;
+  }
+
+  async getInventoryItems() {
+    return await db.select({
+      id: inventoryItems.id,
+      name: inventoryItems.name,
+      currentStock: inventoryItems.currentStock,
+      minLevel: inventoryItems.minLevel,
+      unit: inventoryItems.unit,
+      unitId: inventoryItems.unitId,
+      costPerUnit: inventoryItems.costPerUnit,
+      supplier: inventoryItems.supplier,
+      company: inventoryItems.company,
+      lastRestocked: inventoryItems.lastRestocked,
+      dateAdded: inventoryItems.dateAdded,
+      dateUpdated: inventoryItems.dateUpdated,
+      createdAt: inventoryItems.createdAt,
+      updatedAt: inventoryItems.updatedAt,
+      unitName: units.name,
+      unitAbbreviation: units.abbreviation,
+    })
+    .from(inventoryItems)
+    .leftJoin(units, eq(inventoryItems.unitId, units.id))
+    .orderBy(inventoryItems.name);
   }
 
   async getInventoryItemById(id: number): Promise<InventoryItem | undefined> {
@@ -316,18 +352,27 @@ export class Storage {
       .orderBy(asc(inventoryItems.name));
   }
 
-  async createInventoryItem(item: InsertInventoryItem): Promise<InventoryItem> {
-    const [created] = await db.insert(inventoryItems).values(item).returning();
-    return created;
+  async createInventoryItem(data: InsertInventoryItem) {
+    const itemData = {
+      ...data,
+      dateAdded: new Date(),
+      dateUpdated: new Date(),
+    };
+    const [item] = await db.insert(inventoryItems).values(itemData).returning();
+    return item;
   }
 
-  async updateInventoryItem(id: number, item: Partial<InsertInventoryItem>): Promise<InventoryItem> {
-    const [updated] = await db
+  async updateInventoryItem(id: number, data: Partial<InsertInventoryItem>) {
+    const updateData = {
+      ...data,
+      dateUpdated: new Date(),
+    };
+    const [item] = await db
       .update(inventoryItems)
-      .set({ ...item, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(inventoryItems.id, id))
       .returning();
-    return updated;
+    return item;
   }
 
   async deleteInventoryItem(id: number): Promise<void> {
@@ -822,10 +867,10 @@ export class Storage {
     try {
       const result = await db.select().from(settings);
       const settingsObj: any = {};
-      
+
       result.forEach(setting => {
         let value: any = setting.value;
-        
+
         // Parse based on type
         if (setting.type === 'boolean') {
           value = value === 'true';
@@ -838,10 +883,10 @@ export class Storage {
             value = {};
           }
         }
-        
+
         settingsObj[setting.key] = value;
       });
-      
+
       return settingsObj;
     } catch (error) {
       console.error('Error getting settings:', error);
@@ -852,14 +897,14 @@ export class Storage {
   async updateSettings(settingsData: any): Promise<any> {
     try {
       const updatedSettings: any = {};
-      
+
       for (const [key, value] of Object.entries(settingsData)) {
         if (value !== undefined && value !== null) {
           await this.updateOrCreateSetting(key, String(value));
           updatedSettings[key] = value;
         }
       }
-      
+
       return await this.getSettings();
     } catch (error) {
       console.error('Error updating settings:', error);
@@ -870,7 +915,7 @@ export class Storage {
   async updateOrCreateSetting(key: string, value: string): Promise<any> {
     try {
       const existing = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
-      
+
       if (existing.length > 0) {
         const [updated] = await db
           .update(settings)
@@ -913,7 +958,7 @@ export class Storage {
           assignedTo: productionSchedule.assignedTo,
         })
         .from(productionSchedule)
-        .leftJoin(products, eq(productionSchedule.productId, products.id))
+        Implementing the changes for retrieving units and updating inventory items to include unit information and dates.        .leftJoin(products, eq(productionSchedule.productId, products.id))
         .where(
           and(
             gte(productionSchedule.scheduledDate, scheduleDate),

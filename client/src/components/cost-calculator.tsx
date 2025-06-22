@@ -228,84 +228,122 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg"
-                >
-                  <FormField
-                    control={form.control}
-                    name={`ingredients.${index}.inventoryItemId`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ingredient</FormLabel>
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            calculateCosts();
-                          }}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select ingredient" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {inventoryItems.map((item: any) => (
-                              <SelectItem
-                                key={item.id}
-                                value={item.id.toString()}
-                              >
-                                {item.name} ($
-                                {Number(item.costPerUnit).toFixed(2)}/
-                                {item.unit})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <div className="p-4 border rounded-lg space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <FormField
+                        control={form.control}
+                        name={`ingredients.${index}.inventoryItemId`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Ingredient</FormLabel>
+                            <Select
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                calculateCosts();
+                              }}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select ingredient" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {inventoryItems.map((item: any) => (
+                                  <SelectItem
+                                    key={item.id}
+                                    value={item.id.toString()}
+                                  >
+                                    {item.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name={`ingredients.${index}.quantity`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Quantity</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="2.5"
-                            {...field}
-                            onChange={(e) => {
-                              field.onChange(e);
-                              calculateCosts();
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name={`ingredients.${index}.quantity`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Quantity</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="2.5"
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  calculateCosts();
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <div className="flex items-end">
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        remove(index);
-                        calculateCosts();
-                      }}
-                      disabled={fields.length === 1}
-                    >
-                      <i className="fas fa-trash"></i>
-                    </Button>
+                      <div>
+                        <FormLabel>Unit & Price</FormLabel>
+                        <div className="text-sm text-gray-600 p-2 border rounded bg-gray-50">
+                          {(() => {
+                            const item = inventoryItems.find(
+                              (inv: any) => inv.id.toString() === form.watch(`ingredients.${index}.inventoryItemId`)
+                            );
+                            return item 
+                              ? `${item.unitAbbreviation || item.unit} - $${Number(item.costPerUnit).toFixed(2)}`
+                              : "Select ingredient";
+                          })()}
+                        </div>
+                      </div>
+
+                      <div>
+                        <FormLabel>Amount</FormLabel>
+                        <div className="text-sm font-medium p-2 border rounded bg-blue-50">
+                          ${(() => {
+                            const item = inventoryItems.find(
+                              (inv: any) => inv.id.toString() === form.watch(`ingredients.${index}.inventoryItemId`)
+                            );
+                            const quantity = parseFloat(form.watch(`ingredients.${index}.quantity`) || "0");
+                            if (item && quantity) {
+                              return (quantity * parseFloat(item.costPerUnit)).toFixed(2);
+                            }
+                            return "0.00";
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-gray-600">
+                        Current Stock: {(() => {
+                          const item = inventoryItems.find(
+                            (inv: any) => inv.id.toString() === form.watch(`ingredients.${index}.inventoryItemId`)
+                          );
+                          return item 
+                            ? `${parseFloat(item.currentStock).toFixed(2)} ${item.unitAbbreviation || item.unit}`
+                            : "N/A";
+                        })()}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          remove(index);
+                          calculateCosts();
+                        }}
+                        disabled={fields.length === 1}
+                      >
+                        <i className="fas fa-trash mr-2"></i>
+                        Remove
+                      </Button>
+                    </div>
                   </div>
-                </div>
               ))}
             </CardContent>
           </Card>

@@ -5,6 +5,7 @@ import { setupVite, serveStatic } from "./vite";
 import { setupAuth } from "./localAuth";
 import { initializeDatabase } from "./init-db";
 import { registerRoutes } from "./routes";
+import { initializeUnits } from "./units"; // Import initializeUnits
 
 const app = express();
 
@@ -19,8 +20,11 @@ async function startServer() {
   try {
     console.log("🚀 Starting server...");
 
-    // Initialize database first
+    // Initialize database
     await initializeDatabase();
+
+    // Initialize default units
+    await initializeUnits();
 
     // Setup authentication
     await setupAuth(app);

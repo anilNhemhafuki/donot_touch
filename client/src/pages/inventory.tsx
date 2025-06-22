@@ -37,16 +37,16 @@ export default function Inventory() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const { toast } = useToast();
 
-  const {
-    data: items = [],
-    isLoading,
-    error,
-  } = useQuery({
+  const { data: items = [], isLoading, error } = useQuery({
     queryKey: ["/api/inventory"],
     retry: (failureCount, error) => {
       if (isUnauthorizedError(error)) return false;
       return failureCount < 3;
     },
+  });
+
+  const { data: units = [] } = useQuery({
+    queryKey: ["/api/units"],
   });
 
   const createMutation = useMutation({
@@ -135,10 +135,10 @@ export default function Inventory() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    
+
     const name = formData.get("name") as string;
     const unit = formData.get("unit") as string;
-    
+
     if (!name?.trim()) {
       toast({
         title: "Error",
@@ -147,7 +147,7 @@ export default function Inventory() {
       });
       return;
     }
-    
+
     if (!unit?.trim()) {
       toast({
         title: "Error",
