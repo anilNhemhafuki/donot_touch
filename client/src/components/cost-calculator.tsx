@@ -295,7 +295,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                               (inv: any) => inv.id.toString() === form.watch(`ingredients.${index}.inventoryItemId`)
                             );
                             return item 
-                              ? `${item.unitAbbreviation || item.unit} - $${Number(item.costPerUnit).toFixed(2)}`
+                              ? `${item.unit} - Rs. ${Number(item.costPerUnit).toFixed(2)}`
                               : "Select ingredient";
                           })()}
                         </div>
@@ -304,7 +304,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                       <div>
                         <FormLabel>Amount</FormLabel>
                         <div className="text-sm font-medium p-2 border rounded bg-blue-50">
-                          ${(() => {
+                          Rs. {(() => {
                             const item = inventoryItems.find(
                               (inv: any) => inv.id.toString() === form.watch(`ingredients.${index}.inventoryItemId`)
                             );
@@ -325,7 +325,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                             (inv: any) => inv.id.toString() === form.watch(`ingredients.${index}.inventoryItemId`)
                           );
                           return item 
-                            ? `${parseFloat(item.currentStock).toFixed(2)} ${item.unitAbbreviation || item.unit}`
+                            ? `${parseFloat(item.currentStock).toFixed(2)} ${item.unit}`
                             : "N/A";
                         })()}
                       </div>
@@ -438,24 +438,24 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span>Ingredient Cost:</span>
-              <span>${calculations.ingredientCost.toFixed(2)}</span>
+              <span>Rs. {calculations.ingredientCost.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span>Labor Cost:</span>
-              <span>${calculations.laborCost.toFixed(2)}</span>
+              <span>Rs. {calculations.laborCost.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span>Overhead ({form.getValues("overheadPercentage")}%):</span>
-              <span>${calculations.overheadCost.toFixed(2)}</span>
+              <span>Rs. {calculations.overheadCost.toFixed(2)}</span>
             </div>
             <Separator />
             <div className="flex justify-between font-semibold">
               <span>Total Cost:</span>
-              <span>${calculations.totalCost.toFixed(2)}</span>
+              <span>Rs. {calculations.totalCost.toFixed(2)}</span>
             </div>
             <div className="flex justify-between font-semibold text-primary">
               <span>Suggested Price:</span>
-              <span>${calculations.suggestedPrice.toFixed(2)}</span>
+              <span>Rs. {calculations.suggestedPrice.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-600">
               <span>Actual Margin:</span>

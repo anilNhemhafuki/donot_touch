@@ -85,7 +85,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <i className="fas fa-bread-slice text-white text-sm"></i>
               </div>
               <span className="font-bold text-gray-900 dark:text-white">
-                Sweet Treats
+                Sweet Treats Bakery
               </span>
             </div>
           </Link>

@@ -18,6 +18,7 @@ const orderFormSchema = z.object({
   customerName: z.string().min(1, "Customer name is required"),
   customerEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   customerPhone: z.string().optional(),
+  company: z.string().optional(),
   totalAmount: z.string().min(1, "Total amount is required"),
   dueDate: z.string().optional(),
   notes: z.string().optional(),
@@ -45,6 +46,7 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
       customerName: "",
       customerEmail: "",
       customerPhone: "",
+      company: "",
       totalAmount: "",
       dueDate: "",
       notes: "",
@@ -70,6 +72,7 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
         customerName: data.customerName.trim(),
         customerEmail: data.customerEmail && data.customerEmail.trim() ? data.customerEmail.trim() : null,
         customerPhone: data.customerPhone && data.customerPhone.trim() ? data.customerPhone.trim() : null,
+        company: data.company && data.company.trim() ? data.company.trim() : null,
         totalAmount: data.totalAmount,
         dueDate: data.dueDate || null,
         notes: data.notes && data.notes.trim() ? data.notes.trim() : null,
@@ -193,6 +196,21 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="company"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company (Optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Company name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
           </CardContent>
         </Card>
 

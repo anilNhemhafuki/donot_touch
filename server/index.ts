@@ -5,7 +5,7 @@ import { setupVite, serveStatic } from "./vite";
 import { setupAuth } from "./localAuth";
 import { initializeDatabase } from "./init-db";
 import { registerRoutes } from "./routes";
-import { initializeUnits } from "./units"; // Import initializeUnits
+import { initializeUnits } from "./init-units"; // Import initializeUnits
 
 const app = express();
 

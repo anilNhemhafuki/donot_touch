@@ -50,11 +50,20 @@ export default function Inventory() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/inventory", data),
+    mutationFn: async (data: any) => {
+      console.log("Creating inventory item:", data);
+      // Add today's date for new inventory items
+      const inventoryData = {
+        ...data,
+        dateAdded: new Date().toISOString(),
+        lastRestocked: new Date().toISOString()
+      };
+      return apiRequest("POST", "/api/inventory", inventoryData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      setIsDialogOpen(false);
-      setEditingItem(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/low-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({ title: "Success", description: "Inventory item saved successfully" });
     },
     onError: (error) => {
@@ -78,10 +87,19 @@ export default function Inventory() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
-      apiRequest("PUT", `/api/inventory/${id}`, data),
+    mutationFn: async (data: { id: number; values: any }) => {
+      console.log("Updating inventory item:", data);
+      // Add today's date for inventory updates
+      const updateData = {
+        ...data.values,
+        dateUpdated: new Date().toISOString()
+      };
+      return apiRequest("PUT", `/api/inventory/${data.id}`, updateData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/low-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setIsDialogOpen(false);
       setEditingItem(null);
       toast({ title: "Success", description: "Inventory item updated successfully" });
@@ -168,7 +186,7 @@ export default function Inventory() {
     };
 
     if (editingItem) {
-      updateMutation.mutate({ id: editingItem.id, data });
+      updateMutation.mutate({ id: editingItem.id, values: data });
     } else {
       createMutation.mutate(data);
     }
