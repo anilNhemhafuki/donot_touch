@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,21 +6,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useForm } from 'react-hook-form';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Clock, Package, Scale, Target, Plus, Edit, Trash2 } from 'lucide-react';
+import { Calendar, Clock, Package, Scale, Target, Plus, Edit, Trash2, Minus } from 'lucide-react';
 import { format, addDays, startOfDay } from 'date-fns';
 
 const productionScheduleSchema = z.object({
-  productId: z.number().min(1, 'Please select a product'),
   scheduledDate: z.string().min(1, 'Please select a date'),
-  targetAmount: z.number().min(0.1, 'Target amount must be at least 0.1'),
-  unit: z.enum(['kg', 'packets'], { required_error: 'Please select a unit' }),
   priority: z.enum(['low', 'medium', 'high'], { required_error: 'Please select priority' }),
   notes: z.string().optional(),
+  products: z.array(z.object({
+    productId: z.number().min(1, 'Please select a product'),
+    targetAmount: z.number().min(0.1, 'Target amount must be at least 0.1'),
+    unit: z.enum(['kg', 'packets'], { required_error: 'Please select a unit' }),
+  })).min(1, 'At least one product is required'),
 });
 
 type ProductionScheduleData = z.infer<typeof productionScheduleSchema>;
@@ -61,11 +65,15 @@ export default function EnhancedProductionSchedule() {
     resolver: zodResolver(productionScheduleSchema),
     defaultValues: {
       scheduledDate: selectedDate,
-      targetAmount: 1,
-      unit: 'kg',
       priority: 'medium',
       notes: '',
+      products: [{ productId: 0, targetAmount: 1, unit: 'kg' }],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'products',
   });
 
   const createScheduleMutation = useMutation({
@@ -82,20 +90,19 @@ export default function EnhancedProductionSchedule() {
       queryClient.invalidateQueries({ queryKey: ['/api/production-schedule'] });
       form.reset({
         scheduledDate: selectedDate,
-        targetAmount: 1,
-        unit: 'kg',
         priority: 'medium',
         notes: '',
+        products: [{ productId: 0, targetAmount: 1, unit: 'kg' }],
       });
       toast({
         title: "Schedule Created",
-        description: "Production schedule item has been added successfully.",
+        description: "Production schedule items have been added successfully.",
       });
     },
     onError: () => {
       toast({
         title: "Creation Failed",
-        description: "Failed to create production schedule item.",
+        description: "Failed to create production schedule items.",
         variant: "destructive",
       });
     },
@@ -157,28 +164,61 @@ export default function EnhancedProductionSchedule() {
     return Math.ceil(targetKg * product.packetsPerKg);
   };
 
-  const onSubmit = (data: ProductionScheduleData) => {
-    const scheduleData = {
-      ...data,
-      targetPackets: data.unit === 'kg' ? calculatePackets(data.productId, data.targetAmount) : data.targetAmount,
-    };
+  const onSubmit = async (data: ProductionScheduleData) => {
+    try {
+      // Create multiple schedule items, one for each product
+      for (const product of data.products) {
+        const scheduleData = {
+          productId: product.productId,
+          scheduledDate: data.scheduledDate,
+          targetAmount: product.targetAmount,
+          unit: product.unit,
+          targetPackets: product.unit === 'kg' ? calculatePackets(product.productId, product.targetAmount) : product.targetAmount,
+          priority: data.priority,
+          notes: data.notes,
+        };
 
-    if (editingItem) {
-      updateScheduleMutation.mutate({ id: editingItem.id, data: scheduleData });
-    } else {
-      createScheduleMutation.mutate(scheduleData);
+        const response = await fetch('/api/production-schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(scheduleData),
+        });
+        
+        if (!response.ok) throw new Error('Failed to create schedule item');
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/production-schedule'] });
+      form.reset({
+        scheduledDate: selectedDate,
+        priority: 'medium',
+        notes: '',
+        products: [{ productId: 0, targetAmount: 1, unit: 'kg' }],
+      });
+      
+      toast({
+        title: "Schedule Created",
+        description: "Production schedule items have been added successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Creation Failed",
+        description: "Failed to create production schedule items.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleEdit = (item: ProductionItem) => {
     setEditingItem(item);
     form.reset({
-      productId: item.productId,
       scheduledDate: item.scheduledDate,
-      targetAmount: item.targetAmount,
-      unit: item.unit,
       priority: item.priority,
       notes: item.notes || '',
+      products: [{ 
+        productId: item.productId, 
+        targetAmount: item.targetAmount, 
+        unit: item.unit 
+      }],
     });
   };
 
@@ -186,10 +226,9 @@ export default function EnhancedProductionSchedule() {
     setEditingItem(null);
     form.reset({
       scheduledDate: selectedDate,
-      targetAmount: 1,
-      unit: 'kg',
       priority: 'medium',
       notes: '',
+      products: [{ productId: 0, targetAmount: 1, unit: 'kg' }],
     });
   };
 
@@ -271,43 +310,14 @@ export default function EnhancedProductionSchedule() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              {editingItem ? 'Edit Schedule Item' : 'Add to Production Schedule'}
+              {editingItem ? 'Edit Schedule Item' : 'Add Multiple Products to Schedule'}
             </CardTitle>
             <CardDescription>
-              Schedule production by weight (kg) or packets with automatic packet calculation
+              Schedule multiple products for production on the same date
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <Label>Product</Label>
-                <Select
-                  value={form.watch('productId')?.toString() || ''}
-                  onValueChange={(value) => form.setValue('productId', parseInt(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select product" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map((product: any) => (
-                      <SelectItem key={product.id} value={product.id.toString()}>
-                        {product.name}
-                        {product.packetsPerKg && (
-                          <span className="text-gray-500 ml-2">
-                            ({product.packetsPerKg} packets/kg)
-                          </span>
-                        )}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {form.formState.errors.productId && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.productId.message}
-                  </p>
-                )}
-              </div>
-
               <div>
                 <Label>Scheduled Date</Label>
                 <Input
@@ -321,59 +331,6 @@ export default function EnhancedProductionSchedule() {
                   </p>
                 )}
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Target Amount</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    {...form.register('targetAmount', { valueAsNumber: true })}
-                    placeholder="Enter amount"
-                  />
-                  {form.formState.errors.targetAmount && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {form.formState.errors.targetAmount.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label>Unit</Label>
-                  <Select
-                    value={form.watch('unit')}
-                    onValueChange={(value: 'kg' | 'packets') => form.setValue('unit', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="kg">
-                        <div className="flex items-center gap-2">
-                          <Scale className="h-4 w-4" />
-                          Kilograms (kg)
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="packets">
-                        <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4" />
-                          Packets
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Packet Calculation Preview */}
-              {form.watch('unit') === 'kg' && form.watch('productId') && form.watch('targetAmount') && (
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <Package className="h-4 w-4 inline mr-1" />
-                    Estimated packets needed: {calculatePackets(form.watch('productId'), form.watch('targetAmount'))}
-                  </p>
-                </div>
-              )}
 
               <div>
                 <Label>Priority</Label>
@@ -392,9 +349,120 @@ export default function EnhancedProductionSchedule() {
                 </Select>
               </div>
 
+              {/* Products Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Products</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => append({ productId: 0, targetAmount: 1, unit: 'kg' })}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Product
+                  </Button>
+                </div>
+
+                {fields.map((field, index) => (
+                  <div key={field.id} className="p-4 border rounded-lg space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Product {index + 1}</span>
+                      {fields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => remove(index)}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <Label>Product</Label>
+                        <Select
+                          value={form.watch(`products.${index}.productId`)?.toString() || ''}
+                          onValueChange={(value) => form.setValue(`products.${index}.productId`, parseInt(value))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select product" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {products.map((product: any) => (
+                              <SelectItem key={product.id} value={product.id.toString()}>
+                                {product.name}
+                                {product.packetsPerKg && (
+                                  <span className="text-gray-500 ml-2">
+                                    ({product.packetsPerKg} packets/kg)
+                                  </span>
+                                )}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label>Target Amount</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          {...form.register(`products.${index}.targetAmount`, { valueAsNumber: true })}
+                          placeholder="Enter amount"
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Unit</Label>
+                        <Select
+                          value={form.watch(`products.${index}.unit`)}
+                          onValueChange={(value: 'kg' | 'packets') => form.setValue(`products.${index}.unit`, value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="kg">
+                              <div className="flex items-center gap-2">
+                                <Scale className="h-4 w-4" />
+                                Kilograms (kg)
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="packets">
+                              <div className="flex items-center gap-2">
+                                <Package className="h-4 w-4" />
+                                Packets
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Packet Calculation Preview */}
+                    {form.watch(`products.${index}.unit`) === 'kg' && 
+                     form.watch(`products.${index}.productId`) && 
+                     form.watch(`products.${index}.targetAmount`) && (
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          <Package className="h-4 w-4 inline mr-1" />
+                          Estimated packets needed: {calculatePackets(
+                            form.watch(`products.${index}.productId`), 
+                            form.watch(`products.${index}.targetAmount`)
+                          )}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
               <div>
                 <Label>Notes (Optional)</Label>
-                <Input
+                <Textarea
                   {...form.register('notes')}
                   placeholder="Additional notes or instructions"
                 />

@@ -75,6 +75,7 @@ export const inventoryItems = pgTable("inventory_items", {
   unit: varchar("unit", { length: 50 }).notNull(), // lbs, kg, dozen, etc.
   costPerUnit: decimal("cost_per_unit", { precision: 10, scale: 2 }).notNull(),
   supplier: varchar("supplier", { length: 200 }),
+  company: varchar("company", { length: 200 }),
   lastRestocked: timestamp("last_restocked"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

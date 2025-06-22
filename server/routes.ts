@@ -305,6 +305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         unit: req.body.unit.trim(),
         costPerUnit: parseFloat(req.body.costPerUnit).toString(),
         supplier: req.body.supplier ? req.body.supplier.trim() : null,
+        company: req.body.company ? req.body.company.trim() : null,
         lastRestocked: req.body.lastRestocked ? new Date(req.body.lastRestocked) : null,
       };
 
@@ -1220,6 +1221,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching production schedule:', error);
       res.status(500).json({ message: 'Failed to fetch production schedule' });
+    }
+  });
+
+  app.get('/api/production-schedule/today', isAuthenticated, async (req, res) => {
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const scheduleItems = await storage.getProductionScheduleByDate(today);
+      res.json(scheduleItems);
+    } catch (error) {
+      console.error('Error fetching today\'s production schedule:', error);
+      res.status(500).json({ message: 'Failed to fetch today\'s production schedule' });
     }
   });
 

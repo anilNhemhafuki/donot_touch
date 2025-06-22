@@ -164,6 +164,7 @@ export default function Inventory() {
       unit: unit.trim(),
       costPerUnit: parseFloat(formData.get("costPerUnit") as string) || 0,
       supplier: (formData.get("supplier") as string)?.trim() || null,
+      company: (formData.get("company") as string)?.trim() || null,
     };
 
     if (editingItem) {
@@ -275,6 +276,11 @@ export default function Inventory() {
                 placeholder="Supplier (optional)"
                 defaultValue={editingItem?.supplier || ""}
               />
+              <Input
+                name="company"
+                placeholder="Company (optional)"
+                defaultValue={editingItem?.company || ""}
+              />
               <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
                 <Button
                   type="button"
@@ -347,6 +353,9 @@ export default function Inventory() {
                               <div className="font-medium">{item.name}</div>
                               <div className="text-sm text-muted-foreground">
                                 {item.supplier || "No supplier"}
+                                {item.company && (
+                                  <span className="block">{item.company}</span>
+                                )}
                               </div>
                             </div>
                           </div>
