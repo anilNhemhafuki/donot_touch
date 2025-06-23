@@ -20,7 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Receipt, Search, Filter } from "lucide-react";
+import { Plus, Receipt, Search, Filter, Eye, Printer } from "lucide-react";
 import { format } from "date-fns";
 
 interface Sale {
@@ -47,6 +47,7 @@ export default function Sales() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
   const { data: sales = [], isLoading } = useQuery({
     queryKey: ["/api/sales"],
@@ -176,6 +177,181 @@ export default function Sales() {
     (sum: number, sale: Sale) => sum + parseFloat(sale.totalAmount),
     0,
   );
+
+  const printInvoice = (sale: Sale) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const invoiceHTML = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Sales Invoice - ${sale.id}</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 20px; 
+              color: #333; 
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 30px; 
+              border-bottom: 2px solid #333; 
+              padding-bottom: 20px; 
+            }
+            .company-name { 
+              font-size: 28px; 
+              font-weight: bold; 
+              color: #2563eb; 
+              margin-bottom: 5px; 
+            }
+            .company-tagline { 
+              font-size: 14px; 
+              color: #666; 
+            }
+            .invoice-title { 
+              font-size: 24px; 
+              font-weight: bold; 
+              margin: 20px 0; 
+            }
+            .invoice-details { 
+              display: flex; 
+              justify-content: space-between; 
+              margin-bottom: 30px; 
+            }
+            .invoice-info, .customer-info { 
+              flex: 1; 
+            }
+            .invoice-info h3, .customer-info h3 { 
+              font-size: 16px; 
+              margin-bottom: 10px; 
+              color: #2563eb; 
+            }
+            .invoice-info p, .customer-info p { 
+              margin: 5px 0; 
+              font-size: 14px; 
+            }
+            .items-table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin: 20px 0; 
+            }
+            .items-table th, .items-table td { 
+              border: 1px solid #ddd; 
+              padding: 12px; 
+              text-align: left; 
+            }
+            .items-table th { 
+              background-color: #f8f9fa; 
+              font-weight: bold; 
+              color: #333; 
+            }
+            .items-table tr:nth-child(even) { 
+              background-color: #f9f9f9; 
+            }
+            .total-section { 
+              text-align: right; 
+              margin-top: 20px; 
+            }
+            .total-row { 
+              display: flex; 
+              justify-content: flex-end; 
+              margin: 5px 0; 
+            }
+            .total-label { 
+              width: 150px; 
+              font-weight: bold; 
+            }
+            .total-amount { 
+              width: 100px; 
+              text-align: right; 
+            }
+            .grand-total { 
+              border-top: 2px solid #333; 
+              padding-top: 10px; 
+              font-size: 18px; 
+              font-weight: bold; 
+              color: #2563eb; 
+            }
+            .footer { 
+              margin-top: 40px; 
+              text-align: center; 
+              font-size: 12px; 
+              color: #666; 
+              border-top: 1px solid #ddd; 
+              padding-top: 20px; 
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="company-name">Sweet Treats Bakery</div>
+            <div class="company-tagline">Delicious Moments, Sweet Memories</div>
+            <div class="invoice-title">SALES INVOICE</div>
+          </div>
+          
+          <div class="invoice-details">
+            <div class="invoice-info">
+              <h3>Invoice Information</h3>
+              <p><strong>Invoice #:</strong> INV-${sale.id}</p>
+              <p><strong>Date:</strong> ${format(new Date(sale.createdAt), "dd/MM/yyyy")}</p>
+              <p><strong>Time:</strong> ${format(new Date(sale.createdAt), "HH:mm:ss")}</p>
+              <p><strong>Payment Method:</strong> ${sale.paymentMethod?.toUpperCase() || 'N/A'}</p>
+              <p><strong>Status:</strong> ${sale.status?.toUpperCase() || 'COMPLETED'}</p>
+            </div>
+            <div class="customer-info">
+              <h3>Customer Information</h3>
+              <p><strong>Name:</strong> ${sale.customerName}</p>
+              <p><strong>Invoice Date:</strong> ${format(new Date(sale.createdAt), "MMMM dd, yyyy")}</p>
+            </div>
+          </div>
+
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Total Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sale.items?.map(item => `
+                <tr>
+                  <td>${item.productName}</td>
+                  <td>${item.quantity}</td>
+                  <td>Rs. ${parseFloat(item.unitPrice).toFixed(2)}</td>
+                  <td>Rs. ${parseFloat(item.totalPrice).toFixed(2)}</td>
+                </tr>
+              `).join('') || '<tr><td colspan="4">No items found</td></tr>'}
+            </tbody>
+          </table>
+
+          <div class="total-section">
+            <div class="total-row grand-total">
+              <div class="total-label">Grand Total:</div>
+              <div class="total-amount">Rs. ${parseFloat(sale.totalAmount).toFixed(2)}</div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>Sweet Treats Bakery - Where every bite is a delight</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(invoiceHTML);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
 
   if (isLoading) {
     return (
@@ -474,18 +650,38 @@ export default function Sales() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{sale.paymentMethod?.toUpperCase() ?? "N/A"}</span>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs ${
-                      sale.status === "completed"
-                        ? "bg-green-100 text-green-800"
-                        : sale.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {sale.status}
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <span>{sale.paymentMethod?.toUpperCase() ?? "N/A"}</span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        sale.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : sale.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {sale.status}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedSale(sale)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => printInvoice(sale)}
+                    >
+                      <Printer className="h-4 w-4 mr-1" />
+                      Print
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -504,6 +700,142 @@ export default function Sales() {
           )}
         </CardContent>
       </Card>
+
+      {/* Sales Detail Modal */}
+      <Dialog 
+        open={!!selectedSale} 
+        onOpenChange={() => setSelectedSale(null)}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Sales Invoice - INV-{selectedSale?.id}</DialogTitle>
+            <DialogDescription>
+              Detailed view of the sales transaction
+            </DialogDescription>
+          </DialogHeader>
+          {selectedSale && (
+            <div className="space-y-6">
+              {/* Invoice Header */}
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">Invoice Information</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Invoice #:</span>
+                      <span className="font-medium">INV-{selectedSale.id}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Date:</span>
+                      <span className="font-medium">
+                        {format(new Date(selectedSale.createdAt), "MMM dd, yyyy")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Time:</span>
+                      <span className="font-medium">
+                        {format(new Date(selectedSale.createdAt), "HH:mm:ss")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Payment Method:</span>
+                      <span className="font-medium">{selectedSale.paymentMethod?.toUpperCase()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          selectedSale.status === "completed"
+                            ? "bg-green-100 text-green-800"
+                            : selectedSale.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {selectedSale.status?.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">Customer Information</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Customer Name:</span>
+                      <span className="font-medium">{selectedSale.customerName}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">Items Purchased</h4>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Item</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-900">Qty</th>
+                        <th className="px-4 py-3 text-right text-sm font-medium text-gray-900">Unit Price</th>
+                        <th className="px-4 py-3 text-right text-sm font-medium text-gray-900">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {selectedSale.items?.map((item, index) => (
+                        <tr key={index}>
+                          <td className="px-4 py-3 text-sm text-gray-900">{item.productName}</td>
+                          <td className="px-4 py-3 text-sm text-gray-900 text-center">{item.quantity}</td>
+                          <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                            Rs. {parseFloat(item.unitPrice).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium">
+                            Rs. {parseFloat(item.totalPrice).toFixed(2)}
+                          </td>
+                        </tr>
+                      )) || (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                            No items found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Total Section */}
+              <div className="border-t pt-4">
+                <div className="flex justify-end">
+                  <div className="w-64">
+                    <div className="flex justify-between items-center text-lg font-bold text-gray-900">
+                      <span>Grand Total:</span>
+                      <span>Rs. {parseFloat(selectedSale.totalAmount).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedSale(null)}
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => printInvoice(selectedSale)}
+                  className="flex items-center gap-2"
+                >
+                  <Printer className="h-4 w-4" />
+                  Print Invoice
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
