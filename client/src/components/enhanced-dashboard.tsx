@@ -211,7 +211,7 @@ export default function EnhancedDashboard() {
               <AlertTriangle className="h-5 w-5 mr-2 text-orange-500" />
               Low Stock Alert
             </CardTitle>
-            <CardDescription>Items running low</CardDescription>
+            <CardDescription>Stock items running low</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -232,7 +232,7 @@ export default function EnhancedDashboard() {
                 ))
               ) : (
                 <p className="text-center text-muted-foreground py-4">
-                  All items well stocked
+                  All stock items well stocked
                 </p>
               )}
             </div>

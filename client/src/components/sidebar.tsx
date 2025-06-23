@@ -42,11 +42,11 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
       ],
     },
     {
-      id: "Inventory",
-      title: "Inventory",
+      id: "Stock",
+      title: "Stock",
       items: [
         { name: "Products", href: "/products", icon: "fas fa-cookie-bite" },
-        { name: "Inventory", href: "/inventory", icon: "fas fa-boxes" },
+        { name: "Stock", href: "/stock", icon: "fas fa-boxes" },
         { name: "Production", href: "/production", icon: "fas fa-industry" },
       ],
     },
