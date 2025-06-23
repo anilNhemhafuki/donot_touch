@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import {
@@ -26,15 +27,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 const costCalculatorSchema = z.object({
   productName: z.string().min(1, "Product name is required"),
   categoryId: z.string().optional(),
-  laborCost: z.string().min(0, "Labor cost must be positive").default("0"),
-  overheadPercentage: z
-    .string()
-    .min(0, "Overhead must be positive")
-    .default("15"),
-  profitMargin: z
-    .string()
-    .min(0, "Profit margin must be positive")
-    .default("25"),
+  batchSize: z.string().min(1, "Batch size is required").default("1"),
+  finishedGoodRequired: z.string().min(1, "FG required is required").default("1"),
+  productionQuantity: z.string().min(1, "Production quantity is required").default("25"),
+  normalLossMfg: z.string().default("5"),
+  normalLossOnSold: z.string().default("0"),
+  mfgAndPackagingCost: z.string().default("45"),
+  overheadCost: z.string().default("5"),
   ingredients: z
     .array(
       z.object({
@@ -51,12 +50,17 @@ interface CostCalculatorProps {
 
 export default function CostCalculator({ onSave }: CostCalculatorProps) {
   const [calculations, setCalculations] = useState({
-    ingredientCost: 0,
-    laborCost: 0,
-    overheadCost: 0,
-    totalCost: 0,
-    suggestedPrice: 0,
-    margin: 0,
+    ingredientDetails: [] as any[],
+    subTotalForBatch: 0,
+    totalForProduction: 0,
+    totalForProductionGm: 0,
+    effectiveUnits: 0,
+    rmCostPerUnit: 0,
+    effectiveUnitsProduced: 0,
+    estimatedCostPerUnit: 0,
+    mfgCostPerUnit: 0,
+    overheadCostPerUnit: 0,
+    finalCostPerUnit: 0,
   });
 
   const { data: categories = [] } = useQuery({
@@ -72,9 +76,13 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
     defaultValues: {
       productName: "",
       categoryId: "",
-      laborCost: "0",
-      overheadPercentage: "15",
-      profitMargin: "25",
+      batchSize: "1",
+      finishedGoodRequired: "1",
+      productionQuantity: "25",
+      normalLossMfg: "5",
+      normalLossOnSold: "0",
+      mfgAndPackagingCost: "45",
+      overheadCost: "5",
       ingredients: [{ inventoryItemId: "", quantity: "" }],
     },
   });
@@ -86,59 +94,93 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
 
   const calculateCosts = () => {
     const ingredients = form.getValues("ingredients");
-    const laborCost = parseFloat(form.getValues("laborCost") || "0");
-    const overheadPercentage = parseFloat(
-      form.getValues("overheadPercentage") || "0",
-    );
-    const profitMargin = parseFloat(form.getValues("profitMargin") || "0");
+    const batchSize = parseFloat(form.getValues("batchSize") || "1");
+    const finishedGoodRequired = parseFloat(form.getValues("finishedGoodRequired") || "1");
+    const productionQuantity = parseFloat(form.getValues("productionQuantity") || "25");
+    const normalLossMfg = parseFloat(form.getValues("normalLossMfg") || "5");
+    const normalLossOnSold = parseFloat(form.getValues("normalLossOnSold") || "0");
+    const mfgAndPackagingCost = parseFloat(form.getValues("mfgAndPackagingCost") || "45");
+    const overheadCost = parseFloat(form.getValues("overheadCost") || "5");
 
-    // Calculate ingredient cost
-    const ingredientCost = ingredients.reduce((total, ingredient) => {
+    // Calculate ingredient details
+    const ingredientDetails = ingredients.map((ingredient, index) => {
       const item = inventoryItems.find(
         (inv: any) => inv.id.toString() === ingredient.inventoryItemId,
       );
       if (item && ingredient.quantity) {
         const quantity = parseFloat(ingredient.quantity);
-        const costPerUnit = parseFloat(item.costPerUnit);
-        return total + quantity * costPerUnit;
+        const pricePerUnit = parseFloat(item.costPerUnit);
+        const amount = quantity * pricePerUnit;
+        
+        return {
+          sn: index + 1,
+          particular: item.name,
+          qty: quantity,
+          unit: item.unit,
+          price: pricePerUnit,
+          unitType: `Per ${item.unit}`,
+          amount: amount,
+        };
       }
-      return total;
+      return null;
+    }).filter(Boolean);
+
+    // Calculate sub-total for batch
+    const subTotalForBatch = ingredientDetails.reduce((sum, item) => sum + item.amount, 0);
+    
+    // Calculate total for production (scaling up)
+    const scaleFactor = productionQuantity / batchSize;
+    const totalForProduction = subTotalForBatch * scaleFactor;
+    
+    // Calculate total weight in grams
+    const totalForProductionGm = ingredientDetails.reduce((sum, item) => {
+      const qtyInGrams = item.unit === 'kg' ? item.qty * 1000 : 
+                        item.unit === 'ml' ? item.qty : item.qty;
+      return sum + (qtyInGrams * scaleFactor);
     }, 0);
 
-    // Calculate overhead cost
-    const overheadCost =
-      (ingredientCost + laborCost) * (overheadPercentage / 100);
-
-    // Calculate total cost
-    const totalCost = ingredientCost + laborCost + overheadCost;
-
-    // Calculate suggested price based on profit margin
-    const suggestedPrice = totalCost / (1 - profitMargin / 100);
-
-    // Calculate actual margin
-    const margin =
-      suggestedPrice > 0
-        ? ((suggestedPrice - totalCost) / suggestedPrice) * 100
-        : 0;
+    // Calculate effective units
+    const effectiveUnits = totalForProductionGm;
+    const rmCostPerUnit = finishedGoodRequired * 350; // Assuming 350 is RM cost
+    
+    // Calculate production with losses
+    const lossFactorMfg = (100 - normalLossMfg) / 100;
+    const lossFactorSold = (100 - normalLossOnSold) / 100;
+    const effectiveUnitsProduced = productionQuantity * lossFactorMfg * lossFactorSold;
+    
+    // Calculate costs per unit
+    const estimatedCostPerUnit = totalForProduction / effectiveUnitsProduced;
+    const mfgCostPerUnit = estimatedCostPerUnit * (mfgAndPackagingCost / 100);
+    const overheadCostPerUnit = estimatedCostPerUnit * (overheadCost / 100);
+    const finalCostPerUnit = estimatedCostPerUnit + mfgCostPerUnit + overheadCostPerUnit;
 
     setCalculations({
-      ingredientCost,
-      laborCost,
-      overheadCost,
-      totalCost,
-      suggestedPrice,
-      margin,
+      ingredientDetails,
+      subTotalForBatch,
+      totalForProduction,
+      totalForProductionGm,
+      effectiveUnits,
+      rmCostPerUnit,
+      effectiveUnitsProduced,
+      estimatedCostPerUnit,
+      mfgCostPerUnit,
+      overheadCostPerUnit,
+      finalCostPerUnit,
     });
   };
+
+  useEffect(() => {
+    calculateCosts();
+  }, [form.watch()]);
 
   const handleSaveProduct = () => {
     const formData = form.getValues();
     const productData = {
       name: formData.productName,
       categoryId: formData.categoryId ? parseInt(formData.categoryId) : null,
-      price: calculations.suggestedPrice,
-      cost: calculations.totalCost,
-      margin: calculations.margin,
+      price: calculations.finalCostPerUnit,
+      cost: calculations.estimatedCostPerUnit,
+      batchSize: parseFloat(formData.batchSize),
       ingredients: formData.ingredients.map((ing) => ({
         inventoryItemId: parseInt(ing.inventoryItemId),
         quantity: parseFloat(ing.quantity),
@@ -158,7 +200,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
               <CardTitle>Product Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="productName"
@@ -166,10 +208,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                     <FormItem>
                       <FormLabel>Product Name</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Chocolate Chip Cookies"
-                          {...field}
-                        />
+                        <Input placeholder="Bread" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -182,10 +221,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Category</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select category" />
@@ -206,6 +242,114 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="batchSize"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Batch Size (kg)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Production Parameters */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Production Parameters</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="finishedGoodRequired"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>1 unit FG required (Gm RM)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="productionQuantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>No. of FG to be Produced</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="normalLossMfg"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Normal Loss during mfg. (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="normalLossOnSold"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Normal Loss on sold FG (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="mfgAndPackagingCost"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mfg. and packaging cost (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="overheadCost"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Overhead cost (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </CardContent>
           </Card>
@@ -214,7 +358,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Ingredients & Costs</CardTitle>
+                <CardTitle>Recipe Ingredients</CardTitle>
                 <Button
                   type="button"
                   variant="outline"
@@ -228,115 +372,61 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               {fields.map((field, index) => (
-                <div className="p-4 border rounded-lg space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <FormField
-                        control={form.control}
-                        name={`ingredients.${index}.inventoryItemId`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Ingredient</FormLabel>
-                            <Select
-                              onValueChange={(value) => {
-                                field.onChange(value);
-                                calculateCosts();
-                              }}
-                              value={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select ingredient" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {inventoryItems.map((item: any) => (
-                                  <SelectItem
-                                    key={item.id}
-                                    value={item.id.toString()}
-                                  >
-                                    {item.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name={`ingredients.${index}.quantity`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Quantity</FormLabel>
+                <div key={field.id} className="p-4 border rounded-lg space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name={`ingredients.${index}.inventoryItemId`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ingredient</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                placeholder="2.5"
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  calculateCosts();
-                                }}
-                              />
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select ingredient" />
+                              </SelectTrigger>
                             </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                            <SelectContent>
+                              {inventoryItems.map((item: any) => (
+                                <SelectItem
+                                  key={item.id}
+                                  value={item.id.toString()}
+                                >
+                                  {item.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                      <div>
-                        <FormLabel>Unit & Price</FormLabel>
-                        <div className="text-sm text-gray-600 p-2 border rounded bg-gray-50">
-                          {(() => {
-                            const item = inventoryItems.find(
-                              (inv: any) => inv.id.toString() === form.watch(`ingredients.${index}.inventoryItemId`)
-                            );
-                            return item 
-                              ? `${item.unit} - Rs. ${Number(item.costPerUnit).toFixed(2)}`
-                              : "Select ingredient";
-                          })()}
-                        </div>
-                      </div>
+                    <FormField
+                      control={form.control}
+                      name={`ingredients.${index}.quantity`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Quantity</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="1"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                      <div>
-                        <FormLabel>Amount</FormLabel>
-                        <div className="text-sm font-medium p-2 border rounded bg-blue-50">
-                          Rs. {(() => {
-                            const item = inventoryItems.find(
-                              (inv: any) => inv.id.toString() === form.watch(`ingredients.${index}.inventoryItemId`)
-                            );
-                            const quantity = parseFloat(form.watch(`ingredients.${index}.quantity`) || "0");
-                            if (item && quantity) {
-                              return (quantity * parseFloat(item.costPerUnit)).toFixed(2);
-                            }
-                            return "0.00";
-                          })()}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-gray-600">
-                        Current Stock: {(() => {
-                          const item = inventoryItems.find(
-                            (inv: any) => inv.id.toString() === form.watch(`ingredients.${index}.inventoryItemId`)
-                          );
-                          return item 
-                            ? `${parseFloat(item.currentStock).toFixed(2)} ${item.unit}`
-                            : "N/A";
-                        })()}
-                      </div>
+                    <div className="flex items-end">
                       <Button
                         type="button"
                         variant="destructive"
                         size="sm"
-                        onClick={() => {
-                          remove(index);
-                          calculateCosts();
-                        }}
+                        onClick={() => remove(index)}
                         disabled={fields.length === 1}
                       >
                         <i className="fas fa-trash mr-2"></i>
@@ -344,122 +434,145 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                       </Button>
                     </div>
                   </div>
+                </div>
               ))}
-            </CardContent>
-          </Card>
-
-          {/* Additional Costs */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Additional Costs & Margins</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="laborCost"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Labor Cost ($)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="5.00"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            calculateCosts();
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="overheadPercentage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Overhead (%)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          placeholder="15"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            calculateCosts();
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="profitMargin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Target Profit Margin (%)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          placeholder="25"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            calculateCosts();
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
             </CardContent>
           </Card>
         </form>
       </Form>
 
-      {/* Cost Breakdown */}
+      {/* Detailed Cost Breakdown */}
       <Card className="bg-gray-50">
         <CardHeader>
-          <CardTitle className="text-lg">Cost Breakdown</CardTitle>
+          <CardTitle className="text-lg">Product: {form.getValues("productName") || "Bread"}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span>Ingredient Cost:</span>
-              <span>Rs. {calculations.ingredientCost.toFixed(2)}</span>
+          {/* Computation of Total Cost */}
+          <div className="mb-6">
+            <h3 className="font-semibold mb-3">Computation of Total Cost</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 px-2 py-1">S.N</th>
+                    <th className="border border-gray-300 px-2 py-1">Particulars</th>
+                    <th className="border border-gray-300 px-2 py-1">Qty.</th>
+                    <th className="border border-gray-300 px-2 py-1">Unit</th>
+                    <th className="border border-gray-300 px-2 py-1">Price</th>
+                    <th className="border border-gray-300 px-2 py-1">Unit</th>
+                    <th className="border border-gray-300 px-2 py-1">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {calculations.ingredientDetails.map((item, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 px-2 py-1 text-center">{item.sn}</td>
+                      <td className="border border-gray-300 px-2 py-1">{item.particular}</td>
+                      <td className="border border-gray-300 px-2 py-1 text-right">{item.qty}</td>
+                      <td className="border border-gray-300 px-2 py-1 text-center">{item.unit}</td>
+                      <td className="border border-gray-300 px-2 py-1 text-right">{item.price.toFixed(2)}</td>
+                      <td className="border border-gray-300 px-2 py-1 text-center">{item.unitType}</td>
+                      <td className="border border-gray-300 px-2 py-1 text-right">{item.amount.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-yellow-100 font-semibold">
+                    <td className="border border-gray-300 px-2 py-1 text-center">A.</td>
+                    <td className="border border-gray-300 px-2 py-1">Sub-total for {form.getValues("batchSize")} kg</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right">{calculations.totalForProductionGm.toFixed(1)}</td>
+                    <td className="border border-gray-300 px-2 py-1 text-center">gm</td>
+                    <td className="border border-gray-300 px-2 py-1"></td>
+                    <td className="border border-gray-300 px-2 py-1"></td>
+                    <td className="border border-gray-300 px-2 py-1 text-right">{calculations.subTotalForBatch.toFixed(2)}</td>
+                  </tr>
+                  <tr className="bg-yellow-100 font-semibold">
+                    <td className="border border-gray-300 px-2 py-1"></td>
+                    <td className="border border-gray-300 px-2 py-1">Total for {form.getValues("productionQuantity")} kg</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right">{(calculations.totalForProductionGm * parseFloat(form.getValues("productionQuantity")) / parseFloat(form.getValues("batchSize"))).toFixed(1)}</td>
+                    <td className="border border-gray-300 px-2 py-1 text-center">gm</td>
+                    <td className="border border-gray-300 px-2 py-1"></td>
+                    <td className="border border-gray-300 px-2 py-1"></td>
+                    <td className="border border-gray-300 px-2 py-1 text-right">{calculations.totalForProduction.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div className="flex justify-between text-sm">
-              <span>Labor Cost:</span>
-              <span>Rs. {calculations.laborCost.toFixed(2)}</span>
+          </div>
+
+          {/* Computation of Effective Unit */}
+          <div className="mb-6">
+            <h3 className="font-semibold mb-3">Computation of Effective Unit</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 px-2 py-1">1</td>
+                    <td className="border border-gray-300 px-2 py-1">Total for {form.getValues("productionQuantity")} kg</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right" colSpan={4}>{calculations.totalForProduction.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 px-2 py-1">2</td>
+                    <td className="border border-gray-300 px-2 py-1">1 unit FG required ..... Gm RM</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right" colSpan={4}>{form.getValues("finishedGoodRequired")}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 px-2 py-1">3</td>
+                    <td className="border border-gray-300 px-2 py-1">No. of FG to be Produced</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right" colSpan={4}>{parseFloat(form.getValues("productionQuantity")).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 px-2 py-1">4</td>
+                    <td className="border border-gray-300 px-2 py-1">Less: Normal Loss during mfg.</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right">{form.getValues("normalLossMfg")}%</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right" colSpan={3}>{(parseFloat(form.getValues("productionQuantity")) * parseFloat(form.getValues("normalLossMfg")) / 100).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 px-2 py-1">5</td>
+                    <td className="border border-gray-300 px-2 py-1">Less: Normal Loss on sold FG</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right">{form.getValues("normalLossOnSold")}%</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right" colSpan={3}>{(parseFloat(form.getValues("productionQuantity")) * parseFloat(form.getValues("normalLossOnSold")) / 100).toFixed(2)}</td>
+                  </tr>
+                  <tr className="bg-yellow-100 font-semibold">
+                    <td className="border border-gray-300 px-2 py-1">B.</td>
+                    <td className="border border-gray-300 px-2 py-1">Effective No. of FG produced</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right" colSpan={4}>{calculations.effectiveUnitsProduced.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div className="flex justify-between text-sm">
-              <span>Overhead ({form.getValues("overheadPercentage")}%):</span>
-              <span>Rs. {calculations.overheadCost.toFixed(2)}</span>
-            </div>
-            <Separator />
-            <div className="flex justify-between font-semibold">
-              <span>Total Cost:</span>
-              <span>Rs. {calculations.totalCost.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between font-semibold text-primary">
-              <span>Suggested Price:</span>
-              <span>Rs. {calculations.suggestedPrice.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>Actual Margin:</span>
-              <span>{calculations.margin.toFixed(1)}%</span>
+          </div>
+
+          {/* Cost per unit And selling price per unit */}
+          <div>
+            <h3 className="font-semibold mb-3">Cost per unit And selling price per unit</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 px-2 py-1">I</td>
+                    <td className="border border-gray-300 px-2 py-1">Estimated Cost per unit</td>
+                    <td className="border border-gray-300 px-2 py-1 text-center">A/B</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right">{calculations.estimatedCostPerUnit.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 px-2 py-1">II</td>
+                    <td className="border border-gray-300 px-2 py-1">Mfg. and packaging cost per unit</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right">{form.getValues("mfgAndPackagingCost")}%</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right">{calculations.mfgCostPerUnit.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 px-2 py-1">III</td>
+                    <td className="border border-gray-300 px-2 py-1">Overhead cost</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right">{form.getValues("overheadCost")}%</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right">{calculations.overheadCostPerUnit.toFixed(2)}</td>
+                  </tr>
+                  <tr className="bg-green-100 font-bold">
+                    <td className="border border-gray-300 px-2 py-1"></td>
+                    <td className="border border-gray-300 px-2 py-1">Cost per unit</td>
+                    <td className="border border-gray-300 px-2 py-1 text-center">I+II</td>
+                    <td className="border border-gray-300 px-2 py-1 text-right">{calculations.finalCostPerUnit.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </CardContent>
