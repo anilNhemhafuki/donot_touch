@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Receipt, Search, Filter, Eye, Printer } from "lucide-react";
 import { format } from "date-fns";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface Sale {
   id: number;
@@ -43,6 +44,7 @@ interface SaleItem {
 
 export default function Sales() {
   const { toast } = useToast();
+  const { formatCurrency, formatCurrencyWithCommas } = useCurrency();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -294,7 +296,7 @@ export default function Sales() {
             <div class="company-tagline">Delicious Moments, Sweet Memories</div>
             <div class="invoice-title">SALES INVOICE</div>
           </div>
-          
+
           <div class="invoice-details">
             <div class="invoice-info">
               <h3>Invoice Information</h3>
@@ -325,8 +327,8 @@ export default function Sales() {
                 <tr>
                   <td>${item.productName}</td>
                   <td>${item.quantity}</td>
-                  <td>Rs. ${parseFloat(item.unitPrice).toFixed(2)}</td>
-                  <td>Rs. ${parseFloat(item.totalPrice).toFixed(2)}</td>
+                  <td>${formatCurrency(parseFloat(item.unitPrice))}</td>
+                  <td>${formatCurrency(parseFloat(item.totalPrice))}</td>
                 </tr>
               `).join('') || '<tr><td colspan="4">No items found</td></tr>'}
             </tbody>
@@ -335,7 +337,7 @@ export default function Sales() {
           <div class="total-section">
             <div class="total-row grand-total">
               <div class="total-label">Grand Total:</div>
-              <div class="total-amount">Rs. ${parseFloat(sale.totalAmount).toFixed(2)}</div>
+              <div class="total-amount">${formatCurrency(parseFloat(sale.totalAmount))}</div>
             </div>
           </div>
 
@@ -552,7 +554,7 @@ export default function Sales() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              Rs. {totalSales.toLocaleString()}
+              {formatCurrencyWithCommas(totalSales)}
             </div>
           </CardContent>
         </Card>
@@ -572,19 +574,19 @@ export default function Sales() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              Rs.{" "}
-              {sales
-                .filter(
-                  (sale: Sale) =>
-                    new Date(sale.createdAt).toDateString() ===
-                    new Date().toDateString(),
-                )
-                .reduce(
-                  (sum: number, sale: Sale) =>
-                    sum + parseFloat(sale.totalAmount),
-                  0,
-                )
-                .toLocaleString()}
+              {formatCurrencyWithCommas(
+                sales
+                  .filter(
+                    (sale: Sale) =>
+                      new Date(sale.createdAt).toDateString() ===
+                      new Date().toDateString(),
+                  )
+                  .reduce(
+                    (sum: number, sale: Sale) =>
+                      sum + parseFloat(sale.totalAmount),
+                    0,
+                  ),
+              )}
             </div>
           </CardContent>
         </Card>
@@ -594,10 +596,9 @@ export default function Sales() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              Rs.{" "}
-              {sales.length > 0
-                ? (totalSales / sales.length).toLocaleString()
-                : "0"}
+              {formatCurrencyWithCommas(
+                sales.length > 0 ? totalSales / sales.length : 0,
+              )}
             </div>
           </CardContent>
         </Card>
@@ -642,7 +643,7 @@ export default function Sales() {
                   </div>
                   <div className="text-right">
                     <div className="font-bold">
-                      Rs. {parseFloat(sale.totalAmount).toLocaleString()}
+                      {formatCurrency(parseFloat(sale.totalAmount))}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {format(new Date(sale.createdAt), "MMM dd, yyyy")}
@@ -786,10 +787,10 @@ export default function Sales() {
                           <td className="px-4 py-3 text-sm text-gray-900">{item.productName}</td>
                           <td className="px-4 py-3 text-sm text-gray-900 text-center">{item.quantity}</td>
                           <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                            Rs. {parseFloat(item.unitPrice).toFixed(2)}
+                            {formatCurrency(parseFloat(item.unitPrice))}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium">
-                            Rs. {parseFloat(item.totalPrice).toFixed(2)}
+                            {formatCurrency(parseFloat(item.totalPrice))}
                           </td>
                         </tr>
                       )) || (
@@ -810,7 +811,7 @@ export default function Sales() {
                   <div className="w-64">
                     <div className="flex justify-between items-center text-lg font-bold text-gray-900">
                       <span>Grand Total:</span>
-                      <span>Rs. {parseFloat(selectedSale.totalAmount).toFixed(2)}</span>
+                      <span>{formatCurrency(parseFloat(selectedSale.totalAmount))}</span>
                     </div>
                   </div>
                 </div>

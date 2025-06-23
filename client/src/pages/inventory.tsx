@@ -38,12 +38,14 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const { toast } = useToast();
+  const { formatCurrency, symbol } = useCurrency();
 
   const {
     data: items = [],
@@ -382,7 +384,7 @@ export default function Inventory() {
                 type="number"
                 step="0.01"
                 min="0"
-                placeholder="Cost Per Unit ($)"
+                placeholder={`Cost Per Unit (${symbol})`}
                 defaultValue={editingItem?.costPerUnit || ""}
                 required
               />
@@ -486,7 +488,7 @@ export default function Inventory() {
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          ${parseFloat(item.costPerUnit || 0).toFixed(2)}
+                          {formatCurrency(parseFloat(item.costPerUnit || 0))}
                         </TableCell>
                         <TableCell>
                           <Badge variant={stockInfo.variant}>

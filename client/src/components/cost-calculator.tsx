@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -23,6 +22,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 const costCalculatorSchema = z.object({
   productName: z.string().min(1, "Product name is required"),
@@ -111,7 +113,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
         const quantity = parseFloat(ingredient.quantity);
         const pricePerUnit = parseFloat(item.costPerUnit);
         const amount = quantity * pricePerUnit;
-        
+
         return {
           sn: index + 1,
           particular: item.name,
@@ -127,11 +129,11 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
 
     // Calculate sub-total for batch
     const subTotalForBatch = ingredientDetails.reduce((sum, item) => sum + item.amount, 0);
-    
+
     // Calculate total for production (scaling up)
     const scaleFactor = productionQuantity / batchSize;
     const totalForProduction = subTotalForBatch * scaleFactor;
-    
+
     // Calculate total weight in grams
     const totalForProductionGm = ingredientDetails.reduce((sum, item) => {
       const qtyInGrams = item.unit === 'kg' ? item.qty * 1000 : 
@@ -142,12 +144,12 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
     // Calculate effective units
     const effectiveUnits = totalForProductionGm;
     const rmCostPerUnit = finishedGoodRequired * 350; // Assuming 350 is RM cost
-    
+
     // Calculate production with losses
     const lossFactorMfg = (100 - normalLossMfg) / 100;
     const lossFactorSold = (100 - normalLossOnSold) / 100;
     const effectiveUnitsProduced = productionQuantity * lossFactorMfg * lossFactorSold;
-    
+
     // Calculate costs per unit
     const estimatedCostPerUnit = totalForProduction / effectiveUnitsProduced;
     const mfgCostPerUnit = estimatedCostPerUnit * (mfgAndPackagingCost / 100);

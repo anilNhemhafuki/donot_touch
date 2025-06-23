@@ -48,6 +48,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import AdminUserManagement from "@/components/admin-user-management";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface ProductionItem {
   id: number;
@@ -83,10 +84,12 @@ export default function EnhancedDashboard() {
     queryKey: ["/api/dashboard/production-schedule"],
   });
 
+  const { formatCurrencyWithCommas } = useCurrency();
+
   const statsCards = [
     {
       title: "Total Revenue",
-      value: `$${(stats.totalRevenue || 0).toFixed(2)}`,
+      value: formatCurrencyWithCommas(stats.totalRevenue || 0),
       icon: TrendingUp,
       trend: "+12.5%",
       description: "vs last month",

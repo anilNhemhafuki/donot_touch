@@ -23,6 +23,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 export default function Products() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +32,7 @@ export default function Products() {
   const [showCostCalculator, setShowCostCalculator] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   const {
     data: products = [],
@@ -225,12 +227,12 @@ export default function Products() {
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Price:</span>
                       <span className="font-semibold">
-                        ${Number(product.price).toFixed(2)}
+                        {formatCurrency(Number(product.price))}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Cost:</span>
-                      <span>${Number(product.cost).toFixed(2)}</span>
+                      <span>{formatCurrency(Number(product.cost))}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Margin:</span>
