@@ -30,7 +30,7 @@ import CategoryManagement from "@/pages/category-management";
 import Sales from "@/pages/sales";
 import Purchases from "@/pages/purchases";
 import PublicOrderForm from "@/components/public-order-form";
-import { lazy } from "react";
+import Stock from "@/pages/stock";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -76,8 +76,8 @@ function AuthenticatedApp({ sidebarOpen, setSidebarOpen }: { sidebarOpen: boolea
           <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/products" component={Products} />
-            <Route path="/inventory" component={lazy(() => import("./pages/inventory"))} />
-            <Route path="/stock" component={lazy(() => import("./pages/stock"))} />
+            <Route path="/inventory" component={Inventory} />
+            <Route path="/stock" component={Stock} />
             <Route path="/orders" component={Orders} />
             <Route path="/production" component={Production} />
             <Route path="/customers" component={Customers} />
