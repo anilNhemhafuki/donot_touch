@@ -197,7 +197,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 </DropdownMenuItem>
               </div>
               <div className="p-2 border-t">
-                <Button variant="ghost" className="w-full text-sm">
+                <Button 
+                  variant="ghost" 
+                  className="w-full text-sm"
+                  onClick={() => window.location.href = '/notifications'}
+                >
                   View All Notifications
                 </Button>
               </div>

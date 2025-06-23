@@ -18,6 +18,7 @@ import Parties from "@/pages/parties";
 import Reports from "@/pages/reports";
 import Billing from "@/pages/billing";
 import Settings from "@/pages/settings";
+import Notifications from "./pages/notifications";
 import AdminUsers from "@/pages/admin-users";
 import NotFound from "@/pages/not-found";
 import LoginForm from "@/components/login-form";
@@ -84,7 +85,7 @@ function AuthenticatedApp({ sidebarOpen, setSidebarOpen }: { sidebarOpen: boolea
             <Route path="/reports" component={Reports} />
             <Route path="/billing" component={Billing} />
             <Route path="/settings" component={Settings} />
-            <Route path="/notifications" component={NotificationSettings} />
+            <Route path="/notifications" component={Notifications} />
             <Route path="/categories" component={CategoryManagement} />
             <Route path="/sales" component={Sales} />
             <Route path="/purchases" component={Purchases} />
