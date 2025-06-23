@@ -221,12 +221,6 @@ export default function Products() {
                 </CardHeader>
 
                 <CardContent className="space-y-4">
-                  {product.description && (
-                    <p className="text-sm text-gray-600">
-                      {product.description}
-                    </p>
-                  )}
-
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Price:</span>
@@ -246,17 +240,6 @@ export default function Products() {
                         {margin.toFixed(1)}%
                       </span>
                     </div>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <Badge className={stockStatus.class}>
-                      {stockStatus.label}
-                    </Badge>
-                    {product.sku && (
-                      <span className="text-xs text-gray-500">
-                        SKU: {product.sku}
-                      </span>
-                    )}
                   </div>
 
                   <div className="flex space-x-2 pt-2">
