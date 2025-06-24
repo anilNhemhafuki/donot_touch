@@ -156,30 +156,39 @@ export default function Products() {
         </div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
+      {/* Enhanced Filters */}
+      <Card className="shadow-lg border-0 bg-white dark:bg-gray-800">
+        <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
+            <div className="flex-1 relative">
+              <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
               <Input
-                placeholder="Search products..."
+                placeholder="Search products by name, category, or SKU..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
+                className="pl-10 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
               />
             </div>
             <Select
               value={selectedCategory}
               onValueChange={setSelectedCategory}
             >
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-48 border-gray-300 focus:border-orange-500 focus:ring-orange-500">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">
+                  <div className="flex items-center">
+                    <i className="fas fa-layer-group mr-2 text-gray-500"></i>
+                    All Categories
+                  </div>
+                </SelectItem>
                 {categories.map((category: any) => (
                   <SelectItem key={category.id} value={category.id.toString()}>
-                    {category.name}
+                    <div className="flex items-center">
+                      <i className="fas fa-tag mr-2 text-orange-500"></i>
+                      {category.name}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -198,22 +207,23 @@ export default function Products() {
             return (
               <Card
                 key={product.id}
-                className="hover:shadow-lg transition-shadow"
+                className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 border-0 shadow-md"
               >
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-3 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-700 dark:to-gray-600 rounded-t-lg">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
-                        <i className="fas fa-cookie-bite text-primary"></i>
+                      <div className="w-14 h-14 bg-gradient-to-r from-orange-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i className="fas fa-cookie-bite text-white text-xl"></i>
                       </div>
                       <div>
-                        <CardTitle className="text-lg">
+                        <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">
                           {product.name}
                         </CardTitle>
                         {product.categoryName && (
                           <Badge
-                            className={getCategoryBadge(product.categoryName)}
+                            className={`${getCategoryBadge(product.categoryName)} shadow-sm`}
                           >
+                            <i className="fas fa-tag mr-1"></i>
                             {product.categoryName}
                           </Badge>
                         )}
@@ -222,23 +232,58 @@ export default function Products() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Price:</span>
-                      <span className="font-semibold">
-                        {formatCurrency(Number(product.price))}
+                <CardContent className="space-y-4 p-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-green-700 dark:text-green-300 font-medium">
+                          <i className="fas fa-dollar-sign mr-1"></i>
+                          Price
+                        </span>
+                        <span className="font-bold text-green-800 dark:text-green-200">
+                          {formatCurrency(Number(product.price))}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                          <i className="fas fa-coins mr-1"></i>
+                          Cost
+                        </span>
+                        <span className="font-bold text-blue-800 dark:text-blue-200">
+                          {formatCurrency(Number(product.cost))}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`rounded-lg p-3 ${
+                    margin > 50 
+                      ? "bg-green-50 dark:bg-green-900/20" 
+                      : margin > 25 
+                        ? "bg-yellow-50 dark:bg-yellow-900/20" 
+                        : "bg-red-50 dark:bg-red-900/20"
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm font-medium ${
+                        margin > 50 
+                          ? "text-green-700 dark:text-green-300" 
+                          : margin > 25 
+                            ? "text-yellow-700 dark:text-yellow-300" 
+                            : "text-red-700 dark:text-red-300"
+                      }`}>
+                        <i className={`fas ${
+                          margin > 50 ? "fa-arrow-up" : margin > 25 ? "fa-minus" : "fa-arrow-down"
+                        } mr-1`}></i>
+                        Margin
                       </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Cost:</span>
-                      <span>{formatCurrency(Number(product.cost))}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Margin:</span>
-                      <span
-                        className={`font-medium ${margin > 50 ? "text-green-600" : margin > 25 ? "text-yellow-600" : "text-red-600"}`}
-                      >
+                      <span className={`font-bold text-lg ${
+                        margin > 50 
+                          ? "text-green-800 dark:text-green-200" 
+                          : margin > 25 
+                            ? "text-yellow-800 dark:text-yellow-200" 
+                            : "text-red-800 dark:text-red-200"
+                      }`}>
                         {margin.toFixed(1)}%
                       </span>
                     </div>

@@ -109,8 +109,8 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
       <aside
         className={`
         fixed lg:static inset-y-0 left-0 z-50 
-        w-64 bg-white dark:bg-gray-900 shadow-lg 
-        flex-shrink-0 flex flex-col transform transition-transform duration-300 ease-in-out
+        w-64 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 shadow-xl border-r border-gray-200 dark:border-gray-700
+        flex-shrink-0 flex flex-col transform transition-all duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         
       `}
@@ -122,18 +122,18 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
           </Button>
         </div>
 
-        {/* Logo */}
-        <div className="p-6 flex-shrink-0">
+        {/* Enhanced Logo */}
+        <div className="p-6 flex-shrink-0 bg-gradient-to-r from-blue-600 to-purple-700 text-white">
           <Link href="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <i className="fas fa-bread-slice text-white text-lg"></i>
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
+              <i className="fas fa-bread-slice text-white text-xl"></i>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-xl font-bold">
                 Sweet Treats
               </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Bakery Management
+              <p className="text-sm text-blue-100">
+                Bakery Management System
               </p>
             </div>
           </Link>
@@ -154,11 +154,11 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`flex items-center px-4 py-2 rounded-lg transition-colors text-sm ${
+                      className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${
                         active
-                          ? "bg-primary text-white"
-                          : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-                      }`}
+                          ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg transform scale-105"
+                          : "text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-600 hover:text-gray-900 dark:hover:text-white hover:shadow-md"
+                      } mx-2`}
                     >
                       <i className={item.icon}></i>
                       <span className="font-medium">{item.name}</span>
@@ -176,7 +176,7 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                     open={openSections.includes(section.id)}
                     onOpenChange={() => toggleSection(section.id)}
                   >
-                    <CollapsibleTrigger className="flex items-center w-full px-2 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md">
+                    <CollapsibleTrigger className="flex items-center w-full px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 dark:hover:from-gray-700 dark:hover:to-gray-600 rounded-xl transition-all duration-200 mx-2">
                       {/* Icon */}
                       <i
                         className={section.icon}
@@ -198,10 +198,10 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                           <Link
                             key={item.name}
                             href={item.href}
-                            className={`font-normal flex items-center space-x-2 px-4 py-2 ml-2 rounded-lg transition-colors text-sm ${
+                            className={`font-normal flex items-center space-x-3 px-4 py-2 ml-4 rounded-lg transition-all duration-200 text-sm ${
                               active
-                                ? "bg-primary text-white font-normal"
-                                : "text-gray-600 font-normal dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md transform scale-105"
+                                : "text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-600 hover:text-gray-900 dark:hover:text-white hover:shadow-sm"
                             }`}
                           >
                             {/* Bullet Point */}
@@ -284,19 +284,20 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
           </nav>
         </div>
 
-        {/* User Profile */}
-        <div className="flex-shrink-0 p-6 border-t dark:border-gray-700">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-              <i className="fas fa-user text-primary text-sm"></i>
+        {/* Enhanced User Profile */}
+        <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700">
+          <div className="flex items-center space-x-3 bg-white dark:bg-gray-800 rounded-xl p-3 shadow-md border border-gray-200 dark:border-gray-600">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+              <i className="fas fa-user text-white"></i>
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
                 {user?.firstName
                   ? `${user.firstName} ${user.lastName || ""}`.trim()
                   : user?.email || "User"}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                <i className="fas fa-badge-check mr-1"></i>
                 {user?.role || "Staff"}
               </p>
             </div>
@@ -312,7 +313,8 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                   console.error("Logout failed:", error);
                 }
               }}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
+              title="Logout"
             >
               <i className="fas fa-sign-out-alt"></i>
             </button>

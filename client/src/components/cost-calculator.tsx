@@ -150,7 +150,9 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
             sn: index + 1,
             particular: item.name,
             qty: quantity,
-            unit: units.find((u: any) => u.id === item.unitId)?.abbreviation || item.unit,
+            unit:
+              units.find((u: any) => u.id === item.unitId)?.abbreviation ||
+              item.unit,
             price: pricePerUnit,
             unitType: `Per ${units.find((u: any) => u.id === item.unitId)?.abbreviation || item.unit}`,
             amount: amount,
@@ -571,14 +573,6 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                       </td>
                       <td className="border border-gray-300 px-2 py-1 text-right">
                         {formatCurrency(item.amount)}
-                      </td>
-                        {item.price.toFixed(2)}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1 text-center">
-                        {item.unitType}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1 text-right">
-                        {item.amount.toFixed(2)}
                       </td>
                     </tr>
                   ))}
