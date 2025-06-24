@@ -209,10 +209,10 @@ export default function Products() {
                 key={product.id}
                 className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 border-0 shadow-md"
               >
-                <CardHeader className="pb-3 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-700 dark:to-gray-600 rounded-t-lg">
+                <CardHeader className="pb-3  rounded-t-lg">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-14 h-14 bg-gradient-to-r from-orange-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <div className="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg">
                         <i className="fas fa-cookie-bite text-white text-xl"></i>
                       </div>
                       <div>
@@ -232,83 +232,77 @@ export default function Products() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4 p-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-green-700 dark:text-green-300 font-medium">
-                          <i className="fas fa-dollar-sign mr-1"></i>
-                          Price
+                <CardContent className="space-y-2 p-2">
+                  {/* Cost, Price, and Margin Info - Line by Line */}
+                  <div className="text-sm">
+                    {/* Cost */}
+                    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-md">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-blue-600 dark:text-blue-400">
+                          <i className="fas fa-coins"></i>
                         </span>
-                        <span className="font-bold text-green-800 dark:text-green-200">
-                          {formatCurrency(Number(product.price))}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
-                          <i className="fas fa-coins mr-1"></i>
+                        <span className="text-gray-600 dark:text-gray-300">
                           Cost
                         </span>
-                        <span className="font-bold text-blue-800 dark:text-blue-200">
-                          {formatCurrency(Number(product.cost))}
+                      </div>
+                      <span className="font-semibold text-blue-700 dark:text-blue-300">
+                        {formatCurrency(Number(product.cost))}
+                      </span>
+                    </div>
+
+                    {/* Price */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-green-600 dark:text-green-400">
+                          <i className="fas fa-dollar-sign"></i>
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-300">
+                          Price
                         </span>
                       </div>
-                    </div>
-                  </div>
-                  <div className={`rounded-lg p-3 ${
-                    margin > 50 
-                      ? "bg-green-50 dark:bg-green-900/20" 
-                      : margin > 25 
-                        ? "bg-yellow-50 dark:bg-yellow-900/20" 
-                        : "bg-red-50 dark:bg-red-900/20"
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-sm font-medium ${
-                        margin > 50 
-                          ? "text-green-700 dark:text-green-300" 
-                          : margin > 25 
-                            ? "text-yellow-700 dark:text-yellow-300" 
-                            : "text-red-700 dark:text-red-300"
-                      }`}>
-                        <i className={`fas ${
-                          margin > 50 ? "fa-arrow-up" : margin > 25 ? "fa-minus" : "fa-arrow-down"
-                        } mr-1`}></i>
-                        Margin
+                      <span className="font-semibold text-green-700 dark:text-green-300">
+                        {formatCurrency(Number(product.price))}
                       </span>
-                      <span className={`font-bold text-lg ${
-                        margin > 50 
-                          ? "text-green-800 dark:text-green-200" 
-                          : margin > 25 
-                            ? "text-yellow-800 dark:text-yellow-200" 
-                            : "text-red-800 dark:text-red-200"
-                      }`}>
-                        {margin.toFixed(1)}%
+                    </div>
+
+                    {/* Margin */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-yellow-600 dark:text-yellow-400">
+                          <i className="fas fa-percentage"></i>
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-300">
+                          Margin
+                        </span>
+                      </div>
+                      <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+                        {margin.toFixed(1)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex space-x-2 pt-2">
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1"
+                      className="flex-1 gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                       onClick={() => {
                         setEditingProduct(product);
                         setShowProductForm(true);
                       }}
                     >
-                      <i className="fas fa-edit mr-1"></i>
+                      <i className="fas fa-edit"></i>
                       Edit
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
+                      className="gap-2 hover:bg-red-600 transition-colors"
                       onClick={() => deleteProductMutation.mutate(product.id)}
                       disabled={deleteProductMutation.isPending}
                     >
-                      <i className="fas fa-trash mr-1"></i>
+                      <i className="fas fa-trash"></i>
                       Delete
                     </Button>
                   </div>

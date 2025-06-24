@@ -3,11 +3,24 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProductSchema } from "@shared/schema";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -89,7 +102,9 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
         title: "Success",
-        description: product ? "Product updated successfully" : "Product created successfully",
+        description: product
+          ? "Product updated successfully"
+          : "Product created successfully",
       });
       onSuccess?.();
     },
@@ -107,7 +122,9 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
       }
       toast({
         title: "Error",
-        description: product ? "Failed to update product" : "Failed to create product",
+        description: product
+          ? "Failed to update product"
+          : "Failed to create product",
         variant: "destructive",
       });
     },
@@ -116,16 +133,19 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   const calculateMargin = () => {
     const price = parseFloat(form.getValues("price") || "0");
     const cost = parseFloat(form.getValues("cost") || "0");
-    
+
     if (price > 0 && cost > 0) {
-      const margin = ((price - cost) / price) * 100;
+      const margin = price - cost;
       form.setValue("margin", margin.toFixed(2));
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        className="space-y-4"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -134,7 +154,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
               <FormItem>
                 <FormLabel>Product Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Artisan Sourdough" {...field} />
+                  <Input placeholder="Bread" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -155,7 +175,10 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                   </FormControl>
                   <SelectContent>
                     {categories.map((category: any) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
+                      <SelectItem
+                        key={category.id}
+                        value={category.id.toString()}
+                      >
                         {category.name}
                       </SelectItem>
                     ))}
@@ -169,12 +192,26 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
 
         <FormField
           control={form.control}
+          name="sku"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>SKU (Optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="350G" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Fresh baked daily with organic ingredients..." {...field} />
+                <Textarea placeholder="Making Process..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -184,16 +221,15 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
-            name="price"
+            name="cost"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Selling Price ({symbol})</FormLabel>
+                <FormLabel>Cost Price ({symbol})</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
-                    placeholder="8.50" 
-                    {...field} 
+                  <Input
+                    type="number"
+                    step="0.01"
+                    {...field}
                     onBlur={() => {
                       field.onBlur();
                       calculateMargin();
@@ -207,15 +243,14 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
 
           <FormField
             control={form.control}
-            name="cost"
+            name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Cost ($)</FormLabel>
+                <FormLabel>Selling Price ({symbol})</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
-                    placeholder="3.20" 
+                  <Input
+                    type="number"
+                    step="0.01"
                     {...field}
                     onBlur={() => {
                       field.onBlur();
@@ -233,13 +268,12 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
             name="margin"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Margin (%)</FormLabel>
+                <FormLabel>Margin Price ({symbol})</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
-                    placeholder="62.35" 
-                    {...field} 
+                  <Input
+                    type="number"
+                    step="0.01"
+                    {...field}
                     readOnly
                     className="bg-gray-50"
                   />
@@ -250,26 +284,14 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="sku"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>SKU (Optional)</FormLabel>
-              <FormControl>
-                <Input placeholder="BREAD-SOUR-001" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         <div className="flex justify-end space-x-2 pt-4">
           <Button type="button" variant="outline" onClick={onSuccess}>
             Cancel
           </Button>
           <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending && <i className="fas fa-spinner fa-spin mr-2"></i>}
+            {mutation.isPending && (
+              <i className="fas fa-spinner fa-spin mr-2"></i>
+            )}
             {product ? "Update" : "Create"} Product
           </Button>
         </div>

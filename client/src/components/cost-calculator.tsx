@@ -38,7 +38,7 @@ const costCalculatorSchema = z.object({
   productionQuantity: z
     .string()
     .min(1, "Production quantity is required")
-    .default("25"),
+    .default("1"),
   normalLossMfg: z.string().default("5"),
   normalLossOnSold: z.string().default("0"),
   mfgAndPackagingCost: z.string().default("45"),
@@ -105,7 +105,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
       categoryId: "",
       batchSize: "1",
       finishedGoodRequired: "1",
-      productionQuantity: "25",
+      productionQuantity: "1",
       normalLossMfg: "5",
       normalLossOnSold: "0",
       mfgAndPackagingCost: "45",
@@ -126,7 +126,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
       form.getValues("finishedGoodRequired") || "1",
     );
     const productionQuantity = parseFloat(
-      form.getValues("productionQuantity") || "25",
+      form.getValues("productionQuantity") || "1",
     );
     const normalLossMfg = parseFloat(form.getValues("normalLossMfg") || "5");
     const normalLossOnSold = parseFloat(
@@ -296,37 +296,6 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
 
                 <FormField
                   control={form.control}
-                  name="unitId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unit</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select unit" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {units.map((unit: any) => (
-                            <SelectItem
-                              key={unit.id}
-                              value={unit.id.toString()}
-                            >
-                              {unit.name} ({unit.abbreviation})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="batchSize"
                   render={({ field }) => (
                     <FormItem>
@@ -352,7 +321,10 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
 
             <CardContent className="space-y-4">
               {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div
+                  key={field.id}
+                  className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
+                >
                   {/* Ingredient Select */}
                   <FormField
                     control={form.control}
@@ -445,11 +417,10 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                     onClick={() => remove(index)}
                     disabled={fields.length === 1}
                   >
-                    X
+                    Remove
                   </Button>
                 </div>
               ))}
-            </CardContent>
 
               <div className="pt-4">
                 <Button

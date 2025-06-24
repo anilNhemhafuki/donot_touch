@@ -1,17 +1,16 @@
-
 import { useQuery } from "@tanstack/react-query";
 
 const CURRENCY_SYMBOLS = {
   USD: "$",
-  EUR: "€", 
+  EUR: "€",
   GBP: "£",
-  NPR: "₨",
+  NPR: "Rs. ",
   INR: "₹",
   CAD: "C$",
   AUD: "A$",
   JPY: "¥",
   CNY: "¥",
-  KRW: "₩"
+  KRW: "₩",
 };
 
 export function useCurrency() {
@@ -20,26 +19,27 @@ export function useCurrency() {
   });
 
   const currency = settings.currency || "USD";
-  const symbol = CURRENCY_SYMBOLS[currency as keyof typeof CURRENCY_SYMBOLS] || "$";
+  const symbol =
+    CURRENCY_SYMBOLS[currency as keyof typeof CURRENCY_SYMBOLS] || "$";
 
   const formatCurrency = (amount: number | string) => {
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
     return `${symbol}${numAmount.toFixed(2)}`;
   };
 
   const formatCurrencyWithCommas = (amount: number | string) => {
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
     return `${symbol}${numAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const formatCurrencyInput = (amount: number | string) => {
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    if (isNaN(numAmount)) return '';
+    const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+    if (isNaN(numAmount)) return "";
     return numAmount.toFixed(2);
   };
 
   const parseCurrency = (value: string) => {
-    const cleanValue = value.replace(/[^\d.-]/g, '');
+    const cleanValue = value.replace(/[^\d.-]/g, "");
     return parseFloat(cleanValue) || 0;
   };
 
@@ -49,6 +49,6 @@ export function useCurrency() {
     formatCurrency,
     formatCurrencyWithCommas,
     formatCurrencyInput,
-    parseCurrency
+    parseCurrency,
   };
 }

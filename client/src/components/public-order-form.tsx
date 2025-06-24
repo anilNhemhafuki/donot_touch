@@ -1,30 +1,48 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
-import { Plus, Minus, ShoppingCart, Calendar } from 'lucide-react';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, Minus, ShoppingCart, Calendar } from "lucide-react";
 
 const orderFormSchema = z.object({
-  customerName: z.string().min(2, 'Name must be at least 2 characters'),
-  customerEmail: z.string().email('Invalid email address'),
-  customerPhone: z.string().min(10, 'Phone number must be at least 10 digits'),
-  deliveryDate: z.string().min(1, 'Delivery date is required'),
-  deliveryAddress: z.string().min(10, 'Please provide complete delivery address'),
+  customerName: z.string().min(2, "Name must be at least 2 characters"),
+  customerEmail: z.string().email("Invalid email address"),
+  customerPhone: z.string().min(10, "Phone number must be at least 10 digits"),
+  deliveryDate: z.string().min(1, "Delivery date is required"),
+  deliveryAddress: z
+    .string()
+    .min(10, "Please provide complete delivery address"),
   specialInstructions: z.string().optional(),
-  items: z.array(z.object({
-    productId: z.number(),
-    quantity: z.number().min(1, 'Quantity must be at least 1'),
-    unitPrice: z.number(),
-    totalPrice: z.number(),
-  })).min(1, 'At least one item is required'),
+  items: z
+    .array(
+      z.object({
+        productId: z.number(),
+        quantity: z.number().min(1, "Quantity must be at least 1"),
+        unitPrice: z.number(),
+        totalPrice: z.number(),
+      }),
+    )
+    .min(1, "At least one item is required"),
 });
 
 type OrderFormData = z.infer<typeof orderFormSchema>;
@@ -44,36 +62,37 @@ export default function PublicOrderForm() {
   const [quantity, setQuantity] = useState(1);
 
   const { data: products = [] } = useQuery({
-    queryKey: ['/api/products'],
+    queryKey: ["/api/products"],
   });
 
   const form = useForm<OrderFormData>({
     resolver: zodResolver(orderFormSchema),
     defaultValues: {
-      customerName: '',
-      customerEmail: '',
-      customerPhone: '',
-      deliveryDate: '',
-      deliveryAddress: '',
-      specialInstructions: '',
+      customerName: "",
+      customerEmail: "",
+      customerPhone: "",
+      deliveryDate: "",
+      deliveryAddress: "",
+      specialInstructions: "",
       items: [],
     },
   });
 
   const submitOrderMutation = useMutation({
     mutationFn: async (data: OrderFormData) => {
-      const response = await fetch('/api/public/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/public/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to submit order');
+      if (!response.ok) throw new Error("Failed to submit order");
       return response.json();
     },
     onSuccess: () => {
       toast({
         title: "Order Submitted Successfully!",
-        description: "We've received your order and will contact you soon with confirmation.",
+        description:
+          "We've received your order and will contact you soon with confirmation.",
       });
       form.reset();
       setOrderItems([]);
@@ -93,12 +112,15 @@ export default function PublicOrderForm() {
     const product = products.find((p: any) => p.id === selectedProduct);
     if (!product) return;
 
-    const existingItemIndex = orderItems.findIndex(item => item.productId === selectedProduct);
-    
+    const existingItemIndex = orderItems.findIndex(
+      (item) => item.productId === selectedProduct,
+    );
+
     if (existingItemIndex >= 0) {
       const updatedItems = [...orderItems];
       updatedItems[existingItemIndex].quantity += quantity;
-      updatedItems[existingItemIndex].totalPrice = updatedItems[existingItemIndex].quantity * product.price;
+      updatedItems[existingItemIndex].totalPrice =
+        updatedItems[existingItemIndex].quantity * product.price;
       setOrderItems(updatedItems);
     } else {
       const newItem: OrderItem = {
@@ -116,7 +138,7 @@ export default function PublicOrderForm() {
   };
 
   const removeItemFromOrder = (productId: number) => {
-    setOrderItems(orderItems.filter(item => item.productId !== productId));
+    setOrderItems(orderItems.filter((item) => item.productId !== productId));
   };
 
   const updateItemQuantity = (productId: number, newQuantity: number) => {
@@ -125,7 +147,7 @@ export default function PublicOrderForm() {
       return;
     }
 
-    const updatedItems = orderItems.map(item => {
+    const updatedItems = orderItems.map((item) => {
       if (item.productId === productId) {
         return {
           ...item,
@@ -138,7 +160,10 @@ export default function PublicOrderForm() {
     setOrderItems(updatedItems);
   };
 
-  const totalAmount = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  const totalAmount = orderItems.reduce(
+    (sum, item) => sum + item.totalPrice,
+    0,
+  );
 
   const onSubmit = (data: OrderFormData) => {
     if (orderItems.length === 0) {
@@ -156,8 +181,8 @@ export default function PublicOrderForm() {
       customerPhone: data.customerPhone,
       deliveryDate: data.deliveryDate,
       deliveryAddress: data.deliveryAddress,
-      specialInstructions: data.specialInstructions || '',
-      items: orderItems.map(item => ({
+      specialInstructions: data.specialInstructions || "",
+      items: orderItems.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
@@ -172,7 +197,9 @@ export default function PublicOrderForm() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Sweet Treats Order Form</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Sweet Treats Order Form
+          </h1>
           <p className="text-gray-600">Place your custom bakery order online</p>
         </div>
 
@@ -181,14 +208,16 @@ export default function PublicOrderForm() {
           <Card>
             <CardHeader>
               <CardTitle>Customer Information</CardTitle>
-              <CardDescription>Please provide your contact details</CardDescription>
+              <CardDescription>
+                Please provide your contact details
+              </CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="customerName">Full Name *</Label>
                 <Input
                   id="customerName"
-                  {...form.register('customerName')}
+                  {...form.register("customerName")}
                   placeholder="Enter your full name"
                 />
                 {form.formState.errors.customerName && (
@@ -203,7 +232,7 @@ export default function PublicOrderForm() {
                 <Input
                   id="customerEmail"
                   type="email"
-                  {...form.register('customerEmail')}
+                  {...form.register("customerEmail")}
                   placeholder="Enter your email"
                 />
                 {form.formState.errors.customerEmail && (
@@ -217,7 +246,7 @@ export default function PublicOrderForm() {
                 <Label htmlFor="customerPhone">Phone Number *</Label>
                 <Input
                   id="customerPhone"
-                  {...form.register('customerPhone')}
+                  {...form.register("customerPhone")}
                   placeholder="Enter your phone number"
                 />
                 {form.formState.errors.customerPhone && (
@@ -232,8 +261,12 @@ export default function PublicOrderForm() {
                 <Input
                   id="deliveryDate"
                   type="date"
-                  {...form.register('deliveryDate')}
-                  min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                  {...form.register("deliveryDate")}
+                  min={
+                    new Date(Date.now() + 24 * 60 * 60 * 1000)
+                      .toISOString()
+                      .split("T")[0]
+                  }
                 />
                 {form.formState.errors.deliveryDate && (
                   <p className="text-sm text-red-600 mt-1">
@@ -244,9 +277,9 @@ export default function PublicOrderForm() {
 
               <div className="md:col-span-2">
                 <Label htmlFor="deliveryAddress">Delivery Address *</Label>
-                <Textarea
+                <Input
                   id="deliveryAddress"
-                  {...form.register('deliveryAddress')}
+                  {...form.register("deliveryAddress")}
                   placeholder="Enter complete delivery address"
                   rows={3}
                 />
@@ -258,10 +291,12 @@ export default function PublicOrderForm() {
               </div>
 
               <div className="md:col-span-2">
-                <Label htmlFor="specialInstructions">Special Instructions</Label>
+                <Label htmlFor="specialInstructions">
+                  Special Instructions
+                </Label>
                 <Textarea
                   id="specialInstructions"
-                  {...form.register('specialInstructions')}
+                  {...form.register("specialInstructions")}
                   placeholder="Any special requests or instructions for your order"
                   rows={3}
                 />
@@ -283,15 +318,20 @@ export default function PublicOrderForm() {
                 <div className="flex-1">
                   <Label>Product</Label>
                   <Select
-                    value={selectedProduct?.toString() || ''}
-                    onValueChange={(value) => setSelectedProduct(parseInt(value))}
+                    value={selectedProduct?.toString() || ""}
+                    onValueChange={(value) =>
+                      setSelectedProduct(parseInt(value))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a product" />
                     </SelectTrigger>
                     <SelectContent>
                       {products.map((product: any) => (
-                        <SelectItem key={product.id} value={product.id.toString()}>
+                        <SelectItem
+                          key={product.id}
+                          value={product.id.toString()}
+                        >
                           {product.name} - ${product.price}
                         </SelectItem>
                       ))}
@@ -310,6 +350,22 @@ export default function PublicOrderForm() {
                   />
                 </div>
 
+                <div>
+                  <Label>Unit</Label>
+                  <Select
+                    value={unit.id} // assuming unit.id is a number; if string, use toString()
+                    onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                    className="w-20"
+                  >
+                    {/* Make sure your options are rendered here */}
+                    {units.map((unitOption) => (
+                      <option key={unitOption.id} value={unitOption.id}>
+                        {unitOption.name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
                 <Button
                   type="button"
                   onClick={addItemToOrder}
@@ -325,18 +381,28 @@ export default function PublicOrderForm() {
                 <div className="space-y-4">
                   <h3 className="font-semibold">Your Order:</h3>
                   {orderItems.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                    >
                       <div>
                         <h4 className="font-medium">{item.productName}</h4>
-                        <p className="text-sm text-gray-600">${item.unitPrice} each</p>
+                        <p className="text-sm text-gray-600">
+                          ${item.unitPrice} each
+                        </p>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
-                          onClick={() => updateItemQuantity(item.productId, item.quantity - 1)}
+                          onClick={() =>
+                            updateItemQuantity(
+                              item.productId,
+                              item.quantity - 1,
+                            )
+                          }
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
@@ -345,12 +411,19 @@ export default function PublicOrderForm() {
                           type="button"
                           size="sm"
                           variant="outline"
-                          onClick={() => updateItemQuantity(item.productId, item.quantity + 1)}
+                          onClick={() =>
+                            updateItemQuantity(
+                              item.productId,
+                              item.quantity + 1,
+                            )
+                          }
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
                         <div className="ml-4 text-right">
-                          <p className="font-semibold">${item.totalPrice.toFixed(2)}</p>
+                          <p className="font-semibold">
+                            ${item.totalPrice.toFixed(2)}
+                          </p>
                         </div>
                         <Button
                           type="button"
@@ -363,7 +436,7 @@ export default function PublicOrderForm() {
                       </div>
                     </div>
                   ))}
-                  
+
                   <div className="text-right pt-4 border-t">
                     <p className="text-xl font-bold">
                       Total: ${totalAmount.toFixed(2)}
@@ -379,10 +452,14 @@ export default function PublicOrderForm() {
             <Button
               type="submit"
               size="lg"
-              disabled={submitOrderMutation.isPending || orderItems.length === 0}
+              disabled={
+                submitOrderMutation.isPending || orderItems.length === 0
+              }
               className="min-w-[200px]"
             >
-              {submitOrderMutation.isPending ? 'Submitting Order...' : 'Submit Order'}
+              {submitOrderMutation.isPending
+                ? "Submitting Order..."
+                : "Submit Order"}
             </Button>
           </div>
         </form>
