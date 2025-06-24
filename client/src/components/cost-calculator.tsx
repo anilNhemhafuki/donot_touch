@@ -352,110 +352,106 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
 
             <CardContent className="space-y-4">
               {fields.map((field, index) => (
-                <div key={field.id} className="p-4 border rounded-lg space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Ingredient Select */}
-                    <FormField
-                      control={form.control}
-                      name={`ingredients.${index}.inventoryItemId`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Ingredient</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select ingredient" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {inventoryItems.map((item: any) => (
-                                <SelectItem
-                                  key={item.id}
-                                  value={item.id.toString()}
-                                >
-                                  {item.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Quantity Input */}
-                    <FormField
-                      control={form.control}
-                      name={`ingredients.${index}.quantity`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Quantity</FormLabel>
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                  {/* Ingredient Select */}
+                  <FormField
+                    control={form.control}
+                    name={`ingredients.${index}.inventoryItemId`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ingredient</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              placeholder="1"
-                              {...field}
-                            />
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select ingredient" />
+                            </SelectTrigger>
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                          <SelectContent>
+                            {inventoryItems.map((item: any) => (
+                              <SelectItem
+                                key={item.id}
+                                value={item.id.toString()}
+                              >
+                                {item.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    {/* Unit Select */}
-                    <FormField
-                      control={form.control}
-                      name={`ingredients.${index}.unitId`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Unit</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select unit" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {units.map((unit: any) => (
-                                <SelectItem
-                                  key={unit.id}
-                                  value={unit.id.toString()}
-                                >
-                                  {unit.name} ({unit.abbreviation})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  {/* Quantity Input */}
+                  <FormField
+                    control={form.control}
+                    name={`ingredients.${index}.quantity`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Quantity</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="1"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    {/* Remove Button */}
-                    <div className="flex items-end">
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => remove(index)}
-                        disabled={fields.length === 1}
-                      >
-                        <i className="fas fa-trash"></i>X
-                      </Button>
-                    </div>
-                  </div>
+                  {/* Unit Select */}
+                  <FormField
+                    control={form.control}
+                    name={`ingredients.${index}.unitId`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unit</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select unit" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {units.map((unit: any) => (
+                              <SelectItem
+                                key={unit.id}
+                                value={unit.id.toString()}
+                              >
+                                {unit.name} ({unit.abbreviation})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Remove Button */}
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => remove(index)}
+                    disabled={fields.length === 1}
+                  >
+                    X
+                  </Button>
                 </div>
               ))}
             </CardContent>
 
-              <div className="flex items-center justify-between w-full">
+              <div className="pt-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -464,7 +460,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                     append({
                       inventoryItemId: "",
                       quantity: "",
-                      unitId: "", // 👈 Add this missing field
+                      unitId: "",
                     })
                   }
                 >
@@ -472,6 +468,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                   Add Ingredient
                 </Button>
               </div>
+            </CardContent>
           </Card>
 
           {/* Production Parameters */}
