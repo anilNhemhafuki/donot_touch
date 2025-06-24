@@ -592,7 +592,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                     <td className="border border-gray-300 px-2 py-1"></td>
                     <td className="border border-gray-300 px-2 py-1"></td>
                     <td className="border border-gray-300 px-2 py-1 text-right">
-                      {formatCurrency(calculations.subTotalForBatch)}
+                      {formatCurrency(calculations.subTotalForBatch ?? 0)}
                     </td>
                   </tr>
                   <tr className="bg-yellow-100 font-semibold">
