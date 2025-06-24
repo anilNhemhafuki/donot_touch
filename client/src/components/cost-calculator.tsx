@@ -347,21 +347,14 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Recipe Ingredients</CardTitle>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => append({ inventoryItemId: "", quantity: "" })}
-                >
-                  <i className="fas fa-plus mr-2"></i>
-                  Add Ingredient
-                </Button>
               </div>
             </CardHeader>
+
             <CardContent className="space-y-4">
               {fields.map((field, index) => (
                 <div key={field.id} className="p-4 border rounded-lg space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Ingredient Select */}
                     <FormField
                       control={form.control}
                       name={`ingredients.${index}.inventoryItemId`}
@@ -393,6 +386,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                       )}
                     />
 
+                    {/* Quantity Input */}
                     <FormField
                       control={form.control}
                       name={`ingredients.${index}.quantity`}
@@ -412,6 +406,39 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                       )}
                     />
 
+                    {/* Unit Select */}
+                    <FormField
+                      control={form.control}
+                      name={`ingredients.${index}.unitId`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Unit</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select unit" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {units.map((unit: any) => (
+                                <SelectItem
+                                  key={unit.id}
+                                  value={unit.id.toString()}
+                                >
+                                  {unit.name} ({unit.abbreviation})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Remove Button */}
                     <div className="flex items-end">
                       <Button
                         type="button"
@@ -420,14 +447,31 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                         onClick={() => remove(index)}
                         disabled={fields.length === 1}
                       >
-                        <i className="fas fa-trash mr-2"></i>
-                        Remove
+                        <i className="fas fa-trash"></i>X
                       </Button>
                     </div>
                   </div>
                 </div>
               ))}
             </CardContent>
+
+              <div className="flex items-center justify-between w-full">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    append({
+                      inventoryItemId: "",
+                      quantity: "",
+                      unitId: "", // 👈 Add this missing field
+                    })
+                  }
+                >
+                  <i className="fas fa-plus mr-2"></i>
+                  Add Ingredient
+                </Button>
+              </div>
           </Card>
 
           {/* Production Parameters */}

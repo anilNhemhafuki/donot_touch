@@ -25,7 +25,7 @@ const orderFormSchema = z.object({
   items: z.array(z.object({
     productId: z.string().min(1, "Product is required"),
     quantity: z.string().min(1, "Quantity is required"),
-    unitPrice: z.string().min(1, "Unit price is required"),
+    unitPrice: z.string().min(1, "Unit is required"),
   })).min(1, "At least one item is required"),
 });
 
