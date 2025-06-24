@@ -74,7 +74,12 @@ export default function EnhancedDashboard() {
 
   const { data: recentOrders = [] } = useQuery({
     queryKey: ["/api/dashboard/recent-orders"],
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
+
+  // Check for new public orders (orders without createdBy user)
+  const publicOrders = recentOrders.filter((order: any) => !order.createdBy);
+  const hasNewPublicOrders = publicOrders.length > 0;
 
   const { data: lowStockItems = [] } = useQuery({
     queryKey: ["/api/dashboard/low-stock"],
@@ -163,7 +168,15 @@ export default function EnhancedDashboard() {
         {/* Recent Orders */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Orders</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5" />
+              Recent Orders
+              {hasNewPublicOrders && (
+                <Badge variant="destructive" className="ml-2">
+                  {publicOrders.length} New Public Order{publicOrders.length > 1 ? 's' : ''}
+                </Badge>
+              )}
+            </CardTitle>
             <CardDescription>Latest customer orders</CardDescription>
           </CardHeader>
           <CardContent>

@@ -184,13 +184,16 @@ export default function PublicOrderForm() {
       return;
     }
 
+    // Update form with current items for validation
+    form.setValue("items", orderItems);
+
     const orderData = {
-      customerName: data.customerName,
-      customerEmail: data.customerEmail,
-      customerPhone: data.customerPhone,
+      customerName: data.customerName.trim(),
+      customerEmail: data.customerEmail.trim(),
+      customerPhone: data.customerPhone.trim(),
       deliveryDate: data.deliveryDate,
-      deliveryAddress: data.deliveryAddress,
-      specialInstructions: data.specialInstructions || "",
+      deliveryAddress: data.deliveryAddress.trim(),
+      specialInstructions: data.specialInstructions?.trim() || "",
       items: orderItems.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,
@@ -336,14 +339,18 @@ export default function PublicOrderForm() {
                       <SelectValue placeholder="Select a product" />
                     </SelectTrigger>
                     <SelectContent>
-                      {products.map((product: any) => (
-                        <SelectItem
-                          key={product.id}
-                          value={product.id.toString()}
-                        >
-                          {product.name} - {formatCurrency(parseFloat(product.price))}
-                        </SelectItem>
-                      ))}
+                      {products.map((product: any) => {
+                        const unit = units.find((u: any) => u.id === product.unitId);
+                        return (
+                          <SelectItem
+                            key={product.id}
+                            value={product.id.toString()}
+                          >
+                            {product.name} - {formatCurrency(parseFloat(product.price))} 
+                            {unit && ` per ${unit.abbreviation}`}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -381,7 +388,11 @@ export default function PublicOrderForm() {
                       <div>
                         <h4 className="font-medium">{item.productName}</h4>
                         <p className="text-sm text-gray-600">
-                          {formatCurrency(item.unitPrice)} each
+                          {formatCurrency(item.unitPrice)} per {(() => {
+                            const product = products.find((p: any) => p.id === item.productId);
+                            const unit = units.find((u: any) => u.id === product?.unitId);
+                            return unit?.abbreviation || 'unit';
+                          })()}
                         </p>
                       </div>
 

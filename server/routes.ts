@@ -13,6 +13,7 @@ import {
   insertAssetSchema,
   insertExpenseSchema,
 } from "@shared/schema";
+import { notifyNewPublicOrder, getNotificationRecipients } from "./notifications";
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1376,6 +1377,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('📦 New public order received:', orderNumber);
+
+      // Send notifications about new public order
+      try {
+        await notifyNewPublicOrder({
+          orderNumber,
+          customerName: customerName.trim(),
+          customerEmail: customerEmail.trim(),
+          customerPhone: customerPhone.trim(),
+          totalAmount,
+          deliveryDate,
+          itemCount: items.length
+        });
+      } catch (notificationError) {
+        console.error('Failed to send notifications:', notificationError);
+        // Don't fail the order creation if notifications fail
+      }
 
       res.json({ 
         success: true, 
