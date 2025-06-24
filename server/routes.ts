@@ -274,6 +274,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/units", isAuthenticated, async (req, res) => {
+    try {
+      if (!req.body.name) {
+        return res.status(400).json({ message: "Unit name is required" });
+      }
+      if (!req.body.abbreviation) {
+        return res.status(400).json({ message: "Unit abbreviation is required" });
+      }
+      if (!req.body.type) {
+        return res.status(400).json({ message: "Unit type is required" });
+      }
+
+      const transformedData = {
+        name: req.body.name.trim(),
+        abbreviation: req.body.abbreviation.trim(),
+        type: req.body.type.trim(),
+      };
+
+      const unit = await storage.createUnit(transformedData);
+      res.json(unit);
+    } catch (error) {
+      console.error("Error creating unit:", error);
+      res.status(500).json({ message: "Failed to create unit" });
+    }
+  });
+
+  app.put("/api/units/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+
+      if (!req.body.name) {
+        return res.status(400).json({ message: "Unit name is required" });
+      }
+      if (!req.body.abbreviation) {
+        return res.status(400).json({ message: "Unit abbreviation is required" });
+      }
+      if (!req.body.type) {
+        return res.status(400).json({ message: "Unit type is required" });
+      }
+
+      const transformedData = {
+        name: req.body.name.trim(),
+        abbreviation: req.body.abbreviation.trim(),
+        type: req.body.type.trim(),
+      };
+
+      const unit = await storage.updateUnit(id, transformedData);
+      res.json(unit);
+    } catch (error) {
+      console.error("Error updating unit:", error);
+      res.status(500).json({ message: "Failed to update unit" });
+    }
+  });
+
+  app.delete("/api/units/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteUnit(id);
+      res.json({ message: "Unit deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting unit:", error);
+      res.status(500).json({ message: "Failed to delete unit" });
+    }
+  });
+
   // Inventory Categories
   app.get("/api/inventory-categories", isAuthenticated, async (req, res) => {
     try {

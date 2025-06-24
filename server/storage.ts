@@ -83,6 +83,12 @@ export interface IStorage {
   ): Promise<ProductIngredient>;
   deleteProductIngredients(productId: number): Promise<void>;
 
+  // Units operations
+  getUnits(): Promise<Unit[]>;
+  createUnit(unit: InsertUnit): Promise<Unit>;
+  updateUnit(id: number, unit: Partial<InsertUnit>): Promise<Unit>;
+  deleteUnit(id: number): Promise<void>;
+
   // Inventory operations
   getInventoryItems(): Promise<InventoryItem[]>;
   getInventoryItemById(id: number): Promise<InventoryItem | undefined>;
@@ -373,6 +379,19 @@ export class Storage {
   async createUnit(data: InsertUnit) {
     const [unit] = await db.insert(units).values(data).returning();
     return unit;
+  }
+
+  async updateUnit(id: number, data: Partial<InsertUnit>) {
+    const [unit] = await db
+      .update(units)
+      .set(data)
+      .where(eq(units.id, id))
+      .returning();
+    return unit;
+  }
+
+  async deleteUnit(id: number): Promise<void> {
+    await db.delete(units).where(eq(units.id, id));
   }
 
   async getInventoryItems() {

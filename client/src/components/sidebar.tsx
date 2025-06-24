@@ -266,6 +266,17 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                       <i className="fas fa-tags"></i>
                       <span className="font-medium">Category Management</span>
                     </Link>
+                    <Link
+                      href="/units"
+                      className={`flex items-center space-x-3 px-4 py-2 ml-2 rounded-lg transition-colors text-sm ${
+                        isActive("/units")
+                          ? "bg-primary text-white"
+                          : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                      }`}
+                    >
+                      <i className="fas fa-ruler"></i>
+                      <span className="font-medium">Measuring Units</span>
+                    </Link>
                   </CollapsibleContent>
                 </Collapsible>
               </div>

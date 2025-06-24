@@ -38,6 +38,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, Edit, Trash2, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 export default function Expenses() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,6 +47,7 @@ export default function Expenses() {
   const [editingExpense, setEditingExpense] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   const {
     data: expenses = [],
@@ -398,7 +400,7 @@ export default function Expenses() {
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          ${parseFloat(expense.amount || 0).toFixed(2)}
+                          {formatCurrency(parseFloat(expense.amount || 0))}
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">

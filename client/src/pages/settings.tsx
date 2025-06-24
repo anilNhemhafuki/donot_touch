@@ -349,6 +349,12 @@ export default function Settings() {
                         <SelectItem value="EUR">EUR (€)</SelectItem>
                         <SelectItem value="GBP">GBP (£)</SelectItem>
                         <SelectItem value="NPR">NPR (₨)</SelectItem>
+                        <SelectItem value="INR">INR (₹)</SelectItem>
+                        <SelectItem value="CAD">CAD (C$)</SelectItem>
+                        <SelectItem value="AUD">AUD (A$)</SelectItem>
+                        <SelectItem value="JPY">JPY (¥)</SelectItem>
+                        <SelectItem value="CNY">CNY (¥)</SelectItem>
+                        <SelectItem value="KRW">KRW (₩)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

@@ -31,6 +31,7 @@ import Sales from "@/pages/sales";
 import Purchases from "@/pages/purchases";
 import PublicOrderForm from "@/components/public-order-form";
 import Stock from "@/pages/stock";
+import Units from "@/pages/units";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -89,6 +90,7 @@ function AuthenticatedApp({ sidebarOpen, setSidebarOpen }: { sidebarOpen: boolea
             <Route path="/settings" component={Settings} />
             <Route path="/notifications" component={Notifications} />
             <Route path="/categories" component={CategoryManagement} />
+            <Route path="/units" component={Units} />
             <Route path="/sales" component={Sales} />
             <Route path="/purchases" component={Purchases} />
             <Route path="/admin/users" component={AdminUsers} />

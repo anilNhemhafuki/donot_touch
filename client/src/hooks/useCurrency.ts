@@ -5,7 +5,13 @@ const CURRENCY_SYMBOLS = {
   USD: "$",
   EUR: "€", 
   GBP: "£",
-  NPR: "₨"
+  NPR: "₨",
+  INR: "₹",
+  CAD: "C$",
+  AUD: "A$",
+  JPY: "¥",
+  CNY: "¥",
+  KRW: "₩"
 };
 
 export function useCurrency() {
@@ -23,13 +29,26 @@ export function useCurrency() {
 
   const formatCurrencyWithCommas = (amount: number | string) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return `${symbol}${numAmount.toLocaleString()}`;
+    return `${symbol}${numAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const formatCurrencyInput = (amount: number | string) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(numAmount)) return '';
+    return numAmount.toFixed(2);
+  };
+
+  const parseCurrency = (value: string) => {
+    const cleanValue = value.replace(/[^\d.-]/g, '');
+    return parseFloat(cleanValue) || 0;
   };
 
   return {
     currency,
     symbol,
     formatCurrency,
-    formatCurrencyWithCommas
+    formatCurrencyWithCommas,
+    formatCurrencyInput,
+    parseCurrency
   };
 }
