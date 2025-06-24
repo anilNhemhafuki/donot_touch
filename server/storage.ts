@@ -3,6 +3,7 @@ import {
   categories,
   products,
   inventoryItems,
+  inventoryCategories,
   units,
   productIngredients,
   orders,
@@ -24,6 +25,8 @@ import {
   type InsertProduct,
   type InventoryItem,
   type InsertInventoryItem,
+  type InventoryCategory,
+  type InsertInventoryCategory,
   type Unit,
   type InsertUnit,
   type ProductIngredient,
@@ -90,6 +93,15 @@ export interface IStorage {
     item: Partial<InsertInventoryItem>,
   ): Promise<InventoryItem>;
   deleteInventoryItem(id: number): Promise<void>;
+
+  // Inventory category operations
+  getInventoryCategories(): Promise<InventoryCategory[]>;
+  createInventoryCategory(category: InsertInventoryCategory): Promise<InventoryCategory>;
+  updateInventoryCategory(
+    id: number,
+    category: Partial<InsertInventoryCategory>,
+  ): Promise<InventoryCategory>;
+  deleteInventoryCategory(id: number): Promise<void>;
 
   // Order operations
   getOrders(): Promise<any[]>;
@@ -368,6 +380,7 @@ export class Storage {
       .select({
         id: inventoryItems.id,
         name: inventoryItems.name,
+        categoryId: inventoryItems.categoryId,
         currentStock: inventoryItems.currentStock,
         minLevel: inventoryItems.minLevel,
         unit: inventoryItems.unit,
@@ -382,9 +395,11 @@ export class Storage {
         updatedAt: inventoryItems.updatedAt,
         unitName: units.name,
         unitAbbreviation: units.abbreviation,
+        categoryName: inventoryCategories.name,
       })
       .from(inventoryItems)
       .leftJoin(units, eq(inventoryItems.unitId, units.id))
+      .leftJoin(inventoryCategories, eq(inventoryItems.categoryId, inventoryCategories.id))
       .orderBy(inventoryItems.name);
   }
 
@@ -429,6 +444,37 @@ export class Storage {
 
   async deleteInventoryItem(id: number): Promise<void> {
     await db.delete(inventoryItems).where(eq(inventoryItems.id, id));
+  }
+
+  // Inventory category operations
+  async getInventoryCategories(): Promise<InventoryCategory[]> {
+    return await db
+      .select()
+      .from(inventoryCategories)
+      .where(eq(inventoryCategories.isActive, true))
+      .orderBy(inventoryCategories.name);
+  }
+
+  async createInventoryCategory(data: InsertInventoryCategory): Promise<InventoryCategory> {
+    const [category] = await db.insert(inventoryCategories).values(data).returning();
+    return category;
+  }
+
+  async updateInventoryCategory(id: number, data: Partial<InsertInventoryCategory>): Promise<InventoryCategory> {
+    const updateData = {
+      ...data,
+      updatedAt: new Date(),
+    };
+    const [category] = await db
+      .update(inventoryCategories)
+      .set(updateData)
+      .where(eq(inventoryCategories.id, id))
+      .returning();
+    return category;
+  }
+
+  async deleteInventoryCategory(id: number): Promise<void> {
+    await db.delete(inventoryCategories).where(eq(inventoryCategories.id, id));
   }
 
   // Order operations

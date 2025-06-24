@@ -274,6 +274,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Inventory Categories
+  app.get("/api/inventory-categories", isAuthenticated, async (req, res) => {
+    try {
+      const categories = await storage.getInventoryCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching inventory categories:", error);
+      res.status(500).json({ message: "Failed to fetch inventory categories" });
+    }
+  });
+
+  app.post("/api/inventory-categories", isAuthenticated, async (req, res) => {
+    try {
+      if (!req.body.name) {
+        return res.status(400).json({ message: "Category name is required" });
+      }
+
+      const transformedData = {
+        name: req.body.name.trim(),
+        description: req.body.description ? req.body.description.trim() : null,
+      };
+
+      const category = await storage.createInventoryCategory(transformedData);
+      res.json(category);
+    } catch (error) {
+      console.error("Error creating inventory category:", error);
+      res.status(500).json({ message: "Failed to create inventory category" });
+    }
+  });
+
+  app.put("/api/inventory-categories/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+
+      if (!req.body.name) {
+        return res.status(400).json({ message: "Category name is required" });
+      }
+
+      const transformedData = {
+        name: req.body.name.trim(),
+        description: req.body.description ? req.body.description.trim() : null,
+      };
+
+      const category = await storage.updateInventoryCategory(id, transformedData);
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating inventory category:", error);
+      res.status(500).json({ message: "Failed to update inventory category" });
+    }
+  });
+
+  app.delete("/api/inventory-categories/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteInventoryCategory(id);
+      res.json({ message: "Inventory category deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting inventory category:", error);
+      res.status(500).json({ message: "Failed to delete inventory category" });
+    }
+  });
+
   app.post("/api/units", isAuthenticated, async (req, res) => {
     try {
       if (!req.body.name) {

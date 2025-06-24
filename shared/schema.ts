@@ -76,10 +76,21 @@ export const units = pgTable("units", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Inventory categories/groups
+export const inventoryCategories = pgTable("inventory_categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Inventory items (ingredients)
 export const inventoryItems = pgTable("inventory_items", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 200 }).notNull(),
+  categoryId: integer("category_id").references(() => inventoryCategories.id),
   currentStock: decimal("current_stock", { precision: 10, scale: 2 }).notNull(),
   minLevel: decimal("min_level", { precision: 10, scale: 2 }).notNull(),
   unitId: integer("unit_id").references(() => units.id),
@@ -286,7 +297,15 @@ export const unitsRelations = relations(units, ({ many }) => ({
   inventoryItems: many(inventoryItems),
 }));
 
+export const inventoryCategoriesRelations = relations(inventoryCategories, ({ many }) => ({
+  items: many(inventoryItems),
+}));
+
 export const inventoryItemsRelations = relations(inventoryItems, ({ one, many }) => ({
+  category: one(inventoryCategories, {
+    fields: [inventoryItems.categoryId],
+    references: [inventoryCategories.id],
+  }),
   unit: one(units, {
     fields: [inventoryItems.unitId],
     references: [units.id],
@@ -359,6 +378,9 @@ export type InsertProduct = typeof products.$inferInsert;
 
 export type Unit = typeof units.$inferSelect;
 export type InsertUnit = typeof units.$inferInsert;
+
+export type InventoryCategory = typeof inventoryCategories.$inferSelect;
+export type InsertInventoryCategory = typeof inventoryCategories.$inferInsert;
 
 export type InventoryItem = typeof inventoryItems.$inferSelect;
 export type InsertInventoryItem = typeof inventoryItems.$inferInsert;
