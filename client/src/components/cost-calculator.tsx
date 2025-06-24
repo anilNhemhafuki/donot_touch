@@ -72,6 +72,8 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
     finalCostPerUnit: 0,
   });
 
+  const { formatCurrency } = useCurrency();
+
   const { data: categories = [] } = useQuery({
     queryKey: ["/api/categories"],
     retry: (failureCount, error) => {
