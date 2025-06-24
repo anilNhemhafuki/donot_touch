@@ -86,6 +86,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
       const transformedData = {
         ...data,
         categoryId: data.categoryId ? parseInt(data.categoryId) : null,
+        unitId: data.unitId ? parseInt(data.unitId) : null,
         price: parseFloat(data.price),
         cost: parseFloat(data.cost),
         margin: parseFloat(data.margin),
@@ -146,7 +147,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
         className="space-y-4"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="name"
@@ -180,6 +181,34 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                         value={category.id.toString()}
                       >
                         {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="unitId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Unit</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a unit" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {units.map((unit: any) => (
+                      <SelectItem
+                        key={unit.id}
+                        value={unit.id.toString()}
+                      >
+                        {unit.name} ({unit.abbreviation})
                       </SelectItem>
                     ))}
                   </SelectContent>
