@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +23,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Minus, ShoppingCart, Calendar } from "lucide-react";
+import { useCurrency } from "@/hooks/useCurrency";
+import { Plus, Minus, ShoppingCart } from "lucide-react";
 
 const orderFormSchema = z.object({
   customerName: z.string().min(2, "Name must be at least 2 characters"),
@@ -57,12 +59,17 @@ interface OrderItem {
 
 export default function PublicOrderForm() {
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
 
   const { data: products = [] } = useQuery({
     queryKey: ["/api/products"],
+  });
+
+  const { data: units = [] } = useQuery({
+    queryKey: ["/api/units"],
   });
 
   const form = useForm<OrderFormData>({
@@ -79,28 +86,30 @@ export default function PublicOrderForm() {
   });
 
   const submitOrderMutation = useMutation({
-    mutationFn: async (data: OrderFormData) => {
+    mutationFn: async (data: any) => {
       const response = await fetch("/api/public/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Failed to submit order");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to submit order");
+      }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Order Submitted Successfully!",
-        description:
-          "We've received your order and will contact you soon with confirmation.",
+        description: `Order ${data.orderNumber} has been received. We'll contact you soon with confirmation.`,
       });
       form.reset();
       setOrderItems([]);
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Order Submission Failed",
-        description: "Please check your information and try again.",
+        description: error.message || "Please check your information and try again.",
         variant: "destructive",
       });
     },
@@ -120,7 +129,7 @@ export default function PublicOrderForm() {
       const updatedItems = [...orderItems];
       updatedItems[existingItemIndex].quantity += quantity;
       updatedItems[existingItemIndex].totalPrice =
-        updatedItems[existingItemIndex].quantity * product.price;
+        updatedItems[existingItemIndex].quantity * parseFloat(product.price);
       setOrderItems(updatedItems);
     } else {
       const newItem: OrderItem = {
@@ -277,7 +286,7 @@ export default function PublicOrderForm() {
 
               <div className="md:col-span-2">
                 <Label htmlFor="deliveryAddress">Delivery Address *</Label>
-                <Input
+                <Textarea
                   id="deliveryAddress"
                   {...form.register("deliveryAddress")}
                   placeholder="Enter complete delivery address"
@@ -332,7 +341,7 @@ export default function PublicOrderForm() {
                           key={product.id}
                           value={product.id.toString()}
                         >
-                          {product.name} - ${product.price}
+                          {product.name} - {formatCurrency(parseFloat(product.price))}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -348,22 +357,6 @@ export default function PublicOrderForm() {
                     onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
                     className="w-20"
                   />
-                </div>
-
-                <div>
-                  <Label>Unit</Label>
-                  <Select
-                    value={unit.id} // assuming unit.id is a number; if string, use toString()
-                    onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                    className="w-20"
-                  >
-                    {/* Make sure your options are rendered here */}
-                    {units.map((unitOption) => (
-                      <option key={unitOption.id} value={unitOption.id}>
-                        {unitOption.name}
-                      </option>
-                    ))}
-                  </Select>
                 </div>
 
                 <Button
@@ -388,7 +381,7 @@ export default function PublicOrderForm() {
                       <div>
                         <h4 className="font-medium">{item.productName}</h4>
                         <p className="text-sm text-gray-600">
-                          ${item.unitPrice} each
+                          {formatCurrency(item.unitPrice)} each
                         </p>
                       </div>
 
@@ -422,7 +415,7 @@ export default function PublicOrderForm() {
                         </Button>
                         <div className="ml-4 text-right">
                           <p className="font-semibold">
-                            ${item.totalPrice.toFixed(2)}
+                            {formatCurrency(item.totalPrice)}
                           </p>
                         </div>
                         <Button
@@ -439,7 +432,7 @@ export default function PublicOrderForm() {
 
                   <div className="text-right pt-4 border-t">
                     <p className="text-xl font-bold">
-                      Total: ${totalAmount.toFixed(2)}
+                      Total: {formatCurrency(totalAmount)}
                     </p>
                   </div>
                 </div>

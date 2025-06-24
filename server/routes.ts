@@ -1325,8 +1325,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { customerName, customerEmail, customerPhone, deliveryDate, deliveryAddress, specialInstructions, items } = req.body;
       
+      // Validate required fields
+      if (!customerName || !customerEmail || !customerPhone || !deliveryDate || !deliveryAddress) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'All required fields must be filled' 
+        });
+      }
+
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'At least one item is required' 
+        });
+      }
+      
       // Generate order number
-      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+      const orderNumber = `PUB-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
       
       // Calculate total amount
       const totalAmount = items.reduce((sum: number, item: any) => sum + item.totalPrice, 0);
@@ -1334,42 +1349,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create order
       const order = await storage.createOrder({
         orderNumber,
-        customerName,
-        customerEmail,
-        customerPhone,
-        deliveryDate: new Date(deliveryDate),
-        deliveryAddress,
-        specialInstructions,
+        customerName: customerName.trim(),
+        customerEmail: customerEmail.trim(),
+        customerPhone: customerPhone.trim(),
         totalAmount: totalAmount.toString(),
+        orderDate: new Date(),
+        dueDate: new Date(deliveryDate),
+        notes: `Delivery Address: ${deliveryAddress.trim()}${specialInstructions ? `\nSpecial Instructions: ${specialInstructions.trim()}` : ''}`,
         status: 'pending',
-        orderType: 'online',
-        createdBy: 'public_order'
+        createdBy: null, // Public order, no user ID
       });
 
       // Create order items
       for (const item of items) {
+        if (!item.productId || !item.quantity || !item.unitPrice) {
+          throw new Error('Invalid item data');
+        }
+        
         await storage.createOrderItem({
           orderId: order.id,
-          productId: item.productId,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice.toString(),
-          totalPrice: item.totalPrice.toString(),
+          productId: parseInt(item.productId),
+          quantity: parseInt(item.quantity),
+          unitPrice: parseFloat(item.unitPrice).toString(),
+          totalPrice: parseFloat(item.totalPrice).toString(),
         });
       }
 
-      // TODO: Send notification to admin about new order
       console.log('📦 New public order received:', orderNumber);
 
       res.json({ 
         success: true, 
         orderNumber,
-        message: 'Order submitted successfully! We will contact you soon.' 
+        message: 'Order submitted successfully! We will contact you soon with confirmation.' 
       });
     } catch (error) {
       console.error('Error creating public order:', error);
       res.status(500).json({ 
         success: false, 
-        message: 'Failed to submit order. Please try again.' 
+        message: error instanceof Error ? error.message : 'Failed to submit order. Please try again.' 
       });
     }
   });
