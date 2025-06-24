@@ -11,10 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useCurrency } from "@/hooks/useCurrency";
 import { z } from "zod";
 
 const productFormSchema = insertProductSchema.extend({
   categoryId: z.string().optional(),
+  unitId: z.string().optional(),
   price: z.string().min(1, "Price is required"),
   cost: z.string().min(1, "Cost is required"),
   margin: z.string().min(1, "Margin is required"),
@@ -27,9 +29,14 @@ interface ProductFormProps {
 
 export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   const { toast } = useToast();
+  const { symbol } = useCurrency();
 
   const { data: categories = [] } = useQuery({
     queryKey: ["/api/categories"],
+  });
+
+  const { data: units = [] } = useQuery({
+    queryKey: ["/api/units"],
   });
 
   const form = useForm({
@@ -38,6 +45,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
       name: "",
       description: "",
       categoryId: "",
+      unitId: "",
       price: "",
       cost: "",
       margin: "",
@@ -51,6 +59,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         name: product.name || "",
         description: product.description || "",
         categoryId: product.categoryId?.toString() || "",
+        unitId: product.unitId?.toString() || "",
         price: product.price?.toString() || "",
         cost: product.cost?.toString() || "",
         margin: product.margin?.toString() || "",
@@ -178,7 +187,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Selling Price ($)</FormLabel>
+                <FormLabel>Selling Price ({symbol})</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 

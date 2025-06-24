@@ -35,6 +35,7 @@ interface OrderFormProps {
 
 export default function OrderForm({ onSuccess }: OrderFormProps) {
   const { toast } = useToast();
+  const { formatCurrency, symbol } = useCurrency();
 
   const { data: products = [] } = useQuery({
     queryKey: ["/api/products"],
@@ -290,7 +291,7 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
                   name={`items.${index}.unitPrice`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Unit Price ($)</FormLabel>
+                      <FormLabel>Unit Price ({symbol})</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -339,7 +340,7 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
                 name="totalAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Total Amount ($)</FormLabel>
+                    <FormLabel>Total Amount ({symbol})</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 

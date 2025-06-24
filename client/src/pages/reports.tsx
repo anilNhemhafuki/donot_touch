@@ -12,10 +12,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 export default function Reports() {
   const [timeRange, setTimeRange] = useState("30");
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - parseInt(timeRange));
@@ -358,7 +360,7 @@ export default function Reports() {
                       </span>
                       <div className="flex items-center space-x-2">
                         <span className="font-semibold">
-                          ${Number(product.revenue).toFixed(2)}
+                          {formatCurrency(Number(product.revenue))}
                         </span>
                         <Badge variant="outline">{percentage}%</Badge>
                       </div>

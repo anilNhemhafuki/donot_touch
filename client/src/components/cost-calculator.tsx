@@ -29,6 +29,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 const costCalculatorSchema = z.object({
   productName: z.string().min(1, "Product name is required"),
   categoryId: z.string().optional(),
+  unitId: z.string().min(1, "Unit is required"),
   batchSize: z.string().min(1, "Batch size is required").default("1"),
   finishedGoodRequired: z
     .string()
@@ -73,10 +74,26 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
 
   const { data: categories = [] } = useQuery({
     queryKey: ["/api/categories"],
+    retry: (failureCount, error) => {
+      if (isUnauthorizedError(error)) return false;
+      return failureCount < 3;
+    },
   });
 
   const { data: inventoryItems = [] } = useQuery({
     queryKey: ["/api/inventory"],
+    retry: (failureCount, error) => {
+      if (isUnauthorizedError(error)) return false;
+      return failureCount < 3;
+    },
+  });
+
+  const { data: units = [] } = useQuery({
+    queryKey: ["/api/units"],
+    retry: (failureCount, error) => {
+      if (isUnauthorizedError(error)) return false;
+      return failureCount < 3;
+    },
   });
 
   const form = useForm({
@@ -133,9 +150,9 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
             sn: index + 1,
             particular: item.name,
             qty: quantity,
-            unit: item.unit,
+            unit: units.find((u: any) => u.id === item.unitId)?.abbreviation || item.unit,
             price: pricePerUnit,
-            unitType: `Per ${item.unit}`,
+            unitType: `Per ${units.find((u: any) => u.id === item.unitId)?.abbreviation || item.unit}`,
             amount: amount,
           };
         }
@@ -250,7 +267,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                       <FormLabel>Category</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value}
+                        defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -264,6 +281,37 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                               value={category.id.toString()}
                             >
                               {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="unitId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select unit" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {units.map((unit: any) => (
+                            <SelectItem
+                              key={unit.id}
+                              value={unit.id.toString()}
+                            >
+                              {unit.name} ({unit.abbreviation})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -516,6 +564,14 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                         {item.unit}
                       </td>
                       <td className="border border-gray-300 px-2 py-1 text-right">
+                        {formatCurrency(item.price)}
+                      </td>
+                      <td className="border border-gray-300 px-2 py-1 text-center">
+                        {item.unitType}
+                      </td>
+                      <td className="border border-gray-300 px-2 py-1 text-right">
+                        {formatCurrency(item.amount)}
+                      </td>
                         {item.price.toFixed(2)}
                       </td>
                       <td className="border border-gray-300 px-2 py-1 text-center">
@@ -542,7 +598,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                     <td className="border border-gray-300 px-2 py-1"></td>
                     <td className="border border-gray-300 px-2 py-1"></td>
                     <td className="border border-gray-300 px-2 py-1 text-right">
-                      {calculations.subTotalForBatch.toFixed(2)}
+                      {formatCurrency(calculations.subTotalForBatch)}
                     </td>
                   </tr>
                   <tr className="bg-yellow-100 font-semibold">
@@ -563,7 +619,7 @@ export default function CostCalculator({ onSave }: CostCalculatorProps) {
                     <td className="border border-gray-300 px-2 py-1"></td>
                     <td className="border border-gray-300 px-2 py-1"></td>
                     <td className="border border-gray-300 px-2 py-1 text-right">
-                      {calculations.totalForProduction.toFixed(2)}
+                      {formatCurrency(calculations.totalForProduction)}
                     </td>
                   </tr>
                 </tbody>

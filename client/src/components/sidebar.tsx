@@ -140,7 +140,7 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
         </div>
 
         {/* Scrollable Navigation */}
-        <div className="h-full flex-1 overflow-y-auto px-6 pb-6">
+        <div className=" h-full flex-1 overflow-y-auto px-6 pb-6">
           <nav className="space-y-1">
             {/* Render top-level items directly without Collapsible */}
             {navigationSections
