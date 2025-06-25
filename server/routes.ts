@@ -850,7 +850,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(party);
     } catch (error) {
       console.error("Error updating party:", error);
-      res.status(500).json({ message: "Failed to update party" });
+      ```python
+res.status(500).json({ message: "Failed to update party" });
     }
   });
 
@@ -1525,6 +1526,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+// Media upload endpoint
+  app.post("/api/upload", upload.single("file"), (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      if (!allowedTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({ message: "Invalid file type. Only images are allowed." });
+      }
+
+      const fileUrl = `/uploads/${req.file.filename}`;
+      res.json({ url: fileUrl, filename: req.file.filename });
+    } catch (error) {
+      console.error("Upload error:", error);
+      res.status(500).json({ message: "Upload failed" });
+    }
+  });
 
 
   const httpServer = createServer(app);

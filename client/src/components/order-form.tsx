@@ -295,7 +295,7 @@ export default function OrderForm({ onSuccess }: OrderFormProps) {
                               key={product.id}
                               value={product.id.toString()}
                             >
-                              {product.name}
+                              {product.name} {product.unit ? `(${product.unit.name})` : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
