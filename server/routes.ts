@@ -1,4 +1,6 @@
 import type { Express } from "express";
+import multer from "multer";
+
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./localAuth";
@@ -13,45 +15,49 @@ import {
   insertAssetSchema,
   insertExpenseSchema,
 } from "@shared/schema";
-import { notifyNewPublicOrder, getNotificationRecipients } from "./notifications";
+import {
+  notifyNewPublicOrder,
+  getNotificationRecipients,
+} from "./notifications";
 import { format } from "date-fns";
 
-
 export async function registerRoutes(app: Express): Promise<Server> {
-  console.log('🔧 Setting up routes...');
+  console.log("🔧 Setting up routes...");
 
   // Database test endpoint (remove in production)
-  app.get('/api/test/db', async (req, res) => {
+  app.get("/api/test/db", async (req, res) => {
     try {
-      console.log('🔍 Testing database connection...');
+      console.log("🔍 Testing database connection...");
 
       // Test database connection
       const testUsers = await storage.getAllUsers();
-      console.log('✅ Database connected. Found', testUsers.length, 'users');
+      console.log("✅ Database connected. Found", testUsers.length, "users");
 
       // Ensure default users exist
       await storage.ensureDefaultAdmin();
 
       res.json({
         success: true,
-        message: 'Database is working',
+        message: "Database is working",
         userCount: testUsers.length,
-        users: testUsers.map(u => ({ id: u.id, email: u.email, role: u.role }))
+        users: testUsers.map((u) => ({
+          id: u.id,
+          email: u.email,
+          role: u.role,
+        })),
       });
     } catch (error) {
-      console.error('❌ Database test failed:', error);
+      console.error("❌ Database test failed:", error);
       res.status(500).json({
         success: false,
-        message: 'Database test failed',
-        error: error.message
+        message: "Database test failed",
+        error: error.message,
       });
     }
   });
 
-
-
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
@@ -79,8 +85,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No image file provided" });
       }
 
-      const file = Array.isArray(req.files.image) 
-        ? req.files.image[0] 
+      const file = Array.isArray(req.files.image)
+        ? req.files.image[0]
         : req.files.image;
 
       // Validate file type
@@ -90,7 +96,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
-        return res.status(400).json({ message: "File size must be less than 5MB" });
+        return res
+          .status(400)
+          .json({ message: "File size must be less than 5MB" });
       }
 
       const mediaItem = await storage.uploadMedia(file, req.user.id);
@@ -135,15 +143,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Today's production schedule
-  app.get("/api/dashboard/production-schedule", isAuthenticated, async (req, res) => {
-    try {
-      const schedule = await storage.getTodayProductionSchedule();
-      res.json(schedule);
-    } catch (error) {
-      console.error("Error fetching production schedule:", error);
-      res.status(500).json({ message: "Failed to fetch production schedule" });
-    }
-  });
+  app.get(
+    "/api/dashboard/production-schedule",
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const schedule = await storage.getTodayProductionSchedule();
+        res.json(schedule);
+      } catch (error) {
+        console.error("Error fetching production schedule:", error);
+        res
+          .status(500)
+          .json({ message: "Failed to fetch production schedule" });
+      }
+    },
+  );
 
   // Low stock items
   app.get("/api/dashboard/low-stock", isAuthenticated, async (req, res) => {
@@ -186,9 +200,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(category);
     } catch (error) {
       console.error("Error creating category:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to create category",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
@@ -271,9 +285,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(product);
     } catch (error) {
       console.error("Error creating product:", error);
-      res.status(500).json({ 
-        message: "Failed to create product", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to create product",
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
@@ -332,7 +346,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Unit name is required" });
       }
       if (!req.body.abbreviation) {
-        return res.status(400).json({ message: "Unit abbreviation is required" });
+        return res
+          .status(400)
+          .json({ message: "Unit abbreviation is required" });
       }
       if (!req.body.type) {
         return res.status(400).json({ message: "Unit type is required" });
@@ -360,7 +376,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Unit name is required" });
       }
       if (!req.body.abbreviation) {
-        return res.status(400).json({ message: "Unit abbreviation is required" });
+        return res
+          .status(400)
+          .json({ message: "Unit abbreviation is required" });
       }
       if (!req.body.type) {
         return res.status(400).json({ message: "Unit type is required" });
@@ -421,37 +439,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/inventory-categories/:id", isAuthenticated, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
+  app.put(
+    "/api/inventory-categories/:id",
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
 
-      if (!req.body.name) {
-        return res.status(400).json({ message: "Category name is required" });
+        if (!req.body.name) {
+          return res.status(400).json({ message: "Category name is required" });
+        }
+
+        const transformedData = {
+          name: req.body.name.trim(),
+          description: req.body.description
+            ? req.body.description.trim()
+            : null,
+        };
+
+        const category = await storage.updateInventoryCategory(
+          id,
+          transformedData,
+        );
+        res.json(category);
+      } catch (error) {
+        console.error("Error updating inventory category:", error);
+        res
+          .status(500)
+          .json({ message: "Failed to update inventory category" });
       }
+    },
+  );
 
-      const transformedData = {
-        name: req.body.name.trim(),
-        description: req.body.description ? req.body.description.trim() : null,
-      };
-
-      const category = await storage.updateInventoryCategory(id, transformedData);
-      res.json(category);
-    } catch (error) {
-      console.error("Error updating inventory category:", error);
-      res.status(500).json({ message: "Failed to update inventory category" });
-    }
-  });
-
-  app.delete("/api/inventory-categories/:id", isAuthenticated, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deleteInventoryCategory(id);
-      res.json({ message: "Inventory category deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting inventory category:", error);
-      res.status(500).json({ message: "Failed to delete inventory category" });
-    }
-  });
+  app.delete(
+    "/api/inventory-categories/:id",
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        await storage.deleteInventoryCategory(id);
+        res.json({ message: "Inventory category deleted successfully" });
+      } catch (error) {
+        console.error("Error deleting inventory category:", error);
+        res
+          .status(500)
+          .json({ message: "Failed to delete inventory category" });
+      }
+    },
+  );
 
   app.post("/api/units", isAuthenticated, async (req, res) => {
     try {
@@ -461,7 +496,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const transformedData = {
         name: req.body.name.trim(),
-        abbreviation: req.body.abbreviation ? req.body.abbreviation.trim() : req.body.name.slice(0, 3).toLowerCase(),
+        abbreviation: req.body.abbreviation
+          ? req.body.abbreviation.trim()
+          : req.body.name.slice(0, 3).toLowerCase(),
         type: req.body.type || "count",
         isActive: true,
       };
@@ -470,9 +507,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(unit);
     } catch (error) {
       console.error("Error creating unit:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to create unit",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
@@ -496,11 +533,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (!req.body.currentStock || isNaN(parseFloat(req.body.currentStock))) {
-        return res.status(400).json({ message: "Valid current stock is required" });
+        return res
+          .status(400)
+          .json({ message: "Valid current stock is required" });
       }
 
       if (!req.body.minLevel || isNaN(parseFloat(req.body.minLevel))) {
-        return res.status(400).json({ message: "Valid minimum level is required" });
+        return res
+          .status(400)
+          .json({ message: "Valid minimum level is required" });
       }
 
       if (!req.body.unit) {
@@ -508,7 +549,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (!req.body.costPerUnit || isNaN(parseFloat(req.body.costPerUnit))) {
-        return res.status(400).json({ message: "Valid cost per unit is required" });
+        return res
+          .status(400)
+          .json({ message: "Valid cost per unit is required" });
       }
 
       // Transform the data
@@ -520,7 +563,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         costPerUnit: parseFloat(req.body.costPerUnit).toString(),
         supplier: req.body.supplier ? req.body.supplier.trim() : null,
         company: req.body.company ? req.body.company.trim() : null,
-        lastRestocked: req.body.lastRestocked ? new Date(req.body.lastRestocked) : null,
+        lastRestocked: req.body.lastRestocked
+          ? new Date(req.body.lastRestocked)
+          : null,
       };
 
       console.log("Creating inventory item with data:", transformedData);
@@ -529,9 +574,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(item);
     } catch (error) {
       console.error("Error creating inventory item:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to create inventory item",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
@@ -595,7 +640,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (!orderData.totalAmount || isNaN(parseFloat(orderData.totalAmount))) {
-        return res.status(400).json({ message: "Valid total amount is required" });
+        return res
+          .status(400)
+          .json({ message: "Valid total amount is required" });
       }
 
       if (!items || !Array.isArray(items) || items.length === 0) {
@@ -609,11 +656,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transformedData = {
         orderNumber,
         customerName: orderData.customerName.trim(),
-        customerEmail: orderData.customerEmail ? orderData.customerEmail.trim() : null,
-        customerPhone: orderData.customerPhone ? orderData.customerPhone.trim() : null,
+        customerEmail: orderData.customerEmail
+          ? orderData.customerEmail.trim()
+          : null,
+        customerPhone: orderData.customerPhone
+          ? orderData.customerPhone.trim()
+          : null,
         status: orderData.status || "pending",
         totalAmount: parseFloat(orderData.totalAmount).toString(),
-        orderDate: orderData.orderDate ? new Date(orderData.orderDate) : new Date(),
+        orderDate: orderData.orderDate
+          ? new Date(orderData.orderDate)
+          : new Date(),
         dueDate: orderData.dueDate ? new Date(orderData.dueDate) : null,
         notes: orderData.notes ? orderData.notes.trim() : null,
         createdBy: userId,
@@ -633,7 +686,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           productId: parseInt(item.productId),
           quantity: parseInt(item.quantity),
           unitPrice: parseFloat(item.unitPrice).toString(),
-          totalPrice: (parseInt(item.quantity) * parseFloat(item.unitPrice)).toString(),
+          totalPrice: (
+            parseInt(item.quantity) * parseFloat(item.unitPrice)
+          ).toString(),
         });
       }
 
@@ -641,9 +696,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(order);
     } catch (error) {
       console.error("Error creating order:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to create order",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
@@ -699,15 +754,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: req.body.notes ? req.body.notes.trim() : null,
       };
 
-      console.log("Creating production schedule item with data:", transformedData);
+      console.log(
+        "Creating production schedule item with data:",
+        transformedData,
+      );
       const item = await storage.createProductionScheduleItem(transformedData);
       console.log("Production schedule item created successfully:", item);
       res.json(item);
     } catch (error) {
       console.error("Error creating production schedule item:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to create production schedule item",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
@@ -719,7 +777,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(item);
     } catch (error) {
       console.error("Error updating production schedule item:", error);
-      res.status(500).json({ message: "Failed to update production schedule item" });
+      res
+        .status(500)
+        .json({ message: "Failed to update production schedule item" });
     }
   });
 
@@ -762,7 +822,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: req.body.email ? req.body.email.trim() : null,
         phone: req.body.phone ? req.body.phone.trim() : null,
         address: req.body.address ? req.body.address.trim() : null,
-        remainingBalance: req.body.remainingBalance ? parseFloat(req.body.remainingBalance).toString() : "0.00",
+        remainingBalance: req.body.remainingBalance
+          ? parseFloat(req.body.remainingBalance).toString()
+          : "0.00",
         isActive: req.body.isActive !== undefined ? req.body.isActive : true,
       };
 
@@ -772,9 +834,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(customer);
     } catch (error) {
       console.error("Error creating customer:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to create customer",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
@@ -825,8 +887,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: req.body.email ? req.body.email.trim() : null,
         phone: req.body.phone ? req.body.phone.trim() : null,
         address: req.body.address ? req.body.address.trim() : null,
-        paymentTerms: req.body.paymentTerms ? req.body.paymentTerms.trim() : null,
-        outstandingAmount: req.body.outstandingAmount ? parseFloat(req.body.outstandingAmount).toString() : "0.00",
+        paymentTerms: req.body.paymentTerms
+          ? req.body.paymentTerms.trim()
+          : null,
+        outstandingAmount: req.body.outstandingAmount
+          ? parseFloat(req.body.outstandingAmount).toString()
+          : "0.00",
         isActive: req.body.isActive !== undefined ? req.body.isActive : true,
       };
 
@@ -836,9 +902,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(party);
     } catch (error) {
       console.error("Error creating party:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to create party",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
@@ -850,8 +916,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(party);
     } catch (error) {
       console.error("Error updating party:", error);
-      ```python
-res.status(500).json({ message: "Failed to update party" });
+      res.status(500).json({ message: "Failed to update party" });
     }
   });
 
@@ -921,16 +986,16 @@ res.status(500).json({ message: "Failed to update party" });
 
   app.put("/api/settings", isAuthenticated, async (req, res) => {
     try {
-      console.log('Updating settings with data:', req.body);
+      console.log("Updating settings with data:", req.body);
 
       // Handle theme color specifically
       if (req.body.themeColor) {
-        await storage.updateOrCreateSetting('themeColor', req.body.themeColor);
+        await storage.updateOrCreateSetting("themeColor", req.body.themeColor);
       }
 
       // Handle other settings
       const settings = await storage.updateSettings(req.body);
-      console.log('Updated settings:', settings);
+      console.log("Updated settings:", settings);
       res.json(settings);
     } catch (error) {
       console.error("Error updating settings:", error);
@@ -954,7 +1019,9 @@ res.status(500).json({ message: "Failed to update party" });
       const { description, amount, category, date } = req.body;
 
       if (!description || !description.trim()) {
-        return res.status(400).json({ message: "Expense description is required" });
+        return res
+          .status(400)
+          .json({ message: "Expense description is required" });
       }
 
       if (!amount || isNaN(parseFloat(amount))) {
@@ -978,9 +1045,9 @@ res.status(500).json({ message: "Failed to update party" });
       res.json(expense);
     } catch (error) {
       console.error("Error creating expense:", error);
-      res.status(500).json({ 
-        message: "Failed to create expense", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to create expense",
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
@@ -991,7 +1058,9 @@ res.status(500).json({ message: "Failed to update party" });
       const { description, amount, category, date } = req.body;
 
       if (!description || !description.trim()) {
-        return res.status(400).json({ message: "Expense description is required" });
+        return res
+          .status(400)
+          .json({ message: "Expense description is required" });
       }
 
       if (!amount || isNaN(parseFloat(amount))) {
@@ -1026,11 +1095,11 @@ res.status(500).json({ message: "Failed to update party" });
 
   // Admin user management routes
   const isAdmin = (req: any, res: any, next: any) => {
-    console.log('Checking admin access for user:', req.user);
-    if (req.user && req.user.role === 'admin') {
+    console.log("Checking admin access for user:", req.user);
+    if (req.user && req.user.role === "admin") {
       return next();
     }
-    console.log('Access denied - user role:', req.user?.role);
+    console.log("Access denied - user role:", req.user?.role);
     res.status(403).json({ message: "Access denied. Admin role required." });
   };
 
@@ -1049,17 +1118,19 @@ res.status(500).json({ message: "Failed to update party" });
       const { email, password, firstName, lastName, role } = req.body;
 
       if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required' });
+        return res
+          .status(400)
+          .json({ message: "Email and password are required" });
       }
 
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
-        return res.status(400).json({ message: 'User already exists' });
+        return res.status(400).json({ message: "User already exists" });
       }
 
       // Hash password
-      const bcrypt = require('bcrypt');
+      const bcrypt = require("bcrypt");
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Create user
@@ -1069,58 +1140,69 @@ res.status(500).json({ message: "Failed to update party" });
         password: hashedPassword,
         firstName,
         lastName,
-        role: role || 'staff'
+        role: role || "staff",
       });
 
       res.json(user);
     } catch (error) {
-      console.error('Error creating user:', error);
-      res.status(500).json({ message: 'Failed to create user' });
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
     }
   });
 
-  app.put("/api/admin/users/:id", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { email, password, firstName, lastName, role } = req.body;
+  app.put(
+    "/api/admin/users/:id",
+    isAuthenticated,
+    isAdmin,
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { email, password, firstName, lastName, role } = req.body;
 
-      const updateData: any = {
-        email,
-        firstName,
-        lastName,
-        role,
-      };
+        const updateData: any = {
+          email,
+          firstName,
+          lastName,
+          role,
+        };
 
-      // Only update password if provided
-      if (password) {
-        const bcrypt = require('bcrypt');
-        updateData.password = await bcrypt.hash(password, 10);
+        // Only update password if provided
+        if (password) {
+          const bcrypt = require("bcrypt");
+          updateData.password = await bcrypt.hash(password, 10);
+        }
+
+        const user = await storage.updateUser(id, updateData);
+        res.json(user);
+      } catch (error) {
+        console.error("Error updating user:", error);
+        res.status(500).json({ message: "Failed to update user" });
       }
+    },
+  );
 
-      const user = await storage.updateUser(id, updateData);
-      res.json(user);
-    } catch (error) {
-      console.error('Error updating user:', error);
-      res.status(500).json({ message: 'Failed to update user' });
-    }
-  });
-
-  app.delete("/api/admin/users/:id", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const { id } = req.params;
-      await storage.deleteUser(id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      res.status(500).json({ message: 'Failed to delete user' });
-    }
-  });
+  app.delete(
+    "/api/admin/users/:id",
+    isAuthenticated,
+    isAdmin,
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+        await storage.deleteUser(id);
+        res.json({ success: true });
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        res.status(500).json({ message: "Failed to delete user" });
+      }
+    },
+  );
 
   // Profile management routes
   app.put("/api/profile", isAuthenticated, async (req: any, res) => {
     try {
-            const userId = req.user.id;
-      const { firstName, lastName, email, currentPassword, newPassword } = req.body;
+      const userId = req.user.id;
+      const { firstName, lastName, email, currentPassword, newPassword } =
+        req.body;
 
       const updateData: any = {
         firstName,
@@ -1131,13 +1213,22 @@ res.status(500).json({ message: "Failed to update party" });
       // If password change is requested, verify current password
       if (newPassword) {
         if (!currentPassword) {
-          return res.status(400).json({ message: 'Current password is required to change password' });
+          return res
+            .status(400)
+            .json({
+              message: "Current password is required to change password",
+            });
         }
         const user = await storage.getUser(userId);
-        const bcrypt = require('bcrypt');
-        const isValidPassword = await bcrypt.compare(currentPassword, user.password || '');
+        const bcrypt = require("bcrypt");
+        const isValidPassword = await bcrypt.compare(
+          currentPassword,
+          user.password || "",
+        );
         if (!isValidPassword) {
-          return res.status(400).json({ message: 'Current password is incorrect' });
+          return res
+            .status(400)
+            .json({ message: "Current password is incorrect" });
         }
 
         updateData.password = await bcrypt.hash(newPassword, 10);
@@ -1146,8 +1237,8 @@ res.status(500).json({ message: "Failed to update party" });
       const user = await storage.updateUser(userId, updateData);
       res.json(user);
     } catch (error) {
-      console.error('Error updating profile:', error);
-      res.status(500).json({ message: 'Failed to update profile' });
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
     }
   });
 
@@ -1155,17 +1246,27 @@ res.status(500).json({ message: "Failed to update party" });
     try {
       const { customerId, items, ...orderData } = req.body;
 
-      console.log("Creating order with data:", { customerId, items, orderData });
+      console.log("Creating order with data:", {
+        customerId,
+        items,
+        orderData,
+      });
 
       if (!items || items.length === 0) {
-        return res.status(400).json({ message: "Order must have at least one item" });
+        return res
+          .status(400)
+          .json({ message: "Order must have at least one item" });
       }
 
       // Calculate total from items
       let calculatedTotal = 0;
       for (const item of items) {
         if (!item.productId || !item.quantity || !item.price) {
-          return res.status(400).json({ message: "All items must have productId, quantity, and price" });
+          return res
+            .status(400)
+            .json({
+              message: "All items must have productId, quantity, and price",
+            });
         }
         calculatedTotal += parseFloat(item.price) * parseInt(item.quantity);
       }
@@ -1194,9 +1295,9 @@ res.status(500).json({ message: "Failed to update party" });
       res.json(order);
     } catch (error) {
       console.error("Error creating order:", error);
-      res.status(500).json({ 
-        message: "Failed to create order", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to create order",
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
@@ -1235,69 +1336,96 @@ res.status(500).json({ message: "Failed to update party" });
 
   // Notification system routes
   const hasNotificationAccess = (req: any, res: any, next: any) => {
-    if (req.user && ['admin', 'supervisor', 'manager'].includes(req.user.role)) {
+    if (
+      req.user &&
+      ["admin", "supervisor", "manager"].includes(req.user.role)
+    ) {
       return next();
     }
-    res.status(403).json({ message: "Access denied. Admin, Supervisor, or Manager role required." });
+    res
+      .status(403)
+      .json({
+        message: "Access denied. Admin, Supervisor, or Manager role required.",
+      });
   };
 
   // In-memory storage for push subscriptions (in production, use database)
   const pushSubscriptions = new Map<string, any>();
 
-  app.post("/api/notifications/subscribe", isAuthenticated, hasNotificationAccess, async (req: any, res) => {
-    try {
-      const { subscription } = req.body;
-      const userId = req.user.id;
+  app.post(
+    "/api/notifications/subscribe",
+    isAuthenticated,
+    hasNotificationAccess,
+    async (req: any, res) => {
+      try {
+        const { subscription } = req.body;
+        const userId = req.user.id;
 
-      pushSubscriptions.set(userId, subscription);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error saving push subscription:", error);
-      res.status(500).json({ message: "Failed to save subscription" });
-    }
-  });
-
-  app.post("/api/notifications/unsubscribe", isAuthenticated, hasNotificationAccess, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      pushSubscriptions.delete(userId);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error removing push subscription:", error);
-      res.status(500).json({ message: "Failed to remove subscription" });
-    }
-  });
-
-  app.put("/api/notifications/rules", isAuthenticated, hasNotificationAccess, async (req: any, res) => {
-    try {
-      const { rules } = req.body;
-      const userId = req.user.id;
-
-      // In production, save rules to database
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error updating notification rules:", error);
-      res.status(500).json({ message: "Failed to update rules" });
-    }
-  });
-
-  app.post("/api/notifications/test", isAuthenticated, hasNotificationAccess, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      const subscription = pushSubscriptions.get(userId);
-
-      if (!subscription) {
-        return res.status(400).json({ message: "No subscription found" });
+        pushSubscriptions.set(userId, subscription);
+        res.json({ success: true });
+      } catch (error) {
+        console.error("Error saving push subscription:", error);
+        res.status(500).json({ message: "Failed to save subscription" });
       }
+    },
+  );
 
-      // Simulate successful notification send
-      console.log("Test notification sent to user:", userId);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error sending test notification:", error);
-      res.status(500).json({ message: "Failed to send test notification" });
-    }
-  });
+  app.post(
+    "/api/notifications/unsubscribe",
+    isAuthenticated,
+    hasNotificationAccess,
+    async (req: any, res) => {
+      try {
+        const userId = req.user.id;
+        pushSubscriptions.delete(userId);
+        res.json({ success: true });
+      } catch (error) {
+        console.error("Error removing push subscription:", error);
+        res.status(500).json({ message: "Failed to remove subscription" });
+      }
+    },
+  );
+
+  app.put(
+    "/api/notifications/rules",
+    isAuthenticated,
+    hasNotificationAccess,
+    async (req: any, res) => {
+      try {
+        const { rules } = req.body;
+        const userId = req.user.id;
+
+        // In production, save rules to database
+        res.json({ success: true });
+      } catch (error) {
+        console.error("Error updating notification rules:", error);
+        res.status(500).json({ message: "Failed to update rules" });
+      }
+    },
+  );
+
+  app.post(
+    "/api/notifications/test",
+    isAuthenticated,
+    hasNotificationAccess,
+    async (req: any, res) => {
+      try {
+        const userId = req.user.id;
+        const subscription = pushSubscriptions.get(userId);
+
+        if (!subscription) {
+          return res.status(400).json({ message: "No subscription found" });
+        }
+
+        // Simulate successful notification send
+        console.log("Test notification sent to user:", userId);
+        res.json({ success: true });
+      } catch (error) {
+        console.error("Error sending test notification:", error);
+        res.status(500).json({ message: "Failed to send test notification" });
+      }
+    },
+  );
 
   // Sales routes (using orders as sales)
   app.get("/api/sales", isAuthenticated, async (req, res) => {
@@ -1313,15 +1441,22 @@ res.status(500).json({ message: "Failed to update party" });
   app.post("/api/sales", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { customerId, customerName, totalAmount, paymentMethod, status, items } = req.body;
+      const {
+        customerId,
+        customerName,
+        totalAmount,
+        paymentMethod,
+        status,
+        items,
+      } = req.body;
 
       const orderData = {
         orderNumber: `SALE-${Date.now()}`,
         customerName,
         totalAmount,
-        status: status || 'completed',
+        status: status || "completed",
         createdBy: userId,
-        notes: `Payment: ${paymentMethod}`
+        notes: `Payment: ${paymentMethod}`,
       };
 
       const order = await storage.createOrder(orderData);
@@ -1332,7 +1467,7 @@ res.status(500).json({ message: "Failed to update party" });
           productId: item.productId,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
-          totalPrice: item.totalPrice
+          totalPrice: item.totalPrice,
         });
       }
 
@@ -1356,13 +1491,20 @@ res.status(500).json({ message: "Failed to update party" });
 
   app.post("/api/purchases", isAuthenticated, async (req: any, res) => {
     try {
-      const { partyId, supplierName, totalAmount, paymentMethod, status, items } = req.body;
+      const {
+        partyId,
+        supplierName,
+        totalAmount,
+        paymentMethod,
+        status,
+        items,
+      } = req.body;
 
       const purchaseData = {
         description: `Purchase from ${supplierName}`,
         amount: totalAmount,
-        category: 'purchase',
-        date: new Date()
+        category: "purchase",
+        date: new Date(),
       };
 
       const purchase = await storage.createExpense(purchaseData);
@@ -1374,22 +1516,36 @@ res.status(500).json({ message: "Failed to update party" });
   });
 
   // Public order form endpoint (no authentication required)
-  app.post('/api/public/orders', async (req, res) => {
+  app.post("/api/public/orders", async (req, res) => {
     try {
-      const { customerName, customerEmail, customerPhone, deliveryDate, deliveryAddress, specialInstructions, items } = req.body;
+      const {
+        customerName,
+        customerEmail,
+        customerPhone,
+        deliveryDate,
+        deliveryAddress,
+        specialInstructions,
+        items,
+      } = req.body;
 
       // Validate required fields
-      if (!customerName || !customerEmail || !customerPhone || !deliveryDate || !deliveryAddress) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'All required fields must be filled' 
+      if (
+        !customerName ||
+        !customerEmail ||
+        !customerPhone ||
+        !deliveryDate ||
+        !deliveryAddress
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "All required fields must be filled",
         });
       }
 
       if (!items || !Array.isArray(items) || items.length === 0) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'At least one item is required' 
+        return res.status(400).json({
+          success: false,
+          message: "At least one item is required",
         });
       }
 
@@ -1397,7 +1553,10 @@ res.status(500).json({ message: "Failed to update party" });
       const orderNumber = `PUB-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
 
       // Calculate total amount
-      const totalAmount = items.reduce((sum: number, item: any) => sum + item.totalPrice, 0);
+      const totalAmount = items.reduce(
+        (sum: number, item: any) => sum + item.totalPrice,
+        0,
+      );
 
       // Create order
       const order = await storage.createOrder({
@@ -1408,15 +1567,15 @@ res.status(500).json({ message: "Failed to update party" });
         totalAmount: totalAmount.toString(),
         orderDate: new Date(),
         dueDate: new Date(deliveryDate),
-        notes: `Delivery Address: ${deliveryAddress.trim()}${specialInstructions ? `\nSpecial Instructions: ${specialInstructions.trim()}` : ''}`,
-        status: 'pending',
+        notes: `Delivery Address: ${deliveryAddress.trim()}${specialInstructions ? `\nSpecial Instructions: ${specialInstructions.trim()}` : ""}`,
+        status: "pending",
         createdBy: null, // Public order, no user ID
       });
 
       // Create order items
       for (const item of items) {
         if (!item.productId || !item.quantity || !item.unitPrice) {
-          throw new Error('Invalid item data');
+          throw new Error("Invalid item data");
         }
 
         await storage.createOrderItem({
@@ -1428,7 +1587,7 @@ res.status(500).json({ message: "Failed to update party" });
         });
       }
 
-      console.log('📦 New public order received:', orderNumber);
+      console.log("📦 New public order received:", orderNumber);
 
       // Send notifications about new public order
       try {
@@ -1439,53 +1598,77 @@ res.status(500).json({ message: "Failed to update party" });
           customerPhone: customerPhone.trim(),
           totalAmount,
           deliveryDate,
-          itemCount: items.length
+          itemCount: items.length,
         });
       } catch (notificationError) {
-        console.error('Failed to send notifications:', notificationError);
+        console.error("Failed to send notifications:", notificationError);
         // Don't fail the order creation if notifications fail
       }
 
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         orderNumber,
-        message: 'Order submitted successfully! We will contact you soon with confirmation.' 
+        message:
+          "Order submitted successfully! We will contact you soon with confirmation.",
       });
     } catch (error) {
-      console.error('Error creating public order:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: error instanceof Error ? error.message : 'Failed to submit order. Please try again.' 
+      console.error("Error creating public order:", error);
+      res.status(500).json({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to submit order. Please try again.",
       });
     }
   });
 
   // Enhanced production schedule endpoints
-  app.get('/api/production-schedule/:date', isAuthenticated, async (req, res) => {
-    try {
-      const { date } = req.params;
-      const scheduleItems = await storage.getProductionScheduleByDate(date);
-      res.json(scheduleItems);
-    } catch (error) {
-      console.error('Error fetching production schedule:', error);
-      res.status(500).json({ message: 'Failed to fetch production schedule' });
-    }
-  });
+  app.get(
+    "/api/production-schedule/:date",
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const { date } = req.params;
+        const scheduleItems = await storage.getProductionScheduleByDate(date);
+        res.json(scheduleItems);
+      } catch (error) {
+        console.error("Error fetching production schedule:", error);
+        res
+          .status(500)
+          .json({ message: "Failed to fetch production schedule" });
+      }
+    },
+  );
 
-  app.get('/api/production-schedule/today', isAuthenticated, async (req, res) => {
-    try {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const scheduleItems = await storage.getProductionScheduleByDate(today);
-      res.json(scheduleItems);
-    } catch (error) {
-      console.error('Error fetching today\'s production schedule:', error);
-      res.status(500).json({ message: 'Failed to fetch today\'s production schedule' });
-    }
-  });
+  app.get(
+    "/api/production-schedule/today",
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const today = format(new Date(), "yyyy-MM-dd");
+        const scheduleItems = await storage.getProductionScheduleByDate(today);
+        res.json(scheduleItems);
+      } catch (error) {
+        console.error("Error fetching today's production schedule:", error);
+        res
+          .status(500)
+          .json({ message: "Failed to fetch today's production schedule" });
+      }
+    },
+  );
 
-  app.post('/api/production-schedule', isAuthenticated, async (req, res) => {
+  app.post("/api/production-schedule", isAuthenticated, async (req, res) => {
     try {
-      const { productId, scheduledDate, targetAmount, unit, priority, notes, targetPackets } = req.body;
+      const {
+        productId,
+        scheduledDate,
+        targetAmount,
+        unit,
+        priority,
+        notes,
+        targetPackets,
+      } = req.body;
 
       const scheduleItem = await storage.createProductionScheduleItem({
         productId,
@@ -1495,18 +1678,18 @@ res.status(500).json({ message: "Failed to update party" });
         targetPackets,
         priority,
         notes,
-        status: 'pending',
-        assignedTo: (req as any).user?.id
+        status: "pending",
+        assignedTo: (req as any).user?.id,
       });
 
       res.json(scheduleItem);
     } catch (error) {
-      console.error('Error creating production schedule:', error);
-      res.status(500).json({ message: 'Failed to create production schedule' });
+      console.error("Error creating production schedule:", error);
+      res.status(500).json({ message: "Failed to create production schedule" });
     }
   });
 
-  app.put('/api/production-schedule/:id', isAuthenticated, async (req, res) => {
+  app.put("/api/production-schedule/:id", isAuthenticated, async (req, res) => {
     try {
       const { id } = req.params;
       const updateData = req.body;
@@ -1518,15 +1701,19 @@ res.status(500).json({ message: "Failed to update party" });
         updateData.targetAmount = updateData.targetAmount.toString();
       }
 
-      const updatedItem = await storage.updateProductionScheduleItem(parseInt(id), updateData);
+      const updatedItem = await storage.updateProductionScheduleItem(
+        parseInt(id),
+        updateData,
+      );
       res.json(updatedItem);
     } catch (error) {
-      console.error('Error updating production schedule:', error);
-      res.status(500).json({ message: 'Failed to update production schedule' });
+      console.error("Error updating production schedule:", error);
+      res.status(500).json({ message: "Failed to update production schedule" });
     }
   });
 
-// Media upload endpoint
+  const upload = multer({ storage });
+  // Media upload endpoint
   app.post("/api/upload", upload.single("file"), (req, res) => {
     try {
       if (!req.file) {
@@ -1534,9 +1721,16 @@ res.status(500).json({ message: "Failed to update party" });
       }
 
       // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+      ];
       if (!allowedTypes.includes(req.file.mimetype)) {
-        return res.status(400).json({ message: "Invalid file type. Only images are allowed." });
+        return res
+          .status(400)
+          .json({ message: "Invalid file type. Only images are allowed." });
       }
 
       const fileUrl = `/uploads/${req.file.filename}`;
@@ -1546,7 +1740,6 @@ res.status(500).json({ message: "Failed to update party" });
       res.status(500).json({ message: "Upload failed" });
     }
   });
-
 
   const httpServer = createServer(app);
   return httpServer;
