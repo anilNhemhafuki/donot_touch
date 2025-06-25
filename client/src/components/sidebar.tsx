@@ -112,7 +112,7 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
         w-64 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 shadow-xl border-r border-gray-200 dark:border-gray-700
         flex-shrink-0 flex flex-col transform transition-all duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-        
+
       `}
       >
         {/* Mobile close button */}
