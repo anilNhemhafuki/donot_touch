@@ -17,6 +17,7 @@ import Expenses from "@/pages/expenses";
 import Parties from "@/pages/parties";
 import Reports from "@/pages/reports";
 import DayBook from "./pages/day-book";
+import Transactions from "@/pages/transactions";
 import Billing from "@/pages/billing";
 import Settings from "@/pages/settings";
 import Notifications from "./pages/notifications";
@@ -88,6 +89,7 @@ function AuthenticatedApp({ sidebarOpen, setSidebarOpen }: { sidebarOpen: boolea
             <Route path="/expenses" component={Expenses} />
             <Route path="/reports" component={Reports} />
             <Route path="/day-book" component={DayBook} />
+            <Route path="/transactions" component={Transactions} />
             <Route path="/billing" component={Billing} />
             <Route path="/settings" component={Settings} />
             <Route path="/notifications" component={Notifications} />

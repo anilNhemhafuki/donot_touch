@@ -56,6 +56,7 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
       title: "Finance",
       items: [
         { name: "Day Book", href: "/daybook", icon: "fas fa-shopping-cart" },
+        { name: "Transactions", href: "/transactions", icon: "fas fa-exchange-alt" },
         { name: "Orders", href: "/orders", icon: "fas fa-shopping-cart" },
         { name: "Sales", href: "/sales", icon: "fas fa-cash-register" },
         { name: "Purchases", href: "/purchases", icon: "fas fa-shopping-bag" },
