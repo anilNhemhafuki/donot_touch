@@ -1,5 +1,5 @@
 import express from "express";
-import session from "express-session";
+import fileUpload from "express-fileupload";
 import { createServer } from "http";
 import { setupVite, serveStatic } from "./vite";
 import { setupAuth } from "./localAuth";
@@ -13,8 +13,16 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Parse JSON bodies
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+  // File upload middleware
+  app.use(fileUpload({
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    useTempFiles: true,
+    tempFileDir: '/tmp/',
+    createParentPath: true
+  }));
 
 async function startServer() {
   try {

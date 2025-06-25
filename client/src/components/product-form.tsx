@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import MediaLibrary from "./media-library";
 import {
   Select,
   SelectContent,
@@ -41,6 +42,8 @@ interface ProductFormProps {
 }
 
 export default function ProductForm({ product, onSuccess }: ProductFormProps) {
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string>("");
   const { toast } = useToast();
   const { symbol } = useCurrency();
 
@@ -78,6 +81,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         margin: product.margin?.toString() || "",
         sku: product.sku || "",
       });
+      setSelectedImage(product.imageUrl || "");
     }
   }, [product, form]);
 
@@ -90,6 +94,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         price: parseFloat(data.price),
         cost: parseFloat(data.cost),
         margin: parseFloat(data.margin),
+        imageUrl: selectedImage || null,
       };
 
       if (product) {
@@ -233,6 +238,44 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
           )}
         />
 
+        {/* Product Image */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Product Image</label>
+          <div className="flex items-center gap-4">
+            {selectedImage ? (
+              <div className="relative">
+                <img
+                  src={selectedImage}
+                  alt="Product"
+                  className="w-20 h-20 object-cover rounded-lg border"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                  onClick={() => setSelectedImage("")}
+                >
+                  ×
+                </Button>
+              </div>
+            ) : (
+              <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                <i className="fas fa-image text-gray-400 text-xl"></i>
+              </div>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowMediaLibrary(true)}
+              className="gap-2"
+            >
+              <i className="fas fa-upload"></i>
+              {selectedImage ? "Change Image" : "Select Image"}
+            </Button>
+          </div>
+        </div>
+
         <FormField
           control={form.control}
           name="description"
@@ -324,6 +367,12 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
             {product ? "Update" : "Create"} Product
           </Button>
         </div>
+
+        <MediaLibrary
+          isOpen={showMediaLibrary}
+          onClose={() => setShowMediaLibrary(false)}
+          onSelect={(imageUrl) => setSelectedImage(imageUrl)}
+        />
       </form>
     </Form>
   );

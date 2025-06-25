@@ -14,6 +14,7 @@ import {
   insertExpenseSchema,
 } from "@shared/schema";
 import { notifyNewPublicOrder, getNotificationRecipients } from "./notifications";
+import { format } from "date-fns";
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -23,14 +24,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/test/db', async (req, res) => {
     try {
       console.log('🔍 Testing database connection...');
-      
+
       // Test database connection
       const testUsers = await storage.getAllUsers();
       console.log('✅ Database connected. Found', testUsers.length, 'users');
-      
+
       // Ensure default users exist
       await storage.ensureDefaultAdmin();
-      
+
       res.json({
         success: true,
         message: 'Database is working',
@@ -58,6 +59,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Media management routes
+  app.get("/api/media", isAuthenticated, async (req, res) => {
+    try {
+      const images = await storage.getMediaItems();
+      res.json(images);
+    } catch (error) {
+      console.error("Error fetching media:", error);
+      res.status(500).json({ message: "Failed to fetch media" });
+    }
+  });
+
+  app.post("/api/media/upload", isAuthenticated, async (req, res) => {
+    try {
+      if (!req.files || !req.files.image) {
+        return res.status(400).json({ message: "No image file provided" });
+      }
+
+      const file = Array.isArray(req.files.image) 
+        ? req.files.image[0] 
+        : req.files.image;
+
+      // Validate file type
+      if (!file.mimetype.startsWith("image/")) {
+        return res.status(400).json({ message: "File must be an image" });
+      }
+
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        return res.status(400).json({ message: "File size must be less than 5MB" });
+      }
+
+      const mediaItem = await storage.uploadMedia(file, req.user.id);
+      res.json(mediaItem);
+    } catch (error) {
+      console.error("Error uploading media:", error);
+      res.status(500).json({ message: "Failed to upload image" });
+    }
+  });
+
+  app.delete("/api/media/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = req.params.id;
+      await storage.deleteMedia(id);
+      res.json({ message: "Image deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting media:", error);
+      res.status(500).json({ message: "Failed to delete image" });
     }
   });
 
@@ -870,12 +921,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/settings", isAuthenticated, async (req, res) => {
     try {
       console.log('Updating settings with data:', req.body);
-      
+
       // Handle theme color specifically
       if (req.body.themeColor) {
         await storage.updateOrCreateSetting('themeColor', req.body.themeColor);
       }
-      
+
       // Handle other settings
       const settings = await storage.updateSettings(req.body);
       console.log('Updated settings:', settings);
@@ -1196,7 +1247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { subscription } = req.body;
       const userId = req.user.id;
-      
+
       pushSubscriptions.set(userId, subscription);
       res.json({ success: true });
     } catch (error) {
@@ -1220,7 +1271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { rules } = req.body;
       const userId = req.user.id;
-      
+
       // In production, save rules to database
       res.json({ success: true });
     } catch (error) {
@@ -1233,7 +1284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const subscription = pushSubscriptions.get(userId);
-      
+
       if (!subscription) {
         return res.status(400).json({ message: "No subscription found" });
       }
@@ -1325,7 +1376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/public/orders', async (req, res) => {
     try {
       const { customerName, customerEmail, customerPhone, deliveryDate, deliveryAddress, specialInstructions, items } = req.body;
-      
+
       // Validate required fields
       if (!customerName || !customerEmail || !customerPhone || !deliveryDate || !deliveryAddress) {
         return res.status(400).json({ 
@@ -1340,13 +1391,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: 'At least one item is required' 
         });
       }
-      
+
       // Generate order number
       const orderNumber = `PUB-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-      
+
       // Calculate total amount
       const totalAmount = items.reduce((sum: number, item: any) => sum + item.totalPrice, 0);
-      
+
       // Create order
       const order = await storage.createOrder({
         orderNumber,
@@ -1366,7 +1417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!item.productId || !item.quantity || !item.unitPrice) {
           throw new Error('Invalid item data');
         }
-        
+
         await storage.createOrderItem({
           orderId: order.id,
           productId: parseInt(item.productId),
@@ -1434,7 +1485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/production-schedule', isAuthenticated, async (req, res) => {
     try {
       const { productId, scheduledDate, targetAmount, unit, priority, notes, targetPackets } = req.body;
-      
+
       const scheduleItem = await storage.createProductionScheduleItem({
         productId,
         scheduledDate: new Date(scheduledDate),
@@ -1458,7 +1509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      
+
       if (updateData.scheduledDate) {
         updateData.scheduledDate = new Date(updateData.scheduledDate);
       }

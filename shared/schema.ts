@@ -414,7 +414,13 @@ export type InsertExpense = typeof expenses.$inferInsert;
 
 // Schemas
 export const insertCategorySchema = createInsertSchema(categories);
-export const insertProductSchema = createInsertSchema(products);
+export const insertProductSchema = createInsertSchema(products, {
+  name: z.string().min(1, "Name is required"),
+  price: z.number().min(0, "Price must be positive"),
+  cost: z.number().min(0, "Cost must be positive"),
+  margin: z.number().min(0, "Margin must be positive"),
+  imageUrl: z.string().optional(),
+});
 export const insertUnitSchema = createInsertSchema(units);
 export const insertInventoryItemSchema = createInsertSchema(inventoryItems);
 export const insertProductIngredientSchema = createInsertSchema(productIngredients);

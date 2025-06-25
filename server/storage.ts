@@ -191,6 +191,11 @@ export interface IStorage {
   //Unit
   getUnits(): Promise<Unit[]>;
   createUnit(data: InsertUnit): Promise<Unit>;
+
+  // Media operations
+  getMediaItems(): Promise<any[]>;
+  uploadMedia(file: any, userId: string): Promise<any>;
+  deleteMedia(id: string): Promise<void>;
 }
 
 export class Storage {
@@ -1173,6 +1178,55 @@ export class Storage {
       }
     } catch (error) {
       console.error("❌ Error ensuring default users:", error);
+      throw error;
+    }
+  }
+
+  // Media management methods
+  async getMediaItems(): Promise<any[]> {
+    try {
+      // For now, return mock data since we need to set up Object Storage
+      // In a real implementation, this would fetch from Object Storage
+      return [];
+    } catch (error) {
+      console.error("Error getting media items:", error);
+      return [];
+    }
+  }
+
+  async uploadMedia(file: any, userId: string): Promise<any> {
+    try {
+      // Generate unique filename
+      const timestamp = Date.now();
+      const extension = file.name.split('.').pop();
+      const filename = `product_${timestamp}.${extension}`;
+      
+      // For development, we'll store files locally and return a mock response
+      // In production, this would upload to Object Storage
+      const mediaItem = {
+        id: `media_${timestamp}`,
+        filename: file.name,
+        url: `/uploads/${filename}`,
+        size: file.size,
+        contentType: file.mimetype,
+        uploadedAt: new Date().toISOString(),
+        uploadedBy: userId
+      };
+
+      console.log("Mock media upload:", mediaItem);
+      return mediaItem;
+    } catch (error) {
+      console.error("Error uploading media:", error);
+      throw error;
+    }
+  }
+
+  async deleteMedia(id: string): Promise<void> {
+    try {
+      // In a real implementation, this would delete from Object Storage
+      console.log("Mock media delete:", id);
+    } catch (error) {
+      console.error("Error deleting media:", error);
       throw error;
     }
   }
