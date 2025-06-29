@@ -81,9 +81,11 @@ export default function Purchases() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/purchases"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/low-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
         title: "Success",
-        description: "Purchase recorded successfully",
+        description: "Purchase recorded and stock quantities updated successfully",
       });
       handleCloseDialog();
     },
@@ -165,9 +167,7 @@ export default function Purchases() {
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
 
-    const matchesStatus = purchase.status
-      ? purchase.status.includes(selectedStatus)
-      : true;
+    const matchesStatus = statusFilter === "all" || purchase.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });

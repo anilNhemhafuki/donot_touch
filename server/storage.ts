@@ -398,42 +398,41 @@ export class Storage {
   }
 
   async getInventoryItems() {
-    return await db
-      .select({
-        id: inventoryItems.id,
-        name: inventoryItems.name,
-        categoryId: inventoryItems.categoryId,
-        currentStock: inventoryItems.currentStock,
-        minLevel: inventoryItems.minLevel,
-        unit: inventoryItems.unit,
-        unitId: inventoryItems.unitId,
-        costPerUnit: inventoryItems.costPerUnit,
-        supplier: inventoryItems.supplier,
-        company: inventoryItems.company,
-        lastRestocked: inventoryItems.lastRestocked,
-        dateAdded: inventoryItems.dateAdded,
-        dateUpdated: inventoryItems.dateUpdated,
-        createdAt: inventoryItems.createdAt,
-        updatedAt: inventoryItems.updatedAt,
-        unitName: units.name,
-        unitAbbreviation: units.abbreviation,
-        categoryName: inventoryCategories.name,
-      })
-      .from(inventoryItems)
-      .leftJoin(units, eq(inventoryItems.unitId, units.id))
-      .leftJoin(
-        inventoryCategories,
-        eq(inventoryItems.categoryId, inventoryCategories.id),
-      )
-      .orderBy(inventoryItems.name);
+    return db.select({
+      id: inventoryItems.id,
+      name: inventoryItems.name,
+      categoryId: inventoryItems.categoryId,
+      currentStock: inventoryItems.currentStock,
+      minLevel: inventoryItems.minLevel,
+      unitId: inventoryItems.unitId,
+      unit: inventoryItems.unit,
+      costPerUnit: inventoryItems.costPerUnit,
+      supplier: inventoryItems.supplier,
+      company: inventoryItems.company,
+      lastRestocked: inventoryItems.lastRestocked,
+      dateAdded: inventoryItems.dateAdded,
+      dateUpdated: inventoryItems.dateUpdated,
+      createdAt: inventoryItems.createdAt,
+      updatedAt: inventoryItems.updatedAt,
+    }).from(inventoryItems);
   }
 
-  async getInventoryItemById(id: number): Promise<InventoryItem | undefined> {
-    const [item] = await db
-      .select()
-      .from(inventoryItems)
-      .where(eq(inventoryItems.id, id));
-    return item;
+  async getInventoryItemById(id: number) {
+    const result = await db.select().from(inventoryItems).where(eq(inventoryItems.id, id)).limit(1);
+    return result[0] || null;
+  }
+
+  async createInventoryTransaction(data: any) {
+    const result = await db.insert(inventoryTransactions).values({
+      inventoryItemId: data.inventoryItemId,
+      type: data.type,
+      quantity: data.quantity,
+      reason: data.reason,
+      reference: data.reference,
+      createdBy: data.createdBy,
+      createdAt: new Date(),
+    }).returning();
+    return result[0];
   }
 
   async getLowStockItems(): Promise<InventoryItem[]> {
@@ -1012,7 +1011,7 @@ export class Storage {
         })
         .from(users);
       return allUsers;
-    } catch (error) {
+    } catch (error){
       console.error("Error getting all users:", error);
       return [];
     }

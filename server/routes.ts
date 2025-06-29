@@ -1521,6 +1521,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         items,
       } = req.body;
 
+      // Validate items
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ message: "Purchase items are required" });
+      }
+
+      // Create expense record for the purchase
       const purchaseData = {
         title: `Purchase from ${supplierName}`,
         description: `Purchase from ${supplierName} - Payment: ${paymentMethod}`,
@@ -1530,6 +1536,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const purchase = await storage.createExpense(purchaseData);
+
+      // Update inventory stock for each item
+      for (const item of items) {
+        const { inventoryItemId, quantity, unitPrice } = item;
+        
+        if (!inventoryItemId || !quantity || !unitPrice) {
+          console.warn("Skipping invalid purchase item:", item);
+          continue;
+        }
+
+        try {
+          // Get current inventory item
+          const currentItem = await storage.getInventoryItemById(parseInt(inventoryItemId));
+          if (!currentItem) {
+            console.warn(`Inventory item ${inventoryItemId} not found`);
+            continue;
+          }
+
+          // Calculate new stock and update cost
+          const newStock = parseFloat(currentItem.currentStock) + parseFloat(quantity);
+          const newCostPerUnit = parseFloat(unitPrice);
+
+          // Update inventory item
+          await storage.updateInventoryItem(parseInt(inventoryItemId), {
+            currentStock: newStock.toString(),
+            costPerUnit: newCostPerUnit.toString(),
+            lastRestocked: new Date(),
+          });
+
+          // Create inventory transaction record
+          await storage.createInventoryTransaction({
+            inventoryItemId: parseInt(inventoryItemId),
+            type: "in",
+            quantity: parseFloat(quantity).toString(),
+            reason: "Purchase",
+            reference: `Purchase-${purchase.id}`,
+            createdBy: req.user.id,
+          });
+
+          console.log(`Updated inventory item ${inventoryItemId}: +${quantity} stock, cost: ${unitPrice}`);
+        } catch (itemError) {
+          console.error(`Error updating inventory item ${inventoryItemId}:`, itemError);
+          // Continue with other items even if one fails
+        }
+      }
+
       res.json(purchase);
     } catch (error) {
       console.error("Error creating purchase:", error);
