@@ -1213,11 +1213,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If password change is requested, verify current password
       if (newPassword) {
         if (!currentPassword) {
-          return res
-            .status(400)
-            .json({
-              message: "Current password is required to change password",
-            });
+          return res.status(400).json({
+            message: "Current password is required to change password",
+          });
         }
         const user = await storage.getUser(userId);
         const bcrypt = require("bcrypt");
@@ -1262,11 +1260,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let calculatedTotal = 0;
       for (const item of items) {
         if (!item.productId || !item.quantity || !item.price) {
-          return res
-            .status(400)
-            .json({
-              message: "All items must have productId, quantity, and price",
-            });
+          return res.status(400).json({
+            message: "All items must have productId, quantity, and price",
+          });
         }
         calculatedTotal += parseFloat(item.price) * parseInt(item.quantity);
       }
@@ -1342,11 +1338,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ) {
       return next();
     }
-    res
-      .status(403)
-      .json({
-        message: "Access denied. Admin, Supervisor, or Manager role required.",
-      });
+    res.status(403).json({
+      message: "Access denied. Admin, Supervisor, or Manager role required.",
+    });
   };
 
   // In-memory storage for push subscriptions (in production, use database)
@@ -1663,7 +1657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const {
         productId,
         scheduledDate,
-        targetAmount,
+        quantity,
         unit,
         priority,
         notes,
@@ -1673,7 +1667,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const scheduleItem = await storage.createProductionScheduleItem({
         productId,
         scheduledDate: new Date(scheduledDate),
-        targetAmount: targetAmount.toString(),
+        quantity: quantity.toString(),
         unit,
         targetPackets,
         priority,
@@ -1697,8 +1691,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (updateData.scheduledDate) {
         updateData.scheduledDate = new Date(updateData.scheduledDate);
       }
-      if (updateData.targetAmount) {
-        updateData.targetAmount = updateData.targetAmount.toString();
+      if (updateData.quantity) {
+        updateData.quantity = updateData.quantity.toString();
       }
 
       const updatedItem = await storage.updateProductionScheduleItem(
