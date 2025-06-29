@@ -13,6 +13,8 @@ import {
   customers,
   parties,
   assets,
+  purchases,
+  purchaseItems,
   expenses,
   bills,
   billItems,
@@ -45,6 +47,10 @@ import {
   type InsertParty,
   type Asset,
   type InsertAsset,
+  type Purchase,
+  type InsertPurchase,
+  type PurchaseItem,
+  type InsertPurchaseItem,
   type Expense,
   type InsertExpense,
 } from "@shared/schema";
@@ -167,6 +173,12 @@ export interface IStorage {
   createAsset(asset: InsertAsset): Promise<Asset>;
   updateAsset(id: number, asset: Partial<InsertAsset>): Promise<Asset>;
   deleteAsset(id: number): Promise<void>;
+
+  // Purchase operations
+  getPurchases(): Promise<any[]>;
+  createPurchase(purchase: any): Promise<any>;
+  updatePurchase(id: number, purchase: any): Promise<any>;
+  deletePurchase(id: number): Promise<void>;
 
   // Expense operations
   getExpenses(): Promise<Expense[]>;
@@ -994,6 +1006,104 @@ export class Storage {
 
   async deleteExpense(id: number): Promise<void> {
     await db.delete(expenses).where(eq(expenses.id, id));
+  }
+
+  // Purchase operations
+  async getPurchases(): Promise<any[]> {
+    return await db
+      .select({
+        id: purchases.id,
+        supplierName: purchases.supplierName,
+        partyId: purchases.partyId,
+        totalAmount: purchases.totalAmount,
+        paymentMethod: purchases.paymentMethod,
+        status: purchases.status,
+        purchaseDate: purchases.purchaseDate,
+        notes: purchases.notes,
+        createdBy: purchases.createdBy,
+        createdAt: purchases.createdAt,
+        updatedAt: purchases.updatedAt,
+      })
+      .from(purchases)
+      .orderBy(desc(purchases.createdAt));
+  }
+
+  async createPurchase(purchaseData: any): Promise<any> {
+    // Start transaction
+    return await db.transaction(async (tx) => {
+      // Create the main purchase record
+      const [purchase] = await tx
+        .insert(purchases)
+        .values({
+          supplierName: purchaseData.supplierName,
+          partyId: purchaseData.partyId,
+          totalAmount: purchaseData.totalAmount,
+          paymentMethod: purchaseData.paymentMethod,
+          status: purchaseData.status,
+          notes: purchaseData.notes,
+          createdBy: purchaseData.createdBy,
+        })
+        .returning();
+
+      // Create purchase items and update inventory
+      if (purchaseData.items && purchaseData.items.length > 0) {
+        for (const item of purchaseData.items) {
+          // Create purchase item
+          await tx.insert(purchaseItems).values({
+            purchaseId: purchase.id,
+            inventoryItemId: item.inventoryItemId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.totalPrice,
+          });
+
+          // Update inventory item quantity and price
+          const [currentItem] = await tx
+            .select()
+            .from(inventoryItems)
+            .where(eq(inventoryItems.id, item.inventoryItemId));
+
+          if (currentItem) {
+            const newQuantity = parseFloat(currentItem.currentStock) + parseFloat(item.quantity);
+            
+            await tx
+              .update(inventoryItems)
+              .set({
+                currentStock: newQuantity.toString(),
+                costPerUnit: item.unitPrice,
+                lastRestocked: new Date(),
+                updatedAt: new Date(),
+              })
+              .where(eq(inventoryItems.id, item.inventoryItemId));
+
+            // Create inventory transaction record
+            await tx.insert(inventoryTransactions).values({
+              inventoryItemId: item.inventoryItemId,
+              type: "in",
+              quantity: item.quantity,
+              reason: "Purchase",
+              reference: `PUR-${purchase.id}`,
+              createdBy: purchaseData.createdBy,
+            });
+          }
+        }
+      }
+
+      return purchase;
+    });
+  }
+
+  async updatePurchase(id: number, purchaseData: any): Promise<any> {
+    const [updated] = await db
+      .update(purchases)
+      .set({ ...purchaseData, updatedAt: new Date() })
+      .where(eq(purchases.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePurchase(id: number): Promise<void> {
+    await db.delete(purchases).where(eq(purchases.id, id));
   }
 
   // User management methods

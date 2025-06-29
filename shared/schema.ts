@@ -220,7 +220,33 @@ export const assets = pgTable("assets", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Expenses
+// Purchases
+export const purchases = pgTable("purchases", {
+  id: serial("id").primaryKey(),
+  supplierName: varchar("supplier_name", { length: 200 }).notNull(),
+  partyId: integer("party_id").references(() => parties.id),
+  totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
+  paymentMethod: varchar("payment_method", { length: 50 }).notNull(),
+  status: varchar("status", { length: 50 }).default("pending").notNull(),
+  purchaseDate: timestamp("purchase_date").defaultNow(),
+  notes: text("notes"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Purchase Items
+export const purchaseItems = pgTable("purchase_items", {
+  id: serial("id").primaryKey(),
+  purchaseId: integer("purchase_id").references(() => purchases.id).notNull(),
+  inventoryItemId: integer("inventory_item_id").references(() => inventoryItems.id).notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Expenses (separate from purchases for other business expenses)
 export const expenses = pgTable("expenses", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 100 }).notNull(),
@@ -366,6 +392,29 @@ export const inventoryTransactionsRelations = relations(inventoryTransactions, (
   }),
 }));
 
+export const purchasesRelations = relations(purchases, ({ one, many }) => ({
+  party: one(parties, {
+    fields: [purchases.partyId],
+    references: [parties.id],
+  }),
+  items: many(purchaseItems),
+  createdByUser: one(users, {
+    fields: [purchases.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const purchaseItemsRelations = relations(purchaseItems, ({ one }) => ({
+  purchase: one(purchases, {
+    fields: [purchaseItems.purchaseId],
+    references: [purchases.id],
+  }),
+  inventoryItem: one(inventoryItems, {
+    fields: [purchaseItems.inventoryItemId],
+    references: [inventoryItems.id],
+  }),
+}));
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -409,6 +458,12 @@ export type InsertParty = typeof parties.$inferInsert;
 export type Asset = typeof assets.$inferSelect;
 export type InsertAsset = typeof assets.$inferInsert;
 
+export type Purchase = typeof purchases.$inferSelect;
+export type InsertPurchase = typeof purchases.$inferInsert;
+
+export type PurchaseItem = typeof purchaseItems.$inferSelect;
+export type InsertPurchaseItem = typeof purchaseItems.$inferInsert;
+
 export type Expense = typeof expenses.$inferSelect;
 export type InsertExpense = typeof expenses.$inferInsert;
 
@@ -431,6 +486,8 @@ export const insertInventoryTransactionSchema = createInsertSchema(inventoryTran
 export const insertCustomerSchema = createInsertSchema(customers);
 export const insertPartySchema = createInsertSchema(parties);
 export const insertAssetSchema = createInsertSchema(assets);
+export const insertPurchaseSchema = createInsertSchema(purchases);
+export const insertPurchaseItemSchema = createInsertSchema(purchaseItems);
 export const insertExpenseSchema = createInsertSchema(expenses);
 // Inventory items (ingredients)
 export const inventory = pgTable("inventory", {

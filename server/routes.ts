@@ -907,8 +907,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: req.body.email ? req.body.email.trim() : null,
         phone: req.body.phone ? req.body.phone.trim() : null,
         address: req.body.address ? req.body.address.trim() : null,
-        paymentTerms: req<previous_generation>
-.body.paymentTerms
+        paymentTerms: req.body.paymentTerms
           ? req.body.paymentTerms.trim()
           : null,
         outstandingAmount: req.body.outstandingAmount
@@ -1502,7 +1501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Purchases routes (using expenses as purchases)
   app.get("/api/purchases", isAuthenticated, async (req, res) => {
     try {
-      const purchases = await storage.getExpenses();
+      const purchases = await storage.getPurchases();
       res.json(purchases);
     } catch (error) {
       console.error("Error fetching purchases:", error);
@@ -1528,60 +1527,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create expense record for the purchase
       const purchaseData = {
-        title: `Purchase from ${supplierName}`,
-        description: `Purchase from ${supplierName} - Payment: ${paymentMethod}`,
-        amount: totalAmount,
-        category: "purchase",
-        date: new Date(),
+        partyId: partyId || null,
+        supplierName,
+        totalAmount,
+        paymentMethod,
+        status: "completed",
+        items,
+        createdBy: req.user?.id,
       };
 
-      const purchase = await storage.createExpense(purchaseData);
-
-      // Update inventory stock for each item
-      for (const item of items) {
-        const { inventoryItemId, quantity, unitPrice } = item;
-        
-        if (!inventoryItemId || !quantity || !unitPrice) {
-          console.warn("Skipping invalid purchase item:", item);
-          continue;
-        }
-
-        try {
-          // Get current inventory item
-          const currentItem = await storage.getInventoryItemById(parseInt(inventoryItemId));
-          if (!currentItem) {
-            console.warn(`Inventory item ${inventoryItemId} not found`);
-            continue;
-          }
-
-          // Calculate new stock and update cost
-          const newStock = parseFloat(currentItem.currentStock) + parseFloat(quantity);
-          const newCostPerUnit = parseFloat(unitPrice);
-
-          // Update inventory item
-          await storage.updateInventoryItem(parseInt(inventoryItemId), {
-            currentStock: newStock.toString(),
-            costPerUnit: newCostPerUnit.toString(),
-            lastRestocked: new Date(),
-          });
-
-          // Create inventory transaction record
-          await storage.createInventoryTransaction({
-            inventoryItemId: parseInt(inventoryItemId),
-            type: "in",
-            quantity: parseFloat(quantity).toString(),
-            reason: "Purchase",
-            reference: `Purchase-${purchase.id}`,
-            createdBy: req.user.id,
-          });
-
-          console.log(`Updated inventory item ${inventoryItemId}: +${quantity} stock, cost: ${unitPrice}`);
-        } catch (itemError) {
-          console.error(`Error updating inventory item ${inventoryItemId}:`, itemError);
-          // Continue with other items even if one fails
-        }
-      }
-
+      const purchase = await storage.createPurchase(purchaseData);
       res.json(purchase);
     } catch (error) {
       console.error("Error creating purchase:", error);
