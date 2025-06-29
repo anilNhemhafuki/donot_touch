@@ -443,27 +443,31 @@ export class Storage {
   }
 
   async createInventoryItem(data: any) {
-    const inventoryData = {
-      name: data.name,
-      currentStock: data.currentStock,
-      minLevel: data.minLevel || 0,
-      unit: data.unit,
-      costPerUnit: data.costPerUnit,
-      supplier: data.supplier || null,
-      company: data.company || null,
-      // New fields
-      unitId: data.unitId || null,
-      defaultPrice: data.defaultPrice || 0,
-      group: data.group || null,
-      openingQuantity: data.openingQuantity || 0,
-      openingRate: data.openingRate || 0,
-      openingValue: data.openingValue || 0,
-      location: data.location || null,
-      notes: data.notes || null,
-      dateAdded: data.dateAdded || new Date().toISOString(),
-      lastRestocked: data.lastRestocked || new Date().toISOString(),
-    };
-    return await db.insert(inventoryItems).values(inventoryData).returning();
+    try {
+      console.log("Creating inventory item with data:", data);
+
+      const [item] = await db
+        .insert(inventoryItems)
+        .values({
+          name: data.name,
+          currentStock: data.currentStock,
+          minLevel: data.minLevel,
+          unit: data.unit,
+          unitId: data.unitId,
+          costPerUnit: data.costPerUnit,
+          supplier: data.supplier,
+          company: data.company,
+          lastRestocked: data.lastRestocked,
+          dateAdded: data.dateAdded,
+        })
+        .returning();
+
+      console.log("Inventory item created:", item);
+      return item;
+    } catch (error) {
+      console.error("Error in createInventoryItem:", error);
+      throw error;
+    }
   }
 
   async updateInventoryItem(id: number, data: any) {
@@ -1001,8 +1005,7 @@ export class Storage {
       console.error("Error getting all users:", error);
       return [];
     }
-  }
-
+  }```python
   async updateUser(id: string, userData: Partial<UpsertUser>): Promise<User> {
     const [updated] = await db
       .update(users)

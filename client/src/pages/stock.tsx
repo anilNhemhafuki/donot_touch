@@ -82,7 +82,7 @@ export default function Stock() {
       if (!data.name?.trim()) {
         throw new Error("Item name is required");
       }
-      if (!data.unitId) {
+      if (!data.unitId && !data.unit) {
         throw new Error("Measuring unit is required");
       }
       if (
@@ -92,33 +92,33 @@ export default function Stock() {
         throw new Error("Valid default price is required");
       }
       if (
-        isNaN(parseFloat(data.openingQuantity)) ||
-        parseFloat(data.openingQuantity) < 0
+        isNaN(parseFloat(data.currentStock)) ||
+        parseFloat(data.currentStock) < 0
       ) {
-        throw new Error("Valid opening quantity is required");
+        throw new Error("Valid current stock is required");
       }
       if (
-        isNaN(parseFloat(data.openingRate)) ||
-        parseFloat(data.openingRate) < 0
+        isNaN(parseFloat(data.costPerUnit)) ||
+        parseFloat(data.costPerUnit) < 0
       ) {
-        throw new Error("Valid opening rate is required");
+        throw new Error("Valid cost per unit is required");
       }
 
       // Calculate opening value
-      const openingValue =
-        parseFloat(data.openingQuantity) * parseFloat(data.openingRate);
+      const openingValue = data.currentStock * data.costPerUnit;
 
-      // Add today's date for new stock items
+      // Prepare stock data for API
       const stockData = {
         name: data.name.trim(),
-        unitId: parseInt(data.unitId),
-        defaultPrice: parseFloat(data.defaultPrice),
+        unitId: data.unitId,
+        unit: data.unit || "pcs",
+        defaultPrice: data.defaultPrice,
         group: data.group?.trim() || null,
-        currentStock: parseFloat(data.openingQuantity),
-        minLevel: parseFloat(data.minLevel || 0),
-        costPerUnit: parseFloat(data.openingRate),
-        openingQuantity: parseFloat(data.openingQuantity),
-        openingRate: parseFloat(data.openingRate),
+        currentStock: data.currentStock,
+        minLevel: data.minLevel || 0,
+        costPerUnit: data.costPerUnit,
+        openingQuantity: data.openingQuantity || data.currentStock,
+        openingRate: data.openingRate || data.costPerUnit,
         openingValue: openingValue,
         supplier: data.supplier?.trim() || null,
         company: data.company?.trim() || null,
@@ -290,14 +290,20 @@ export default function Stock() {
       return;
     }
 
+    // Get the selected unit details
+    const selectedUnit = (units as any[]).find((u: any) => u.id.toString() === unitId);
+    
     const data = {
       name: name.trim(),
-      unitId: unitId,
-      defaultPrice: defaultPrice || "0",
+      unitId: parseInt(unitId),
+      unit: selectedUnit ? selectedUnit.abbreviation : "pcs", // Fallback unit
+      defaultPrice: parseFloat(defaultPrice || "0"),
       group: group,
-      openingQuantity: openingQuantity || "0",
-      openingRate: openingRate || "0",
-      minLevel: (formData.get("minLevel") as string) || "0",
+      currentStock: parseFloat(openingQuantity || "0"),
+      openingQuantity: parseFloat(openingQuantity || "0"),
+      openingRate: parseFloat(openingRate || "0"),
+      minLevel: parseFloat((formData.get("minLevel") as string) || "0"),
+      costPerUnit: parseFloat(openingRate || "0"),
       supplier: (formData.get("supplier") as string)?.trim() || null,
       company: (formData.get("company") as string)?.trim() || null,
       location: (formData.get("location") as string)?.trim() || null,

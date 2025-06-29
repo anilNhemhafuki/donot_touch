@@ -556,7 +556,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: "Valid minimum level is required" });
       }
 
-      if (!req.body.unit) {
+      // Check for either unit or unitId
+      if (!req.body.unit && !req.body.unitId) {
         return res.status(400).json({ message: "Unit is required" });
       }
 
@@ -571,13 +572,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: req.body.name.trim(),
         currentStock: parseFloat(req.body.currentStock).toString(),
         minLevel: parseFloat(req.body.minLevel).toString(),
-        unit: req.body.unit.trim(),
+        unit: req.body.unit ? req.body.unit.trim() : "pcs",
+        unitId: req.body.unitId ? parseInt(req.body.unitId) : null,
         costPerUnit: parseFloat(req.body.costPerUnit).toString(),
+        defaultPrice: req.body.defaultPrice ? parseFloat(req.body.defaultPrice).toString() : "0",
+        group: req.body.group ? req.body.group.trim() : null,
+        openingQuantity: req.body.openingQuantity ? parseFloat(req.body.openingQuantity).toString() : parseFloat(req.body.currentStock).toString(),
+        openingRate: req.body.openingRate ? parseFloat(req.body.openingRate).toString() : parseFloat(req.body.costPerUnit).toString(),
+        openingValue: req.body.openingValue ? parseFloat(req.body.openingValue).toString() : "0",
         supplier: req.body.supplier ? req.body.supplier.trim() : null,
         company: req.body.company ? req.body.company.trim() : null,
-        lastRestocked: req.body.lastRestocked
-          ? new Date(req.body.lastRestocked)
-          : null,
+        location: req.body.location ? req.body.location.trim() : null,
+        notes: req.body.notes ? req.body.notes.trim() : null,
+        dateAdded: req.body.dateAdded ? new Date(req.body.dateAdded) : new Date(),
+        lastRestocked: req.body.lastRestocked ? new Date(req.body.lastRestocked) : new Date(),
       };
 
       console.log("Creating inventory item with data:", transformedData);
