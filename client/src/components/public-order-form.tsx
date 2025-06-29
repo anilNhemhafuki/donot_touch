@@ -87,30 +87,62 @@ export default function PublicOrderForm() {
 
   const submitOrderMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log("Sending order to API:", data);
+      
       const response = await fetch("/api/public/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify(data),
       });
+      
+      const responseData = await response.json();
+      console.log("API Response:", responseData);
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to submit order");
+        throw new Error(responseData.message || `Server error: ${response.status}`);
       }
-      return response.json();
+      
+      return responseData;
     },
     onSuccess: (data) => {
+      console.log("Order submitted successfully:", data);
+      
+      // Show success toast
       toast({
-        title: "Order Submitted Successfully!",
-        description: `Order ${data.orderNumber} has been received. We'll contact you soon with confirmation.`,
+        title: "🎉 Order Submitted Successfully!",
+        description: `Order ${data.orderNumber} has been received. We'll contact you soon with confirmation details.`,
+        duration: 6000,
       });
-      form.reset();
+      
+      // Reset form and clear items
+      form.reset({
+        customerName: "",
+        customerEmail: "",
+        customerPhone: "",
+        deliveryDate: "",
+        deliveryAddress: "",
+        specialInstructions: "",
+        items: [],
+      });
       setOrderItems([]);
+      setSelectedProduct(null);
+      setQuantity(1);
+      
+      // Scroll to top of page
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     onError: (error: any) => {
+      console.error("Order submission error:", error);
+      
+      // Show error toast with detailed message
       toast({
-        title: "Order Submission Failed",
-        description: error.message || "Please check your information and try again.",
+        title: "❌ Order Submission Failed",
+        description: error.message || "There was an error submitting your order. Please check your information and try again.",
         variant: "destructive",
+        duration: 8000,
       });
     },
   });
@@ -175,6 +207,7 @@ export default function PublicOrderForm() {
   );
 
   const onSubmit = (data: OrderFormData) => {
+    // Validate order items
     if (orderItems.length === 0) {
       toast({
         title: "No Items Selected",
@@ -184,9 +217,61 @@ export default function PublicOrderForm() {
       return;
     }
 
+    // Validate delivery date is at least 24 hours from now
+    const deliveryDate = new Date(data.deliveryDate);
+    const minDeliveryDate = new Date();
+    minDeliveryDate.setHours(minDeliveryDate.getHours() + 24);
+    
+    if (deliveryDate < minDeliveryDate) {
+      toast({
+        title: "Invalid Delivery Date",
+        description: "Delivery date must be at least 24 hours from now.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate required fields
+    if (!data.customerName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your full name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!data.customerEmail.trim()) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!data.customerPhone.trim()) {
+      toast({
+        title: "Phone Required",
+        description: "Please enter your phone number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!data.deliveryAddress.trim() || data.deliveryAddress.trim().length < 10) {
+      toast({
+        title: "Address Required",
+        description: "Please provide a complete delivery address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Update form with current items for validation
     form.setValue("items", orderItems);
 
+    // Prepare order data for submission
     const orderData = {
       customerName: data.customerName.trim(),
       customerEmail: data.customerEmail.trim(),
@@ -202,6 +287,7 @@ export default function PublicOrderForm() {
       })),
     };
 
+    console.log("Submitting order data:", orderData);
     submitOrderMutation.mutate(orderData);
   };
 
@@ -216,6 +302,16 @@ export default function PublicOrderForm() {
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Loading overlay */}
+          {submitOrderMutation.isPending && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-lg font-semibold">Submitting your order...</p>
+                <p className="text-gray-600">Please wait while we process your request.</p>
+              </div>
+            </div>
+          )}
           {/* Customer Information */}
           <Card>
             <CardHeader>
@@ -231,6 +327,7 @@ export default function PublicOrderForm() {
                   id="customerName"
                   {...form.register("customerName")}
                   placeholder="Enter your full name"
+                  disabled={submitOrderMutation.isPending}
                 />
                 {form.formState.errors.customerName && (
                   <p className="text-sm text-red-600 mt-1">
@@ -246,6 +343,7 @@ export default function PublicOrderForm() {
                   type="email"
                   {...form.register("customerEmail")}
                   placeholder="Enter your email"
+                  disabled={submitOrderMutation.isPending}
                 />
                 {form.formState.errors.customerEmail && (
                   <p className="text-sm text-red-600 mt-1">
@@ -260,6 +358,7 @@ export default function PublicOrderForm() {
                   id="customerPhone"
                   {...form.register("customerPhone")}
                   placeholder="Enter your phone number"
+                  disabled={submitOrderMutation.isPending}
                 />
                 {form.formState.errors.customerPhone && (
                   <p className="text-sm text-red-600 mt-1">
@@ -279,6 +378,7 @@ export default function PublicOrderForm() {
                       .toISOString()
                       .split("T")[0]
                   }
+                  disabled={submitOrderMutation.isPending}
                 />
                 {form.formState.errors.deliveryDate && (
                   <p className="text-sm text-red-600 mt-1">
@@ -294,6 +394,7 @@ export default function PublicOrderForm() {
                   {...form.register("deliveryAddress")}
                   placeholder="Enter complete delivery address"
                   rows={3}
+                  disabled={submitOrderMutation.isPending}
                 />
                 {form.formState.errors.deliveryAddress && (
                   <p className="text-sm text-red-600 mt-1">
@@ -311,6 +412,7 @@ export default function PublicOrderForm() {
                   {...form.register("specialInstructions")}
                   placeholder="Any special requests or instructions for your order"
                   rows={3}
+                  disabled={submitOrderMutation.isPending}
                 />
               </div>
             </CardContent>
@@ -334,6 +436,7 @@ export default function PublicOrderForm() {
                     onValueChange={(value) =>
                       setSelectedProduct(parseInt(value))
                     }
+                    disabled={submitOrderMutation.isPending}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a product" />
@@ -363,13 +466,14 @@ export default function PublicOrderForm() {
                     value={quantity}
                     onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
                     className="w-20"
+                    disabled={submitOrderMutation.isPending}
                   />
                 </div>
 
                 <Button
                   type="button"
                   onClick={addItemToOrder}
-                  disabled={!selectedProduct}
+                  disabled={!selectedProduct || submitOrderMutation.isPending}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Item
@@ -461,9 +565,14 @@ export default function PublicOrderForm() {
               }
               className="min-w-[200px]"
             >
-              {submitOrderMutation.isPending
-                ? "Submitting Order..."
-                : "Submit Order"}
+              {submitOrderMutation.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Submitting Order...
+                </>
+              ) : (
+                "Submit Order"
+              )}
             </Button>
           </div>
         </form>

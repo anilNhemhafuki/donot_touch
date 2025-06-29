@@ -168,7 +168,7 @@ export default function Orders() {
     const matchesStatus =
       statusFilter === "all" || order.status === statusFilter;
 
-    // Hide completed orders from the list
+    // Hide completed orders from the list (but show all statuses for filtering)
     const isNotCompleted = order.status !== "completed";
 
     return matchesSearch && matchesStatus && isNotCompleted;
