@@ -442,31 +442,55 @@ export class Storage {
       .orderBy(asc(inventoryItems.name));
   }
 
-  async createInventoryItem(data: InsertInventoryItem) {
-    const itemData = {
-      ...data,
-      dateAdded: new Date(),
-      dateUpdated: new Date(),
+  async createInventoryItem(data: any) {
+    const inventoryData = {
+      name: data.name,
+      currentStock: data.currentStock,
+      minLevel: data.minLevel || 0,
+      unit: data.unit,
+      costPerUnit: data.costPerUnit,
+      supplier: data.supplier || null,
+      company: data.company || null,
+      // New fields
+      unitId: data.unitId || null,
+      defaultPrice: data.defaultPrice || 0,
+      group: data.group || null,
+      openingQuantity: data.openingQuantity || 0,
+      openingRate: data.openingRate || 0,
+      openingValue: data.openingValue || 0,
+      location: data.location || null,
+      notes: data.notes || null,
+      dateAdded: data.dateAdded || new Date().toISOString(),
+      lastRestocked: data.lastRestocked || new Date().toISOString(),
     };
-    const [item] = await db.insert(inventoryItems).values(itemData).returning();
-    return item;
+    return await db.insert(inventoryItems).values(inventoryData).returning();
   }
 
-  async updateInventoryItem(id: number, data: Partial<InsertInventoryItem>) {
+  async updateInventoryItem(id: number, data: any) {
     const updateData = {
-      ...data,
-      dateUpdated: new Date(),
+      name: data.name,
+      currentStock: data.currentStock,
+      minLevel: data.minLevel,
+      unit: data.unit,
+      costPerUnit: data.costPerUnit,
+      supplier: data.supplier,
+      company: data.company,
+      // New fields
+      unitId: data.unitId,
+      defaultPrice: data.defaultPrice,
+      group: data.group,
+      openingQuantity: data.openingQuantity,
+      openingRate: data.openingRate,
+      openingValue: data.openingValue,
+      location: data.location,
+      notes: data.notes,
+      dateUpdated: data.dateUpdated || new Date().toISOString(),
     };
-    const [item] = await db
+    return await db
       .update(inventoryItems)
       .set(updateData)
       .where(eq(inventoryItems.id, id))
       .returning();
-    return item;
-  }
-
-  async deleteInventoryItem(id: number): Promise<void> {
-    await db.delete(inventoryItems).where(eq(inventoryItems.id, id));
   }
 
   // Inventory category operations
@@ -970,8 +994,7 @@ export class Storage {
           lastName: users.lastName,
           role: users.role,
           createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
-        })
+          updatedAt: users.updatedAt,        })
         .from(users);
       return allUsers;
     } catch (error) {
@@ -1199,7 +1222,7 @@ export class Storage {
       const timestamp = Date.now();
       const extension = file.name.split('.').pop();
       const filename = `product_${timestamp}.${extension}`;
-      
+
       // For development, we'll store files locally and return a mock response
       // In production, this would upload to Object Storage
       const mediaItem = {

@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -20,6 +21,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -35,15 +43,19 @@ import {
   Trash2,
   Package,
   AlertTriangle,
+  ChevronDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 export default function Stock() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
   const { toast } = useToast();
+  const { symbol } = useCurrency();
 
   const {
     data: items = [],
@@ -61,6 +73,9 @@ export default function Stock() {
     queryKey: ["/api/units"],
   });
 
+  // Filter only active units for the dropdown
+  const activeUnits = (units as any[]).filter((unit: any) => unit.isActive);
+
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log("Creating stock item:", data);
@@ -68,22 +83,38 @@ export default function Stock() {
       if (!data.name?.trim()) {
         throw new Error("Item name is required");
       }
-      if (!data.unit?.trim()) {
-        throw new Error("Unit is required");
+      if (!data.unitId) {
+        throw new Error("Measuring unit is required");
       }
-      if (isNaN(parseFloat(data.currentStock)) || parseFloat(data.currentStock) < 0) {
-        throw new Error("Valid current stock is required");
+      if (isNaN(parseFloat(data.defaultPrice)) || parseFloat(data.defaultPrice) < 0) {
+        throw new Error("Valid default price is required");
       }
-      if (isNaN(parseFloat(data.minLevel)) || parseFloat(data.minLevel) < 0) {
-        throw new Error("Valid minimum level is required");
+      if (isNaN(parseFloat(data.openingQuantity)) || parseFloat(data.openingQuantity) < 0) {
+        throw new Error("Valid opening quantity is required");
       }
-      if (isNaN(parseFloat(data.costPerUnit)) || parseFloat(data.costPerUnit) < 0) {
-        throw new Error("Valid cost per unit is required");
+      if (isNaN(parseFloat(data.openingRate)) || parseFloat(data.openingRate) < 0) {
+        throw new Error("Valid opening rate is required");
       }
+
+      // Calculate opening value
+      const openingValue = parseFloat(data.openingQuantity) * parseFloat(data.openingRate);
 
       // Add today's date for new stock items
       const stockData = {
-        ...data,
+        name: data.name.trim(),
+        unitId: parseInt(data.unitId),
+        defaultPrice: parseFloat(data.defaultPrice),
+        group: data.group?.trim() || null,
+        currentStock: parseFloat(data.openingQuantity),
+        minLevel: parseFloat(data.minLevel || 0),
+        costPerUnit: parseFloat(data.openingRate),
+        openingQuantity: parseFloat(data.openingQuantity),
+        openingRate: parseFloat(data.openingRate),
+        openingValue: openingValue,
+        supplier: data.supplier?.trim() || null,
+        company: data.company?.trim() || null,
+        location: data.location?.trim() || null,
+        notes: data.notes?.trim() || null,
         dateAdded: new Date().toISOString(),
         lastRestocked: new Date().toISOString(),
       };
@@ -122,27 +153,37 @@ export default function Stock() {
   const updateMutation = useMutation({
     mutationFn: async (data: { id: number; values: any }) => {
       console.log("Updating stock item:", data);
-      // Validate required fields before sending
       const values = data.values;
+      
+      // Validate required fields before sending
       if (!values.name?.trim()) {
         throw new Error("Item name is required");
       }
-      if (!values.unit?.trim()) {
-        throw new Error("Unit is required");
-      }
-      if (isNaN(parseFloat(values.currentStock)) || parseFloat(values.currentStock) < 0) {
-        throw new Error("Valid current stock is required");
-      }
-      if (isNaN(parseFloat(values.minLevel)) || parseFloat(values.minLevel) < 0) {
-        throw new Error("Valid minimum level is required");
-      }
-      if (isNaN(parseFloat(values.costPerUnit)) || parseFloat(values.costPerUnit) < 0) {
-        throw new Error("Valid cost per unit is required");
+      if (!values.unitId) {
+        throw new Error("Measuring unit is required");
       }
 
-      // Add today's date for stock updates
+      // Calculate opening value if opening fields are provided
+      let openingValue = values.openingValue;
+      if (values.openingQuantity && values.openingRate) {
+        openingValue = parseFloat(values.openingQuantity) * parseFloat(values.openingRate);
+      }
+
       const updateData = {
-        ...values,
+        name: values.name.trim(),
+        unitId: parseInt(values.unitId),
+        defaultPrice: parseFloat(values.defaultPrice || 0),
+        group: values.group?.trim() || null,
+        currentStock: parseFloat(values.currentStock || values.openingQuantity || 0),
+        minLevel: parseFloat(values.minLevel || 0),
+        costPerUnit: parseFloat(values.costPerUnit || values.openingRate || 0),
+        openingQuantity: parseFloat(values.openingQuantity || 0),
+        openingRate: parseFloat(values.openingRate || 0),
+        openingValue: openingValue || 0,
+        supplier: values.supplier?.trim() || null,
+        company: values.company?.trim() || null,
+        location: values.location?.trim() || null,
+        notes: values.notes?.trim() || null,
         dateUpdated: new Date().toISOString(),
       };
       return apiRequest("PUT", `/api/inventory/${data.id}`, updateData);
@@ -212,10 +253,11 @@ export default function Stock() {
     const formData = new FormData(e.target as HTMLFormElement);
 
     const name = formData.get("name") as string;
-    const unit = formData.get("unit") as string;
-    const currentStock = formData.get("currentStock") as string;
-    const minLevel = formData.get("minLevel") as string;
-    const costPerUnit = formData.get("costPerUnit") as string;
+    const unitId = formData.get("unitId") as string;
+    const defaultPrice = formData.get("defaultPrice") as string;
+    const group = formData.get("group") as string;
+    const openingQuantity = formData.get("openingQuantity") as string;
+    const openingRate = formData.get("openingRate") as string;
 
     // Client-side validation
     if (!name?.trim()) {
@@ -227,37 +269,10 @@ export default function Stock() {
       return;
     }
 
-    if (!unit?.trim()) {
+    if (!unitId) {
       toast({
         title: "Error",
-        description: "Unit is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!currentStock || isNaN(parseFloat(currentStock)) || parseFloat(currentStock) < 0) {
-      toast({
-        title: "Error",
-        description: "Valid current stock is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!minLevel || isNaN(parseFloat(minLevel)) || parseFloat(minLevel) < 0) {
-      toast({
-        title: "Error",
-        description: "Valid minimum level is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!costPerUnit || isNaN(parseFloat(costPerUnit)) || parseFloat(costPerUnit) < 0) {
-      toast({
-        title: "Error",
-        description: "Valid cost per unit is required",
+        description: "Measuring unit is required",
         variant: "destructive",
       });
       return;
@@ -265,12 +280,16 @@ export default function Stock() {
 
     const data = {
       name: name.trim(),
-      currentStock: parseFloat(currentStock),
-      minLevel: parseFloat(minLevel),
-      unit: unit.trim(),
-      costPerUnit: parseFloat(costPerUnit),
+      unitId: unitId,
+      defaultPrice: defaultPrice || "0",
+      group: group,
+      openingQuantity: openingQuantity || "0",
+      openingRate: openingRate || "0",
+      minLevel: (formData.get("minLevel") as string) || "0",
       supplier: (formData.get("supplier") as string)?.trim() || null,
       company: (formData.get("company") as string)?.trim() || null,
+      location: (formData.get("location") as string)?.trim() || null,
+      notes: (formData.get("notes") as string)?.trim() || null,
     };
 
     if (editingItem) {
@@ -283,7 +302,8 @@ export default function Stock() {
   const filteredItems = (items as any[]).filter(
     (item: any) =>
       item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.supplier?.toLowerCase().includes(searchQuery.toLowerCase()),
+      item.supplier?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.group?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const getStockBadge = (item: any) => {
@@ -296,6 +316,12 @@ export default function Stock() {
       return { variant: "secondary" as const, text: "Warning" };
     }
     return { variant: "default" as const, text: "In Stock" };
+  };
+
+  // Get unit name by ID
+  const getUnitName = (unitId: number) => {
+    const unit = (units as any[]).find((u: any) => u.id === unitId);
+    return unit ? `${unit.name} (${unit.abbreviation})` : "Unknown Unit";
   };
 
   if (error && isUnauthorizedError(error)) {
@@ -327,6 +353,7 @@ export default function Stock() {
             setIsDialogOpen(open);
             if (!open) {
               setEditingItem(null);
+              setShowAdditionalDetails(false);
             }
           }}
         >
@@ -339,80 +366,262 @@ export default function Stock() {
               Add Item
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl mx-auto max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
-                {editingItem ? "Edit Stock Item" : "Add New Stock Item"}
+              <DialogTitle className="text-center text-lg font-semibold">
+                {editingItem ? "Edit Stock Item" : "Create Stock Item"}
               </DialogTitle>
-              <DialogDescription>Enter item details below</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSave} className="space-y-4">
-              <Input
-                name="name"
-                placeholder="Item Name"
-                defaultValue={editingItem?.name || ""}
-                required
-              />
-              <Input
-                name="currentStock"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="Current Stock"
-                defaultValue={editingItem?.currentStock || ""}
-                required
-              />
-              <Input
-                name="minLevel"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="Minimum Level"
-                defaultValue={editingItem?.minLevel || ""}
-                required
-              />
-              <Input
-                name="unit"
-                placeholder="Unit (e.g., kg, lbs, pieces)"
-                defaultValue={editingItem?.unit || ""}
-                required
-              />
-              <Input
-                name="costPerUnit"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="Cost Per Unit ($)"
-                defaultValue={editingItem?.costPerUnit || ""}
-                required
-              />
-              <Input
-                name="supplier"
-                placeholder="Supplier (optional)"
-                defaultValue={editingItem?.supplier || ""}
-              />
-              <Input
-                name="company"
-                placeholder="Company (optional)"
-                defaultValue={editingItem?.company || ""}
-              />
-              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+              {/* First Row - Item Name and Measuring Unit */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    Item Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder="Enter name of Stock"
+                    defaultValue={editingItem?.name || ""}
+                    required
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="unitId" className="text-sm font-medium">
+                    Measuring Unit <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="flex gap-2 mt-1">
+                    <Select
+                      name="unitId"
+                      defaultValue={editingItem?.unitId?.toString() || ""}
+                      required
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select Measuring Unit of the item" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {activeUnits.map((unit: any) => (
+                          <SelectItem key={unit.id} value={unit.id.toString()}>
+                            {unit.name} ({unit.abbreviation})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <span className="text-sm text-muted-foreground self-center">Multiple Unit</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Second Row - Default Price and Group */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="defaultPrice" className="text-sm font-medium">
+                    Default Price
+                  </Label>
+                  <div className="relative mt-1">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                      {symbol}
+                    </span>
+                    <Input
+                      id="defaultPrice"
+                      name="defaultPrice"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0"
+                      defaultValue={editingItem?.defaultPrice || ""}
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="group" className="text-sm font-medium">
+                    Group
+                  </Label>
+                  <Select name="group" defaultValue={editingItem?.group || ""}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select Group for Item" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="raw-materials">Raw Materials</SelectItem>
+                      <SelectItem value="finished-goods">Finished Goods</SelectItem>
+                      <SelectItem value="packaging">Packaging</SelectItem>
+                      <SelectItem value="supplies">Supplies</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Opening Stock Section */}
+              <div>
+                <Label className="text-sm font-medium">Opening Stock</Label>
+                <div className="grid grid-cols-3 gap-4 mt-2 p-4 border rounded-lg bg-gray-50">
+                  <div>
+                    <Label htmlFor="openingQuantity" className="text-sm text-muted-foreground">
+                      Quantity
+                    </Label>
+                    <Input
+                      id="openingQuantity"
+                      name="openingQuantity"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="00.00"
+                      defaultValue={editingItem?.openingQuantity || editingItem?.currentStock || ""}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="openingRate" className="text-sm text-muted-foreground">
+                      Rate
+                    </Label>
+                    <div className="relative mt-1">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                        {symbol}
+                      </span>
+                      <Input
+                        id="openingRate"
+                        name="openingRate"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0"
+                        defaultValue={editingItem?.openingRate || editingItem?.costPerUnit || ""}
+                        className="pl-8"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      Value
+                    </Label>
+                    <div className="relative mt-1">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                        {symbol}
+                      </span>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        readOnly
+                        className="pl-8 bg-gray-100"
+                        value={
+                          (() => {
+                            const qty = parseFloat((document.querySelector('[name="openingQuantity"]') as HTMLInputElement)?.value || "0");
+                            const rate = parseFloat((document.querySelector('[name="openingRate"]') as HTMLInputElement)?.value || "0");
+                            return (qty * rate).toFixed(2);
+                          })()
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Details Toggle */}
+              <div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowAdditionalDetails(!showAdditionalDetails)}
+                  className="text-blue-600 p-0 h-auto font-normal"
+                >
+                  Additional Details{" "}
+                  <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${showAdditionalDetails ? "rotate-180" : ""}`} />
+                </Button>
+              </div>
+
+              {/* Additional Details Section */}
+              {showAdditionalDetails && (
+                <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="minLevel" className="text-sm font-medium">
+                        Minimum Level
+                      </Label>
+                      <Input
+                        id="minLevel"
+                        name="minLevel"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="Minimum stock level"
+                        defaultValue={editingItem?.minLevel || ""}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="location" className="text-sm font-medium">
+                        Location
+                      </Label>
+                      <Input
+                        id="location"
+                        name="location"
+                        placeholder="Storage location"
+                        defaultValue={editingItem?.location || ""}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="supplier" className="text-sm font-medium">
+                        Supplier
+                      </Label>
+                      <Input
+                        id="supplier"
+                        name="supplier"
+                        placeholder="Supplier name"
+                        defaultValue={editingItem?.supplier || ""}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="company" className="text-sm font-medium">
+                        Company
+                      </Label>
+                      <Input
+                        id="company"
+                        name="company"
+                        placeholder="Company name"
+                        defaultValue={editingItem?.company || ""}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="notes" className="text-sm font-medium">
+                      Notes
+                    </Label>
+                    <Input
+                      id="notes"
+                      name="notes"
+                      placeholder="Additional notes"
+                      defaultValue={editingItem?.notes || ""}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
                   className="w-full sm:w-auto"
                 >
-                  Cancel
+                  Reset
                 </Button>
                 <Button
                   type="submit"
-                  disabled={
-                    createMutation.isPending || updateMutation.isPending
-                  }
-                  className="w-full sm:w-auto"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  className="w-full sm:w-auto bg-red-400 hover:bg-red-500"
                 >
-                  {editingItem ? "Update" : "Create"}
+                  Save Item
                 </Button>
               </div>
             </form>
@@ -446,10 +655,10 @@ export default function Stock() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Item</TableHead>
+                    <TableHead>Unit</TableHead>
                     <TableHead>Stock</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Cost/Unit
-                    </TableHead>
+                    <TableHead className="hidden md:table-cell">Cost/Unit</TableHead>
+                    <TableHead className="hidden md:table-cell">Group</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -468,25 +677,32 @@ export default function Stock() {
                               <div className="font-medium">{item.name}</div>
                               <div className="text-sm text-muted-foreground">
                                 {item.supplier || "No supplier"}
-                                {item.company && (
-                                  <span className="block">{item.company}</span>
-                                )}
                               </div>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
+                          <span className="text-sm">{getUnitName(item.unitId)}</span>
+                        </TableCell>
+                        <TableCell>
                           <div className="font-medium">
-                            {parseFloat(item.currentStock || 0).toFixed(2)}{" "}
-                            {item.unit}
+                            {parseFloat(item.currentStock || 0).toFixed(2)}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            Min: {parseFloat(item.minLevel || 0).toFixed(2)}{" "}
-                            {item.unit}
+                            Min: {parseFloat(item.minLevel || 0).toFixed(2)}
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          ${parseFloat(item.costPerUnit || 0).toFixed(2)}
+                          {symbol}{parseFloat(item.costPerUnit || 0).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {item.group ? (
+                            <Badge variant="outline" className="capitalize">
+                              {item.group.replace("-", " ")}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge variant={stockInfo.variant}>

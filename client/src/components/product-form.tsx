@@ -348,7 +348,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {units.map((unit: any) => (
+                            {(units as any[]).filter((unit: any) => unit.isActive).map((unit: any) => (
                               <SelectItem
                                 key={unit.id}
                                 value={unit.id.toString()}

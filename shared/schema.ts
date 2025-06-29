@@ -432,3 +432,25 @@ export const insertCustomerSchema = createInsertSchema(customers);
 export const insertPartySchema = createInsertSchema(parties);
 export const insertAssetSchema = createInsertSchema(assets);
 export const insertExpenseSchema = createInsertSchema(expenses);
+// Inventory items (ingredients)
+export const inventory = pgTable("inventory", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  currentStock: decimal("current_stock", { precision: 10, scale: 2 }).notNull(),
+  minLevel: decimal("min_level", { precision: 10, scale: 2 }).notNull(),
+  unit: text("unit").notNull(),
+  costPerUnit: decimal("cost_per_unit", { precision: 10, scale: 2 }).notNull(),
+  supplier: text("supplier"),
+  company: text("company"),
+  // New fields
+  unitId: integer("unit_id").references(() => units.id),
+  defaultPrice: decimal("default_price", { precision: 10, scale: 2 }).default("0"),
+  group: text("group"),
+  openingQuantity: decimal("opening_quantity", { precision: 10, scale: 2 }).default("0"),
+  openingRate: decimal("opening_rate", { precision: 10, scale: 2 }).default("0"),
+  openingValue: decimal("opening_value", { precision: 10, scale: 2 }).default("0"),
+  location: text("location"),
+  notes: text("notes"),
+  dateAdded: timestamp("date_added").defaultNow(),
+  lastRestocked: timestamp("last_restocked").defaultNow(),
+});
