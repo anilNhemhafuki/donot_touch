@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import MediaLibrary from "./media-library";
-import SimpleCostCalculator from "./simple-cost-calculator";
+import CostCalculator from "./cost-calculator";
 import {
   Select,
   SelectContent,
@@ -193,9 +193,10 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
 
   const applyCostCalculations = () => {
     // The values are already applied via handleCostCalculationChange
+    // Show visual feedback that calculations are applied
     toast({
-      title: "Success",
-      description: "Cost calculations applied to product form",
+      title: "Calculations Applied",
+      description: `Cost: ${symbol}${costCalculations.costPrice.toFixed(2)}, Price: ${symbol}${costCalculations.salesPrice.toFixed(2)}, Margin: ${symbol}${costCalculations.marginAmount.toFixed(2)}`,
     });
   };
 
@@ -243,7 +244,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(categories as any[]).map((category: any) => (
+                        {Array.isArray(categories) && categories.map((category: any) => (
                           <SelectItem
                             key={category.id}
                             value={category.id.toString()}
@@ -271,7 +272,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(units as any[]).map((unit: any) => (
+                        {Array.isArray(units) && units.map((unit: any) => (
                           <SelectItem
                             key={unit.id}
                             value={unit.id.toString()}
@@ -409,27 +410,36 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
               <Calculator className="h-5 w-5" />
               Cost Calculator
             </CardTitle>
-            <div className="flex items-center gap-4">
-              <Badge variant="outline">
-                Current Cost: {symbol}{form.watch("cost") || "0"}
-              </Badge>
-              <Badge variant="outline">
-                Current Price: {symbol}{form.watch("price") || "0"}
-              </Badge>
-              <Badge variant="outline">
-                Current Margin: {symbol}{form.watch("margin") || "0"}
-              </Badge>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Badge variant="outline">
+                  Current Cost: {symbol}{form.watch("cost") || "0"}
+                </Badge>
+                <Badge variant="outline">
+                  Current Price: {symbol}{form.watch("price") || "0"}
+                </Badge>
+                <Badge variant="outline">
+                  Current Margin: {symbol}{form.watch("margin") || "0"}
+                </Badge>
+              </div>
+              <Button 
+                type="button" 
+                variant="secondary" 
+                size="sm"
+                onClick={applyCostCalculations}
+                className="flex items-center gap-2"
+              >
+                <Calculator className="h-4 w-4" />
+                Apply to Form
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <SimpleCostCalculator
-              initialData={{
-                cost: parseFloat(form.watch("cost") || "0"),
-                price: parseFloat(form.watch("price") || "0"),
-                margin: parseFloat(form.watch("margin") || "0"),
-              }}
+            <CostCalculator
+              initialCost={parseFloat(form.watch("cost") || "0")}
+              initialPrice={parseFloat(form.watch("price") || "0")}
+              initialMargin={parseFloat(form.watch("margin") || "0")}
               onCalculationChange={handleCostCalculationChange}
-              onSave={applyCostCalculations}
             />
           </CardContent>
         </Card>
