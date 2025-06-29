@@ -899,7 +899,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: req.body.email ? req.body.email.trim() : null,
         phone: req.body.phone ? req.body.phone.trim() : null,
         address: req.body.address ? req.body.address.trim() : null,
-        paymentTerms: req.body.paymentTerms
+        paymentTerms: req<previous_generation>
+.body.paymentTerms
           ? req.body.paymentTerms.trim()
           : null,
         outstandingAmount: req.body.outstandingAmount

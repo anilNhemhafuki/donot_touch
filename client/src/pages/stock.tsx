@@ -708,6 +708,9 @@ export default function Stock() {
                     <TableHead className="hidden md:table-cell">
                       Group
                     </TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                      Date Added
+                    </TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -755,6 +758,20 @@ export default function Stock() {
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <div className="text-sm">
+                            {item.dateAdded ? 
+                              new Date(item.dateAdded).toLocaleDateString() : 
+                              new Date(item.createdAt || item.lastRestocked).toLocaleDateString()
+                            }
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {item.lastRestocked ? 
+                              `Updated: ${new Date(item.lastRestocked).toLocaleDateString()}` : 
+                              ''
+                            }
+                          </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant={stockInfo.variant}>

@@ -12,7 +12,7 @@ import ThemeSettings from './theme-settings';
 export default function NotificationSettings() {
   const { toast } = useToast();
   const {
-    isSupported,
+    isSupported: notificationsSupported,
     permission,
     subscription,
     requestPermission,
@@ -22,6 +22,8 @@ export default function NotificationSettings() {
     updateRule,
     sendTestNotification,
   } = useNotifications();
+
+  const [isTestingNotification, setIsTestingNotification] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -113,7 +115,7 @@ export default function NotificationSettings() {
     }
   };
 
-  if (!isSupported) {
+  if (!notificationsSupported) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -183,12 +185,28 @@ export default function NotificationSettings() {
                 </Button>
               )}
               <Button
-                variant="outline"
-                onClick={handleTestNotification}
-                disabled={isLoading || !subscription}
+                onClick={async () => {
+                  setIsTestingNotification(true);
+                  try {
+                    await sendTestNotification();
+                    toast({
+                      title: "Test Notification Sent",
+                      description: "Check your browser for the test notification",
+                    });
+                  } catch (error) {
+                    toast({
+                      title: "Error",
+                      description: "Failed to send test notification",
+                      variant: "destructive",
+                    });
+                  } finally {
+                    setIsTestingNotification(false);
+                  }
+                }}
+                disabled={!subscription || isTestingNotification}
+                className="w-full"
               >
-                <TestTube className="h-4 w-4 mr-2" />
-                Test
+                {isTestingNotification ? "Sending..." : "Send Test Notification"}
               </Button>
             </div>
           </div>
