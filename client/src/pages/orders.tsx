@@ -168,7 +168,10 @@ export default function Orders() {
     const matchesStatus =
       statusFilter === "all" || order.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    // Hide completed orders from the list
+    const isNotCompleted = order.status !== "completed";
+
+    return matchesSearch && matchesStatus && isNotCompleted;
   });
 
   if (isLoading) {
