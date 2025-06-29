@@ -18,6 +18,7 @@ import {
   Settings,
   Calendar,
   Bell,
+  HelpCircle,
 } from "lucide-react";
 import { Link } from "wouter";
 import ProfileEditor from "./profile-editor";
@@ -97,18 +98,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
               </span>
             </div>
           </Link>
-
-          {/* Page title and date */}
-          <div className="hidden lg:block">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium text-primary">
-                  {getCurrentDate()}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div className="flex items-center space-x-2 lg:space-x-4">
@@ -123,6 +112,18 @@ export default function Header({ onMenuClick }: HeaderProps) {
             />
             <i className="fas fa-search absolute left-3 top-3 text-gray-400"></i>
           </form>
+
+          {/* Page title and date */}
+          <div className="hidden lg:block">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
+                <Calendar className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-primary">
+                  {getCurrentDate()}
+                </span>
+              </div>
+            </div>
+          </div>
 
           {/* Language Selector */}
           <DropdownMenu>
@@ -148,7 +149,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="relative p-2">
-                <Bell className="h-5 w-5" />
+                <Bell className="h-6 w-6" />
                 <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
                   3
                 </span>
@@ -197,10 +198,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 </DropdownMenuItem>
               </div>
               <div className="p-2 border-t">
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="w-full text-sm"
-                  onClick={() => window.location.href = '/notifications'}
+                  onClick={() => (window.location.href = "/notifications")}
                 >
                   View All Notifications
                 </Button>
@@ -208,9 +209,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Mobile Notifications */}
+          {/* Mobile Help - Only visible on mobile */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild></DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="md:hidden p-2">
+                <HelpCircle className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <div className="p-4 border-b">
                 <h3 className="font-semibold">Notifications</h3>
@@ -241,6 +246,32 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   </p>
                 </DropdownMenuItem>
               </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Info Selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="p-2">
+                <HelpCircle className="h-6 w-6" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <span className="mr-2">📚</span> Support Guide
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <span className="mr-2">✨</span> What's New?
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <span className="mr-2">⌨️</span> Keyboard Shortcuts
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <span className="mr-2">💬</span> Give Feedback
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <span className="mr-2">📧</span> Send us a message
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 

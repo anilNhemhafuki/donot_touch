@@ -55,7 +55,7 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
       id: "Finance",
       title: "Finance",
       items: [
-        { name: "Day Book", href: "/daybook", icon: "fas fa-shopping-cart" },
+        { name: "Day Book", href: "/day-book", icon: "fas fa-shopping-cart" },
         {
           name: "Transactions",
           href: "/transactions",
@@ -178,19 +178,16 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                     onOpenChange={() => toggleSection(section.id)}
                   >
                     <CollapsibleTrigger className="flex items-center w-full px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 dark:hover:from-gray-700 dark:hover:to-gray-600 rounded-xl transition-all duration-200 mx-2">
-                      {/* Icon */}
-                      <i
-                        className={section.icon}
-                        style={{ marginRight: "8px" }}
-                      ></i>
                       {/* Title */}
                       <span>{section.title}</span>
                       {/* Arrow Icon */}
-                      {openSections.includes(section.id) ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
+                      <div className="ml-auto">
+                        {openSections.includes(section.id) ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="mt-1 space-y-1 border-l-4 border-transparent">
                       {section.items.map((item) => {
@@ -211,12 +208,7 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                             <i className={item.icon}></i>
                             {/* Name */}
                             <span className="font-medium">{item.name}</span>
-                            {/* New Badge (if applicable) */}
-                            {item.new && (
-                              <span className="ml-2 px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">
-                                New
-                              </span>
-                            )}
+
                           </Link>
                         );
                       })}
