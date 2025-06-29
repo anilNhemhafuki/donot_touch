@@ -62,7 +62,10 @@ interface ProductFormProps {
   onSuccess?: () => void;
 }
 
-export default function ProductForm({ product, onSuccess }: ProductFormProps) {
+export default function ProductFormEnhanced({
+  product,
+  onSuccess,
+}: ProductFormProps) {
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [activeTab, setActiveTab] = useState("basic");
@@ -130,6 +133,14 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         cost: product.cost?.toString() || "",
         margin: product.margin?.toString() || "",
         sku: product.sku || "",
+        batchSize: "1",
+        finishedGoodRequired: "1",
+        productionQuantity: "1",
+        normalLossMfg: "5",
+        normalLossOnSold: "0",
+        mfgAndPackagingCost: "45",
+        overheadCost: "5",
+        ingredients: [],
       });
       setSelectedImage(product.imageUrl || "");
     }
@@ -203,12 +214,8 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
     if (ingredients.length === 0) return;
 
     const batchSize = parseFloat(formData.batchSize || "1");
-    const finishedGoodRequired = parseFloat(
-      formData.finishedGoodRequired || "1",
-    );
     const productionQuantity = parseFloat(formData.productionQuantity || "1");
     const normalLossMfg = parseFloat(formData.normalLossMfg || "5");
-    const normalLossOnSold = parseFloat(formData.normalLossOnSold || "0");
     const mfgAndPackagingCost = parseFloat(
       formData.mfgAndPackagingCost || "45",
     );
@@ -228,7 +235,6 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
     });
 
     const totalForProduction = subTotalForBatch * productionQuantity;
-    const totalForProductionGm = totalForProduction / 1000;
     const effectiveUnits = batchSize * productionQuantity;
     const rmCostPerUnit = totalForProduction / effectiveUnits;
     const effectiveUnitsProduced = effectiveUnits * (1 - normalLossMfg / 100);
@@ -317,7 +323,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {categories.map((category: any) => (
+                            {(categories as any[]).map((category: any) => (
                               <SelectItem
                                 key={category.id}
                                 value={category.id.toString()}
@@ -348,7 +354,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {units.map((unit: any) => (
+                            {(units as any[]).map((unit: any) => (
                               <SelectItem
                                 key={unit.id}
                                 value={unit.id.toString()}
@@ -378,44 +384,6 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                   )}
                 />
 
-                {/* Product Image */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Product Image</label>
-                  <div className="flex items-center gap-4">
-                    {selectedImage ? (
-                      <div className="relative">
-                        <img
-                          src={selectedImage}
-                          alt="Product"
-                          className="w-20 h-20 object-cover rounded-lg border"
-                        />
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="destructive"
-                          className="absolute -top-2 -right-2 h-6 w-6 p-0"
-                          onClick={() => setSelectedImage("")}
-                        >
-                          ×
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                        <i className="fas fa-image text-gray-400 text-xl"></i>
-                      </div>
-                    )}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowMediaLibrary(true)}
-                      className="gap-2"
-                    >
-                      <i className="fas fa-upload"></i>
-                      {selectedImage ? "Change Image" : "Select Image"}
-                    </Button>
-                  </div>
-                </div>
-
                 <FormField
                   control={form.control}
                   name="description"
@@ -430,13 +398,57 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                   )}
                 />
 
+                {/* Product Image */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Product Image</label>
+                  <div className="flex items-center gap-4">
+                    {selectedImage ? (
+                      <div className="relative">
+                        <img
+                          src={selectedImage}
+                          alt="Product preview"
+                          className="w-20 h-20 object-cover rounded-lg border"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                          onClick={() => setSelectedImage("")}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                        <span className="text-gray-400 text-xs">No image</span>
+                      </div>
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowMediaLibrary(true)}
+                    >
+                      Select Image
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="cost"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Cost Price ({symbol})</FormLabel>
+                        <FormLabel>
+                          Cost Price ({symbol})
+                          {calculations.finalCostPerUnit > 0 && (
+                            <Badge variant="secondary" className="ml-2">
+                              Calculated:{" "}
+                              {formatCurrency(calculations.finalCostPerUnit)}
+                            </Badge>
+                          )}
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -495,28 +507,240 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                     )}
                   />
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button type="button" variant="outline" onClick={onSuccess}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={mutation.isPending}>
-                    {mutation.isPending && (
-                      <i className="fas fa-spinner fa-spin mr-2"></i>
+          <TabsContent value="calculator" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Cost Calculator</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Calculate product cost based on ingredients and production
+                  parameters
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Production Parameters */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="batchSize"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Batch Size</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                    {product ? "Update" : "Create"} Product
-                  </Button>
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="productionQuantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Production Quantity</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="normalLossMfg"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Normal Loss Mfg (%)</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="mfgAndPackagingCost"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mfg & Packaging (%)</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
-                <MediaLibrary
-                  isOpen={showMediaLibrary}
-                  onClose={() => setShowMediaLibrary(false)}
-                  onSelect={(imageUrl) => setSelectedImage(imageUrl)}
-                />
+                {/* Ingredients Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">Ingredients</h3>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        append({ inventoryItemId: "", quantity: "" })
+                      }
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Ingredient
+                    </Button>
+                  </div>
+
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="flex gap-4 items-end">
+                      <div className="flex-1">
+                        <FormField
+                          control={form.control}
+                          name={`ingredients.${index}.inventoryItemId`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Ingredient</FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select ingredient" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {(inventoryItems as any[]).map(
+                                    (item: any) => (
+                                      <SelectItem
+                                        key={item.id}
+                                        value={item.id.toString()}
+                                      >
+                                        {item.name} -{" "}
+                                        {formatCurrency(item.costPerUnit)}/
+                                        {item.unit}
+                                      </SelectItem>
+                                    ),
+                                  )}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="w-32">
+                        <FormField
+                          control={form.control}
+                          name={`ingredients.${index}.quantity`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Quantity</FormLabel>
+                              <FormControl>
+                                <Input type="number" step="0.01" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => remove(index)}
+                        className="mb-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                <Separator />
+
+                {/* Cost Summary */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Cost Breakdown</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Subtotal for Batch:</span>
+                        <span>
+                          {formatCurrency(calculations.subTotalForBatch)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Total for Production:</span>
+                        <span>
+                          {formatCurrency(calculations.totalForProduction)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>RM Cost per Unit:</span>
+                        <span>
+                          {formatCurrency(calculations.rmCostPerUnit)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Estimated Cost per Unit:</span>
+                        <span>
+                          {formatCurrency(calculations.estimatedCostPerUnit)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Mfg Cost per Unit:</span>
+                        <span>
+                          {formatCurrency(calculations.mfgCostPerUnit)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Overhead Cost per Unit:</span>
+                        <span>
+                          {formatCurrency(calculations.overheadCostPerUnit)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between font-semibold border-t pt-2">
+                        <span>Final Cost per Unit:</span>
+                        <span>
+                          {formatCurrency(calculations.finalCostPerUnit)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button type="button" variant="outline" onClick={onSuccess}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending && (
+              <i className="fas fa-spinner fa-spin mr-2"></i>
+            )}
+            {product ? "Update" : "Create"} Product
+          </Button>
+        </div>
+
+        <MediaLibrary
+          isOpen={showMediaLibrary}
+          onClose={() => setShowMediaLibrary(false)}
+          onSelect={(imageUrl) => setSelectedImage(imageUrl)}
+        />
       </form>
     </Form>
   );
