@@ -46,7 +46,7 @@ const productionScheduleSchema = z.object({
     .array(
       z.object({
         productId: z.number().min(1, "Please select a product"),
-        quantity: z.number().min(1, "Target amount must be at least 0.1"),
+        targetAmount: z.number().min(0.1, "Target amount must be at least 0.1"),
         unit: z.enum(["kg", "packets"], {
           required_error: "Please select a unit",
         }),
@@ -62,7 +62,7 @@ interface ProductionItem {
   productId: number;
   productName: string;
   scheduledDate: string;
-  quantity: number;
+  targetAmount: number;
   unit: "kg" | "packets";
   targetPackets?: number;
   packetsPerKg?: number;
@@ -98,7 +98,7 @@ export default function EnhancedProductionSchedule() {
       scheduledDate: selectedDate,
       priority: "medium",
       notes: "",
-      products: [{ productId: 0, quantity: 1, unit: "kg" }],
+      products: [{ productId: 0, targetAmount: 1, unit: "kg" }],
     },
   });
 
@@ -123,7 +123,7 @@ export default function EnhancedProductionSchedule() {
         scheduledDate: selectedDate,
         priority: "medium",
         notes: "",
-        products: [{ productId: 0, quantity: 1, unit: "kg" }],
+        products: [{ productId: 0, targetAmount: 1, unit: "kg" }],
       });
       toast({
         title: "Schedule Created",
@@ -208,12 +208,12 @@ export default function EnhancedProductionSchedule() {
         const scheduleData = {
           productId: product.productId,
           scheduledDate: data.scheduledDate,
-          quantity: product.quantity,
+          targetAmount: product.targetAmount,
           unit: product.unit,
           targetPackets:
             product.unit === "kg"
-              ? calculatePackets(product.productId, product.quantity)
-              : product.quantity,
+              ? calculatePackets(product.productId, product.targetAmount)
+              : product.targetAmount,
           priority: data.priority,
           notes: data.notes,
         };
@@ -232,7 +232,7 @@ export default function EnhancedProductionSchedule() {
         scheduledDate: selectedDate,
         priority: "medium",
         notes: "",
-        products: [{ productId: 0, quantity: 1, unit: "kg" }],
+        products: [{ productId: 0, targetAmount: 1, unit: "kg" }],
       });
 
       toast({
@@ -257,7 +257,7 @@ export default function EnhancedProductionSchedule() {
       products: [
         {
           productId: item.productId,
-          quantity: item.quantity,
+          targetAmount: item.targetAmount,
           unit: item.unit,
         },
       ],
@@ -270,7 +270,7 @@ export default function EnhancedProductionSchedule() {
       scheduledDate: selectedDate,
       priority: "medium",
       notes: "",
-      products: [{ productId: 0, quantity: 1, unit: "kg" }],
+      products: [{ productId: 0, targetAmount: 1, unit: "kg" }],
     });
   };
 
@@ -338,7 +338,7 @@ export default function EnhancedProductionSchedule() {
                     <div className="flex items-center gap-2">
                       <Target className="h-4 w-4" />
                       <span>
-                        {item.quantity} {item.unit}
+                        {item.targetAmount} {item.unit}
                       </span>
                       {item.unit === "kg" && item.targetPackets && (
                         <span className="text-gray-400">
@@ -419,7 +419,7 @@ export default function EnhancedProductionSchedule() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      append({ productId: 0, quantity: 1, unit: "kg" })
+                      append({ productId: 0, targetAmount: 1, unit: "kg" })
                     }
                   >
                     <Plus className="h-4 w-4 mr-1" />
@@ -484,14 +484,14 @@ export default function EnhancedProductionSchedule() {
                       </div>
 
                       <div>
-                        <Label>Quantity</Label>
+                        <Label>Target Amount</Label>
                         <Input
                           type="number"
                           step="0.1"
-                          {...form.register(`products.${index}.quantity`, {
+                          {...form.register(`products.${index}.targetAmount`, {
                             valueAsNumber: true,
                           })}
-                          placeholder="Enter Quantity"
+                          placeholder="Enter amount"
                         />
                       </div>
 
@@ -527,14 +527,14 @@ export default function EnhancedProductionSchedule() {
                     {/* Packet Calculation Preview */}
                     {form.watch(`products.${index}.unit`) === "kg" &&
                       form.watch(`products.${index}.productId`) &&
-                      form.watch(`products.${index}.quantity`) && (
+                      form.watch(`products.${index}.targetAmount`) && (
                         <div className="p-3 bg-blue-50 rounded-lg">
                           <p className="text-sm text-blue-800">
                             <Package className="h-4 w-4 inline mr-1" />
                             Estimated packets needed:{" "}
                             {calculatePackets(
                               form.watch(`products.${index}.productId`),
-                              form.watch(`products.${index}.quantity`),
+                              form.watch(`products.${index}.targetAmount`),
                             )}
                           </p>
                         </div>
@@ -569,6 +569,88 @@ export default function EnhancedProductionSchedule() {
                 )}
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* Schedule Calendar View */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Schedule Calendar</CardTitle>
+            <CardDescription>View production schedule by date</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <Label>Select Date</Label>
+                <Input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  min={format(new Date(), "yyyy-MM-dd")}
+                />
+              </div>
+
+              <div className="space-y-3">
+                {productionSchedule.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">
+                    No production scheduled for{" "}
+                    {format(new Date(selectedDate), "MMM dd, yyyy")}
+                  </p>
+                ) : (
+                  productionSchedule.map((item: ProductionItem) => (
+                    <div key={item.id} className="p-4 border rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-semibold">{item.productName}</h4>
+                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                            <span className="flex items-center gap-1">
+                              <Target className="h-4 w-4" />
+                              {item.targetAmount} {item.unit}
+                            </span>
+                            {item.unit === "kg" && item.targetPackets && (
+                              <span className="text-gray-400">
+                                ({item.targetPackets} packets)
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <Badge className={getPriorityColor(item.priority)}>
+                              {item.priority}
+                            </Badge>
+                            <Badge className={getStatusColor(item.status)}>
+                              {item.status.replace("_", " ")}
+                            </Badge>
+                          </div>
+                          {item.notes && (
+                            <p className="text-sm text-gray-600 mt-2">
+                              {item.notes}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(item)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() =>
+                              deleteScheduleMutation.mutate(item.id)
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

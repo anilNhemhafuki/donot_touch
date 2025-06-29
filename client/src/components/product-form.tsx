@@ -14,11 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import MediaLibrary from "./media-library";
-import CostCalculator from "./cost-calculator";
 import {
   Select,
   SelectContent,
@@ -30,7 +26,6 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Calculator } from "lucide-react";
 import { z } from "zod";
 
 const productFormSchema = insertProductSchema.extend({
@@ -49,29 +44,15 @@ interface ProductFormProps {
 export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>("");
-  const [costCalculations, setCostCalculations] = useState({
-    costPrice: 0,
-    salesPrice: 0,
-    marginAmount: 0,
-    marginPercentage: 0,
-  });
   const { toast } = useToast();
   const { symbol } = useCurrency();
 
   const { data: categories = [] } = useQuery({
     queryKey: ["/api/categories"],
-    retry: (failureCount, error) => {
-      if (isUnauthorizedError(error)) return false;
-      return failureCount < 3;
-    },
   });
 
   const { data: units = [] } = useQuery({
     queryKey: ["/api/units"],
-    retry: (failureCount, error) => {
-      if (isUnauthorizedError(error)) return false;
-      return failureCount < 3;
-    },
   });
 
   const form = useForm({
@@ -106,26 +87,13 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
-      // Safe number parsing to prevent NaN errors
-      const safeParseFloat = (value: string | number): number => {
-        if (typeof value === 'number') return isNaN(value) ? 0 : value;
-        const parsed = parseFloat(value || '0');
-        return isNaN(parsed) ? 0 : parsed;
-      };
-
-      const safeParseInt = (value: string | number): number | null => {
-        if (!value) return null;
-        const parsed = parseInt(value.toString());
-        return isNaN(parsed) ? null : parsed;
-      };
-
       const transformedData = {
         ...data,
-        categoryId: safeParseInt(data.categoryId),
-        unitId: safeParseInt(data.unitId),
-        price: safeParseFloat(data.price),
-        cost: safeParseFloat(data.cost),
-        margin: safeParseFloat(data.margin),
+        categoryId: data.categoryId ? parseInt(data.categoryId) : null,
+        unitId: data.unitId ? parseInt(data.unitId) : null,
+        price: parseFloat(data.price),
+        cost: parseFloat(data.cost),
+        margin: parseFloat(data.margin),
         imageUrl: selectedImage || null,
       };
 
@@ -178,272 +146,234 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
     }
   };
 
-  const handleCostCalculationChange = (calculations: {
-    costPrice: number;
-    salesPrice: number;
-    marginAmount: number;
-    marginPercentage: number;
-  }) => {
-    setCostCalculations(calculations);
-    // Update form fields with calculated values
-    form.setValue("cost", calculations.costPrice.toFixed(2));
-    form.setValue("price", calculations.salesPrice.toFixed(2));
-    form.setValue("margin", calculations.marginAmount.toFixed(2));
-  };
-
-  const applyCostCalculations = () => {
-    // The values are already applied via handleCostCalculationChange
-    // Show visual feedback that calculations are applied
-    toast({
-      title: "Calculations Applied",
-      description: `Cost: ${symbol}${costCalculations.costPrice.toFixed(2)}, Price: ${symbol}${costCalculations.salesPrice.toFixed(2)}, Margin: ${symbol}${costCalculations.marginAmount.toFixed(2)}`,
-    });
-  };
-
   return (
-    <Tabs defaultValue="basic" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="basic">Basic Information</TabsTrigger>
-        <TabsTrigger value="calculator" className="flex items-center gap-2">
-          <Calculator className="h-4 w-4" />
-          Cost Calculator
-        </TabsTrigger>
-      </TabsList>
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        className="space-y-4"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Product Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Bread" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-      <TabsContent value="basic">
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-            className="space-y-4"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Product Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Bread" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="categoryId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Array.isArray(categories) && categories.map((category: any) => (
-                          <SelectItem
-                            key={category.id}
-                            value={category.id.toString()}
-                          >
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="unitId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Unit</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a unit" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Array.isArray(units) && units.map((unit: any) => (
-                          <SelectItem
-                            key={unit.id}
-                            value={unit.id.toString()}
-                          >
-                            {unit.name} ({unit.abbreviation})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="sku"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>SKU (Optional)</FormLabel>
+          <FormField
+            control={form.control}
+            name="categoryId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <Input placeholder="Product SKU" {...field} />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <SelectContent>
+                    {categories.map((category: any) => (
+                      <SelectItem
+                        key={category.id}
+                        value={category.id.toString()}
+                      >
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
+          <FormField
+            control={form.control}
+            name="unitId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Unit</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <Textarea placeholder="Making Process..." {...field} />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a unit" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <SelectContent>
+                    {units.map((unit: any) => (
+                      <SelectItem
+                        key={unit.id}
+                        value={unit.id.toString()}
+                      >
+                        {unit.name} ({unit.abbreviation})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="cost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cost Price ({symbol})</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...field}
-                        onBlur={() => {
-                          field.onBlur();
-                          calculateMargin();
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <FormField
+          control={form.control}
+          name="sku"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>SKU (Optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="350G" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-              <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Selling Price ({symbol})</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...field}
-                        onBlur={() => {
-                          field.onBlur();
-                          calculateMargin();
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="margin"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Margin ({symbol})</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...field}
-                        readOnly
-                        className="bg-gray-50"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={onSuccess}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending && (
-                  <i className="fas fa-spinner fa-spin mr-2"></i>
-                )}
-                {product ? "Update" : "Create"} Product
-              </Button>
-            </div>
-
-            <MediaLibrary
-              isOpen={showMediaLibrary}
-              onClose={() => setShowMediaLibrary(false)}
-              onSelect={(imageUrl) => setSelectedImage(imageUrl)}
-            />
-          </form>
-        </Form>
-      </TabsContent>
-
-      <TabsContent value="calculator">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calculator className="h-5 w-5" />
-              Cost Calculator
-            </CardTitle>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Badge variant="outline">
-                  Current Cost: {symbol}{form.watch("cost") || "0"}
-                </Badge>
-                <Badge variant="outline">
-                  Current Price: {symbol}{form.watch("price") || "0"}
-                </Badge>
-                <Badge variant="outline">
-                  Current Margin: {symbol}{form.watch("margin") || "0"}
-                </Badge>
+        {/* Product Image */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Product Image</label>
+          <div className="flex items-center gap-4">
+            {selectedImage ? (
+              <div className="relative">
+                <img
+                  src={selectedImage}
+                  alt="Product"
+                  className="w-20 h-20 object-cover rounded-lg border"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                  onClick={() => setSelectedImage("")}
+                >
+                  ×
+                </Button>
               </div>
-              <Button 
-                type="button" 
-                variant="secondary" 
-                size="sm"
-                onClick={applyCostCalculations}
-                className="flex items-center gap-2"
-              >
-                <Calculator className="h-4 w-4" />
-                Apply to Form
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <CostCalculator
-              initialCost={parseFloat(form.watch("cost") || "0")}
-              initialPrice={parseFloat(form.watch("price") || "0")}
-              initialMargin={parseFloat(form.watch("margin") || "0")}
-              onCalculationChange={handleCostCalculationChange}
-            />
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
+            ) : (
+              <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                <i className="fas fa-image text-gray-400 text-xl"></i>
+              </div>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowMediaLibrary(true)}
+              className="gap-2"
+            >
+              <i className="fas fa-upload"></i>
+              {selectedImage ? "Change Image" : "Select Image"}
+            </Button>
+          </div>
+        </div>
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Making Process..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="cost"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cost Price ({symbol})</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    {...field}
+                    onBlur={() => {
+                      field.onBlur();
+                      calculateMargin();
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Selling Price ({symbol})</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    {...field}
+                    onBlur={() => {
+                      field.onBlur();
+                      calculateMargin();
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="margin"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Margin Price ({symbol})</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    {...field}
+                    readOnly
+                    className="bg-gray-50"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button type="button" variant="outline" onClick={onSuccess}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending && (
+              <i className="fas fa-spinner fa-spin mr-2"></i>
+            )}
+            {product ? "Update" : "Create"} Product
+          </Button>
+        </div>
+
+        <MediaLibrary
+          isOpen={showMediaLibrary}
+          onClose={() => setShowMediaLibrary(false)}
+          onSelect={(imageUrl) => setSelectedImage(imageUrl)}
+        />
+      </form>
+    </Form>
   );
 }
