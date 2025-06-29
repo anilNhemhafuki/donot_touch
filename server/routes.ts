@@ -1522,7 +1522,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } = req.body;
 
       const purchaseData = {
-        description: `Purchase from ${supplierName}`,
+        title: `Purchase from ${supplierName}`,
+        description: `Purchase from ${supplierName} - Payment: ${paymentMethod}`,
         amount: totalAmount,
         category: "purchase",
         date: new Date(),
