@@ -102,7 +102,9 @@ export interface IStorage {
 
   // Inventory category operations
   getInventoryCategories(): Promise<InventoryCategory[]>;
-  createInventoryCategory(category: InsertInventoryCategory): Promise<InventoryCategory>;
+  createInventoryCategory(
+    category: InsertInventoryCategory,
+  ): Promise<InventoryCategory>;
   updateInventoryCategory(
     id: number,
     category: Partial<InsertInventoryCategory>,
@@ -374,10 +376,7 @@ export class Storage {
 
   // Inventory operations
   async getUnits() {
-    return await db
-      .select()
-      .from(units)
-      .orderBy(units.name);
+    return await db.select().from(units).orderBy(units.name);
   }
 
   async createUnit(data: InsertUnit) {
@@ -422,7 +421,10 @@ export class Storage {
       })
       .from(inventoryItems)
       .leftJoin(units, eq(inventoryItems.unitId, units.id))
-      .leftJoin(inventoryCategories, eq(inventoryItems.categoryId, inventoryCategories.id))
+      .leftJoin(
+        inventoryCategories,
+        eq(inventoryItems.categoryId, inventoryCategories.id),
+      )
       .orderBy(inventoryItems.name);
   }
 
@@ -506,12 +508,20 @@ export class Storage {
       .orderBy(inventoryCategories.name);
   }
 
-  async createInventoryCategory(data: InsertInventoryCategory): Promise<InventoryCategory> {
-    const [category] = await db.insert(inventoryCategories).values(data).returning();
+  async createInventoryCategory(
+    data: InsertInventoryCategory,
+  ): Promise<InventoryCategory> {
+    const [category] = await db
+      .insert(inventoryCategories)
+      .values(data)
+      .returning();
     return category;
   }
 
-  async updateInventoryCategory(id: number, data: Partial<InsertInventoryCategory>): Promise<InventoryCategory> {
+  async updateInventoryCategory(
+    id: number,
+    data: Partial<InsertInventoryCategory>,
+  ): Promise<InventoryCategory> {
     const updateData = {
       ...data,
       updatedAt: new Date(),
@@ -998,14 +1008,15 @@ export class Storage {
           lastName: users.lastName,
           role: users.role,
           createdAt: users.createdAt,
-          updatedAt: users.updatedAt,        })
+          updatedAt: users.updatedAt,
+        })
         .from(users);
       return allUsers;
     } catch (error) {
       console.error("Error getting all users:", error);
       return [];
     }
-  }```python
+  }
   async updateUser(id: string, userData: Partial<UpsertUser>): Promise<User> {
     const [updated] = await db
       .update(users)
@@ -1223,7 +1234,7 @@ export class Storage {
     try {
       // Generate unique filename
       const timestamp = Date.now();
-      const extension = file.name.split('.').pop();
+      const extension = file.name.split(".").pop();
       const filename = `product_${timestamp}.${extension}`;
 
       // For development, we'll store files locally and return a mock response
@@ -1235,7 +1246,7 @@ export class Storage {
         size: file.size,
         contentType: file.mimetype,
         uploadedAt: new Date().toISOString(),
-        uploadedBy: userId
+        uploadedBy: userId,
       };
 
       console.log("Mock media upload:", mediaItem);
