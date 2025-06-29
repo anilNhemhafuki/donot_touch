@@ -21,11 +21,14 @@ import OrderForm from "@/components/order-form";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 export default function Orders() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showOrderForm, setShowOrderForm] = useState(false);
+  const { formatCurrency } = useCurrency();
+
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const { toast } = useToast();
 
@@ -402,8 +405,8 @@ export default function Orders() {
                       </div>
                     )}
                     <div>
-                      <strong>Total:</strong> $
-                      {Number(selectedOrder.totalAmount).toFixed(2)}
+                      <strong>Total:</strong>
+                      {formatCurrency(selectedOrder.totalAmount)}
                     </div>
                   </div>
                 </div>
