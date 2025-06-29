@@ -292,7 +292,7 @@ export default function Stock() {
 
     // Get the selected unit details
     const selectedUnit = (units as any[]).find((u: any) => u.id.toString() === unitId);
-    
+
     const data = {
       name: name.trim(),
       unitId: parseInt(unitId),
@@ -708,9 +708,10 @@ export default function Stock() {
                     <TableHead>Item</TableHead>
                     <TableHead>Unit</TableHead>
                     <TableHead>Stock</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Cost/Unit
-                    </TableHead>
+                    <TableHead>Previous Qty</TableHead>
+                    <TableHead>Previous Amt</TableHead>
+                    <TableHead>Min Level</TableHead>
+                    <TableHead>Cost/Unit</TableHead>
                     <TableHead className="hidden md:table-cell">
                       Group
                     </TableHead>
@@ -751,6 +752,12 @@ export default function Stock() {
                           <div className="text-sm text-muted-foreground">
                             Min: {parseFloat(item.minLevel || 0).toFixed(2)}
                           </div>
+                        </TableCell>
+                         <TableCell className="text-muted-foreground">
+                          {item.previousQuantity ? parseFloat(item.previousQuantity).toLocaleString() : "0"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {symbol} {item.previousAmount ? parseFloat(item.previousAmount).toLocaleString() : "0"}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           {symbol}

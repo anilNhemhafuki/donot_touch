@@ -63,7 +63,7 @@ function CategoryDialog({ isOpen, onClose, onCategoryCreated }: CategoryDialogPr
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     const formData = new FormData(e.target as HTMLFormElement);
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
@@ -128,12 +128,15 @@ export function EnhancedStockItemForm({ isOpen, onClose, editingItem }: StockIte
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    categoryId: "",
-    unitId: "",
-    defaultPrice: "",
     currentStock: "",
     minLevel: "",
+    unitId: "",
+    unit: "",
     costPerUnit: "",
+    previousQuantity: "",
+    previousAmount: "",
+    defaultPrice: "",
+    categoryId: "",
     supplier: "",
     company: "",
   });
@@ -158,6 +161,8 @@ export function EnhancedStockItemForm({ isOpen, onClose, editingItem }: StockIte
         costPerUnit: editingItem.costPerUnit || "",
         supplier: editingItem.supplier || "",
         company: editingItem.company || "",
+        previousQuantity: editingItem.previousQuantity || "",
+        previousAmount: editingItem.previousAmount || "",
       });
     } else {
       setFormData({
@@ -170,6 +175,8 @@ export function EnhancedStockItemForm({ isOpen, onClose, editingItem }: StockIte
         costPerUnit: "",
         supplier: "",
         company: "",
+        previousQuantity: "",
+        previousAmount: "",
       });
     }
   }, [editingItem]);
@@ -243,6 +250,8 @@ export function EnhancedStockItemForm({ isOpen, onClose, editingItem }: StockIte
       costPerUnit: parseFloat(formData.costPerUnit) || 0,
       supplier: formData.supplier.trim() || null,
       company: formData.company.trim() || null,
+      previousQuantity: parseFloat(formData.previousQuantity) || 0,
+      previousAmount: parseFloat(formData.previousAmount) || 0,
     };
 
     saveMutation.mutate(submitData);
@@ -453,6 +462,67 @@ export function EnhancedStockItemForm({ isOpen, onClose, editingItem }: StockIte
                     placeholder="Enter minimum stock level"
                     className="mt-1"
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="currentStock" className="text-sm font-medium">
+                      Quantity
+                    </Label>
+                    <Input
+                      id="currentStock"
+                      type="number"
+                      step="0.01"
+                      value={formData.currentStock}
+                      onChange={(e) => handleInputChange("currentStock", e.target.value)}
+                      placeholder="12"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="minLevel" className="text-sm font-medium">
+                      Minimum Level
+                    </Label>
+                    <Input
+                      id="minLevel"
+                      type="number"
+                      step="0.01"
+                      value={formData.minLevel}
+                      onChange={(e) => handleInputChange("minLevel", e.target.value)}
+                      placeholder="Enter minimum stock level"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="previousQuantity" className="text-sm font-medium">Previous Quantity</Label>
+                    <Input
+                      id="previousQuantity"
+                      type="number"
+                      step="0.01"
+                      value={formData.previousQuantity || ""}
+                      onChange={(e) => handleInputChange("previousQuantity", e.target.value)}
+                      placeholder="Previous stock quantity"
+                      disabled={!!editingItem}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="previousAmount" className="text-sm font-medium">Previous Amount</Label>
+                    <Input
+                      id="previousAmount"
+                      type="number"
+                      step="0.01"
+                      value={formData.previousAmount || ""}
+                      onChange={(e) => handleInputChange("previousAmount", e.target.value)}
+                      placeholder="Previous cost amount"
+                      disabled={!!editingItem}
+                      className="mt-1"
+                    />
+                  </div>
                 </div>
 
                 <div>

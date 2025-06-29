@@ -96,6 +96,8 @@ export const inventoryItems = pgTable("inventory_items", {
   unitId: integer("unit_id").references(() => units.id),
   unit: varchar("unit", { length: 50 }).notNull(), // fallback for existing data
   costPerUnit: decimal("cost_per_unit", { precision: 10, scale: 2 }).notNull(),
+  previousQuantity: decimal("previous_quantity", { precision: 10, scale: 2 }).default("0"),
+  previousAmount: decimal("previous_amount", { precision: 10, scale: 2 }).default("0"),
   supplier: varchar("supplier", { length: 200 }),
   company: varchar("company", { length: 200 }),
   lastRestocked: timestamp("last_restocked"),

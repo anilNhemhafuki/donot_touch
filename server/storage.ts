@@ -490,6 +490,8 @@ export class Storage {
       minLevel: data.minLevel,
       unit: data.unit,
       costPerUnit: data.costPerUnit,
+      previousQuantity: data.previousQuantity,
+      previousAmount: data.previousAmount,
       supplier: data.supplier,
       company: data.company,
       // New fields
@@ -1064,11 +1066,15 @@ export class Storage {
             .where(eq(inventoryItems.id, item.inventoryItemId));
 
           if (currentItem) {
-            const newQuantity = parseFloat(currentItem.currentStock) + parseFloat(item.quantity);
+            const previousQty = parseFloat(currentItem.currentStock) || 0;
+            const previousAmt = parseFloat(currentItem.costPerUnit) || 0;
+            const newQuantity = previousQty + parseFloat(item.quantity);
             
             await tx
               .update(inventoryItems)
               .set({
+                previousQuantity: previousQty.toString(),
+                previousAmount: previousAmt.toString(),
                 currentStock: newQuantity.toString(),
                 costPerUnit: item.unitPrice,
                 lastRestocked: new Date(),

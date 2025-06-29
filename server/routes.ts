@@ -575,6 +575,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         unit: req.body.unit ? req.body.unit.trim() : "pcs",
         unitId: req.body.unitId ? parseInt(req.body.unitId) : null,
         costPerUnit: parseFloat(req.body.costPerUnit).toString(),
+        previousQuantity: req.body.previousQuantity ? parseFloat(req.body.previousQuantity).toString() : "0",
+        previousAmount: req.body.previousAmount ? parseFloat(req.body.previousAmount).toString() : "0",
         defaultPrice: req.body.defaultPrice ? parseFloat(req.body.defaultPrice).toString() : "0",
         group: req.body.group ? req.body.group.trim() : null,
         openingQuantity: req.body.openingQuantity ? parseFloat(req.body.openingQuantity).toString() : parseFloat(req.body.currentStock).toString(),
