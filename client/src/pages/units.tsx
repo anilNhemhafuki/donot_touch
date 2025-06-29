@@ -154,6 +154,36 @@ export default function Units() {
     },
   });
 
+  const toggleActiveMutation = useMutation({
+    mutationFn: (data: { id: number; isActive: boolean }) =>
+      apiRequest("PUT", `/api/units/${data.id}`, { isActive: data.isActive }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+      toast({
+        title: "Success",
+        description: "Unit status updated successfully",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to update unit status",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
@@ -393,6 +423,18 @@ export default function Units() {
                               }}
                             >
                               <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant={unit.isActive ? "destructive" : "default"}
+                              size="sm"
+                              onClick={() => 
+                                toggleActiveMutation.mutate({
+                                  id: unit.id,
+                                  isActive: !unit.isActive
+                                })
+                              }
+                            >
+                              {unit.isActive ? "Deactivate" : "Activate"}
                             </Button>
                             <Button
                               variant="outline"

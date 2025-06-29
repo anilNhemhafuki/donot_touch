@@ -372,6 +372,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
 
+      // If only updating isActive status
+      if (req.body.hasOwnProperty('isActive') && Object.keys(req.body).length === 1) {
+        const transformedData = {
+          isActive: req.body.isActive,
+        };
+        const unit = await storage.updateUnit(id, transformedData);
+        res.json(unit);
+        return;
+      }
+
+      // Full unit update validation
       if (!req.body.name) {
         return res.status(400).json({ message: "Unit name is required" });
       }
@@ -388,6 +399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: req.body.name.trim(),
         abbreviation: req.body.abbreviation.trim(),
         type: req.body.type.trim(),
+        isActive: req.body.isActive !== undefined ? req.body.isActive : true,
       };
 
       const unit = await storage.updateUnit(id, transformedData);

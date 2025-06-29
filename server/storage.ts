@@ -377,7 +377,6 @@ export class Storage {
     return await db
       .select()
       .from(units)
-      .where(eq(units.isActive, true))
       .orderBy(units.name);
   }
 
