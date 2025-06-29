@@ -159,11 +159,16 @@ export default function Purchases() {
   };
 
   const filteredPurchases = purchases.filter((purchase: Purchase) => {
-    const matchesSearch = purchase.supplierName
+    const supplierName = purchase.supplierName ?? "";
+    const matchesSearch = supplierName
+      .toString()
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || purchase.status === statusFilter;
+
+    const matchesStatus = purchase.status
+      ? purchase.status.includes(selectedStatus)
+      : true;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -479,7 +484,7 @@ export default function Purchases() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{purchase.paymentMethod.toUpperCase()}</span>
+                  <span>{purchase.paymentMethod?.toUpperCase() ?? 'N/A'}</span>
                   <span
                     className={`px-2 py-1 rounded-full text-xs ${
                       purchase.status === "completed"
