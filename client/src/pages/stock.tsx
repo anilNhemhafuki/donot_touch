@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -86,18 +85,28 @@ export default function Stock() {
       if (!data.unitId) {
         throw new Error("Measuring unit is required");
       }
-      if (isNaN(parseFloat(data.defaultPrice)) || parseFloat(data.defaultPrice) < 0) {
+      if (
+        isNaN(parseFloat(data.defaultPrice)) ||
+        parseFloat(data.defaultPrice) < 0
+      ) {
         throw new Error("Valid default price is required");
       }
-      if (isNaN(parseFloat(data.openingQuantity)) || parseFloat(data.openingQuantity) < 0) {
+      if (
+        isNaN(parseFloat(data.openingQuantity)) ||
+        parseFloat(data.openingQuantity) < 0
+      ) {
         throw new Error("Valid opening quantity is required");
       }
-      if (isNaN(parseFloat(data.openingRate)) || parseFloat(data.openingRate) < 0) {
+      if (
+        isNaN(parseFloat(data.openingRate)) ||
+        parseFloat(data.openingRate) < 0
+      ) {
         throw new Error("Valid opening rate is required");
       }
 
       // Calculate opening value
-      const openingValue = parseFloat(data.openingQuantity) * parseFloat(data.openingRate);
+      const openingValue =
+        parseFloat(data.openingQuantity) * parseFloat(data.openingRate);
 
       // Add today's date for new stock items
       const stockData = {
@@ -154,7 +163,7 @@ export default function Stock() {
     mutationFn: async (data: { id: number; values: any }) => {
       console.log("Updating stock item:", data);
       const values = data.values;
-      
+
       // Validate required fields before sending
       if (!values.name?.trim()) {
         throw new Error("Item name is required");
@@ -166,7 +175,8 @@ export default function Stock() {
       // Calculate opening value if opening fields are provided
       let openingValue = values.openingValue;
       if (values.openingQuantity && values.openingRate) {
-        openingValue = parseFloat(values.openingQuantity) * parseFloat(values.openingRate);
+        openingValue =
+          parseFloat(values.openingQuantity) * parseFloat(values.openingRate);
       }
 
       const updateData = {
@@ -174,7 +184,9 @@ export default function Stock() {
         unitId: parseInt(values.unitId),
         defaultPrice: parseFloat(values.defaultPrice || 0),
         group: values.group?.trim() || null,
-        currentStock: parseFloat(values.currentStock || values.openingQuantity || 0),
+        currentStock: parseFloat(
+          values.currentStock || values.openingQuantity || 0,
+        ),
         minLevel: parseFloat(values.minLevel || 0),
         costPerUnit: parseFloat(values.costPerUnit || values.openingRate || 0),
         openingQuantity: parseFloat(values.openingQuantity || 0),
@@ -409,7 +421,6 @@ export default function Stock() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <span className="text-sm text-muted-foreground self-center">Multiple Unit</span>
                   </div>
                 </div>
               </div>
@@ -445,8 +456,12 @@ export default function Stock() {
                       <SelectValue placeholder="Select Group for Item" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="raw-materials">Raw Materials</SelectItem>
-                      <SelectItem value="finished-goods">Finished Goods</SelectItem>
+                      <SelectItem value="raw-materials">
+                        Raw Materials
+                      </SelectItem>
+                      <SelectItem value="finished-goods">
+                        Finished Goods
+                      </SelectItem>
                       <SelectItem value="packaging">Packaging</SelectItem>
                       <SelectItem value="supplies">Supplies</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
@@ -460,7 +475,10 @@ export default function Stock() {
                 <Label className="text-sm font-medium">Opening Stock</Label>
                 <div className="grid grid-cols-3 gap-4 mt-2 p-4 border rounded-lg bg-gray-50">
                   <div>
-                    <Label htmlFor="openingQuantity" className="text-sm text-muted-foreground">
+                    <Label
+                      htmlFor="openingQuantity"
+                      className="text-sm text-muted-foreground"
+                    >
                       Quantity
                     </Label>
                     <Input
@@ -470,12 +488,19 @@ export default function Stock() {
                       step="0.01"
                       min="0"
                       placeholder="00.00"
-                      defaultValue={editingItem?.openingQuantity || editingItem?.currentStock || ""}
+                      defaultValue={
+                        editingItem?.openingQuantity ||
+                        editingItem?.currentStock ||
+                        ""
+                      }
                       className="mt-1"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="openingRate" className="text-sm text-muted-foreground">
+                    <Label
+                      htmlFor="openingRate"
+                      className="text-sm text-muted-foreground"
+                    >
                       Rate
                     </Label>
                     <div className="relative mt-1">
@@ -489,7 +514,11 @@ export default function Stock() {
                         step="0.01"
                         min="0"
                         placeholder="0"
-                        defaultValue={editingItem?.openingRate || editingItem?.costPerUnit || ""}
+                        defaultValue={
+                          editingItem?.openingRate ||
+                          editingItem?.costPerUnit ||
+                          ""
+                        }
                         className="pl-8"
                       />
                     </div>
@@ -507,13 +536,23 @@ export default function Stock() {
                         placeholder="0"
                         readOnly
                         className="pl-8 bg-gray-100"
-                        value={
-                          (() => {
-                            const qty = parseFloat((document.querySelector('[name="openingQuantity"]') as HTMLInputElement)?.value || "0");
-                            const rate = parseFloat((document.querySelector('[name="openingRate"]') as HTMLInputElement)?.value || "0");
-                            return (qty * rate).toFixed(2);
-                          })()
-                        }
+                        value={(() => {
+                          const qty = parseFloat(
+                            (
+                              document.querySelector(
+                                '[name="openingQuantity"]',
+                              ) as HTMLInputElement
+                            )?.value || "0",
+                          );
+                          const rate = parseFloat(
+                            (
+                              document.querySelector(
+                                '[name="openingRate"]',
+                              ) as HTMLInputElement
+                            )?.value || "0",
+                          );
+                          return (qty * rate).toFixed(2);
+                        })()}
                       />
                     </div>
                   </div>
@@ -525,11 +564,15 @@ export default function Stock() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => setShowAdditionalDetails(!showAdditionalDetails)}
+                  onClick={() =>
+                    setShowAdditionalDetails(!showAdditionalDetails)
+                  }
                   className="text-blue-600 p-0 h-auto font-normal"
                 >
                   Additional Details{" "}
-                  <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${showAdditionalDetails ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`h-4 w-4 ml-1 transition-transform ${showAdditionalDetails ? "rotate-180" : ""}`}
+                  />
                 </Button>
               </div>
 
@@ -618,7 +661,9 @@ export default function Stock() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
                   className="w-full sm:w-auto bg-red-400 hover:bg-red-500"
                 >
                   Save Item
@@ -657,8 +702,12 @@ export default function Stock() {
                     <TableHead>Item</TableHead>
                     <TableHead>Unit</TableHead>
                     <TableHead>Stock</TableHead>
-                    <TableHead className="hidden md:table-cell">Cost/Unit</TableHead>
-                    <TableHead className="hidden md:table-cell">Group</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Cost/Unit
+                    </TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Group
+                    </TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -682,7 +731,9 @@ export default function Stock() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">{getUnitName(item.unitId)}</span>
+                          <span className="text-sm">
+                            {getUnitName(item.unitId)}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">
@@ -693,7 +744,8 @@ export default function Stock() {
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          {symbol}{parseFloat(item.costPerUnit || 0).toFixed(2)}
+                          {symbol}
+                          {parseFloat(item.costPerUnit || 0).toFixed(2)}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           {item.group ? (

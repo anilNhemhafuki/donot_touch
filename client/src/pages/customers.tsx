@@ -31,12 +31,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, Edit, Trash2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 export default function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   const {
     data: customers = [],
@@ -163,14 +165,14 @@ export default function Customers() {
   const getBalanceBadge = (balance: any) => {
     const amount = parseFloat(balance || 0);
     if (amount > 0) {
-      return { variant: "default" as const, text: `+$${amount.toFixed(2)}` };
+      return { variant: "default" as const, text: `+${amount.toFixed(2)}` };
     } else if (amount < 0) {
       return {
         variant: "destructive" as const,
-        text: `-$${Math.abs(amount).toFixed(2)}`,
+        text: `-${Math.formatCurrency(amount)}`,
       };
     }
-    return { variant: "secondary" as const, text: "$0.00" };
+    return { variant: "secondary" as const, text: "0.00" };
   };
 
   if (error && isUnauthorizedError(error)) {

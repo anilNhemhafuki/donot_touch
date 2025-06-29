@@ -135,7 +135,6 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
             </div>
             <div>
               <h1 className="text-xl font-bold">Sweet Treats</h1>
-              <p className="text-sm text-blue-100">Bakery Management System</p>
             </div>
           </Link>
         </div>
@@ -208,7 +207,6 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                             <i className={item.icon}></i>
                             {/* Name */}
                             <span className="font-medium">{item.name}</span>
-
                           </Link>
                         );
                       })}
