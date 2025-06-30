@@ -2,7 +2,7 @@ import type { Express } from "express";
 import multer from "multer";
 
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { fixedStorage as storage } from "./storage-fixed";
 import { setupAuth, isAuthenticated } from "./localAuth";
 import { registerEnhancedRoutes } from "./enhanced-routes";
 import {

@@ -1,14 +1,18 @@
 import { Express } from "express";
 import { enhancedStorage } from "./enhanced-storage";
-import { insertSampleData } from "./sample-data";
+import { insertFixedSampleData } from "./sample-data-fixed";
 import { isAuthenticated } from "./localAuth";
 
 export function registerEnhancedRoutes(app: Express) {
-  // Initialize sample data
+  // Initialize comprehensive sample data
   app.post("/api/initialize-sample-data", isAuthenticated, async (req, res) => {
     try {
-      await insertSampleData();
-      res.json({ success: true, message: "Sample data inserted successfully" });
+      const result = await insertFixedSampleData();
+      res.json({ 
+        success: true, 
+        message: "Comprehensive sample data inserted successfully",
+        summary: result
+      });
     } catch (error) {
       console.error("Error inserting sample data:", error);
       res.status(500).json({ 
