@@ -46,7 +46,7 @@ const productionScheduleSchema = z.object({
     .array(
       z.object({
         productId: z.number().min(1, "Please select a product"),
-        targetAmount: z.number().min(0.1, "Target amount must be at least 0.1"),
+        targetQuentity: z.number().min(1, "Target amount must be at least 1"),
         unit: z.enum(["kg", "packets"], {
           required_error: "Please select a unit",
         }),
@@ -62,7 +62,7 @@ interface ProductionItem {
   productId: number;
   productName: string;
   scheduledDate: string;
-  targetAmount: number;
+  targetQuentity: number;
   unit: "kg" | "packets";
   targetPackets?: number;
   packetsPerKg?: number;
@@ -98,7 +98,7 @@ export default function EnhancedProductionSchedule() {
       scheduledDate: selectedDate,
       priority: "medium",
       notes: "",
-      products: [{ productId: 0, targetAmount: 1, unit: "kg" }],
+      products: [{ productId: 0, targetQuentity: 1, unit: "kg" }],
     },
   });
 
@@ -123,7 +123,7 @@ export default function EnhancedProductionSchedule() {
         scheduledDate: selectedDate,
         priority: "medium",
         notes: "",
-        products: [{ productId: 0, targetAmount: 1, unit: "kg" }],
+        products: [{ productId: 0, targetQuentity: 1, unit: "kg" }],
       });
       toast({
         title: "Schedule Created",
@@ -208,12 +208,12 @@ export default function EnhancedProductionSchedule() {
         const scheduleData = {
           productId: product.productId,
           scheduledDate: data.scheduledDate,
-          targetAmount: product.targetAmount,
+          targetQuentity: product.targetQuentity,
           unit: product.unit,
           targetPackets:
             product.unit === "kg"
-              ? calculatePackets(product.productId, product.targetAmount)
-              : product.targetAmount,
+              ? calculatePackets(product.productId, product.targetQuentity)
+              : product.targetQuentity,
           priority: data.priority,
           notes: data.notes,
         };
@@ -232,7 +232,7 @@ export default function EnhancedProductionSchedule() {
         scheduledDate: selectedDate,
         priority: "medium",
         notes: "",
-        products: [{ productId: 0, targetAmount: 1, unit: "kg" }],
+        products: [{ productId: 0, targetQuentity: 1, unit: "kg" }],
       });
 
       toast({
@@ -257,7 +257,7 @@ export default function EnhancedProductionSchedule() {
       products: [
         {
           productId: item.productId,
-          targetAmount: item.targetAmount,
+          targetQuentity: item.targetQuentity,
           unit: item.unit,
         },
       ],
@@ -270,7 +270,7 @@ export default function EnhancedProductionSchedule() {
       scheduledDate: selectedDate,
       priority: "medium",
       notes: "",
-      products: [{ productId: 0, targetAmount: 1, unit: "kg" }],
+      products: [{ productId: 0, targetQuentity: 1, unit: "kg" }],
     });
   };
 
@@ -338,7 +338,7 @@ export default function EnhancedProductionSchedule() {
                     <div className="flex items-center gap-2">
                       <Target className="h-4 w-4" />
                       <span>
-                        {item.targetAmount} {item.unit}
+                        {item.targetQuentity} {item.unit}
                       </span>
                       {item.unit === "kg" && item.targetPackets && (
                         <span className="text-gray-400">
@@ -361,7 +361,7 @@ export default function EnhancedProductionSchedule() {
       </Card>
 
       {/* Schedule Management */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="space-y-6">
         {/* Add/Edit Schedule Form */}
         <Card>
           <CardHeader>
@@ -377,39 +377,48 @@ export default function EnhancedProductionSchedule() {
           </CardHeader>
           <CardContent>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <Label>Scheduled Date</Label>
-                <Input
-                  type="date"
-                  {...form.register("scheduledDate")}
-                  min={format(new Date(), "yyyy-MM-dd")}
-                />
-                {form.formState.errors.scheduledDate && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.scheduledDate.message}
-                  </p>
-                )}
-              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <Label>Scheduled Date</Label>
+                  <Input
+                    type="date"
+                    {...form.register("scheduledDate")}
+                    min={format(new Date(), "yyyy-MM-dd")}
+                  />
+                  {form.formState.errors.scheduledDate && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {form.formState.errors.scheduledDate.message}
+                    </p>
+                  )}
+                </div>
 
-              <div>
-                <Label>Priority</Label>
-                <Select
-                  value={form.watch("priority")}
-                  onValueChange={(value: "low" | "medium" | "high") =>
-                    form.setValue("priority", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low Priority</SelectItem>
-                    <SelectItem value="medium">Medium Priority</SelectItem>
-                    <SelectItem value="high">High Priority</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div>
+                  <Label>Priority</Label>
+                  <Select
+                    value={form.watch("priority")}
+                    onValueChange={(value: "low" | "medium" | "high") =>
+                      form.setValue("priority", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low Priority</SelectItem>
+                      <SelectItem value="medium">Medium Priority</SelectItem>
+                      <SelectItem value="high">High Priority</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
+                <div>
+                  <Label>Notes (Optional)</Label>
+                  <Textarea
+                    {...form.register("notes")}
+                    placeholder="Additional notes or instructions"
+                  />
+                </div>
+              </div>
               {/* Products Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -419,7 +428,7 @@ export default function EnhancedProductionSchedule() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      append({ productId: 0, targetAmount: 1, unit: "kg" })
+                      append({ productId: 0, targetQuantity: 1, unit: "kg" })
                     }
                   >
                     <Plus className="h-4 w-4 mr-1" />
@@ -488,9 +497,12 @@ export default function EnhancedProductionSchedule() {
                         <Input
                           type="number"
                           step="0.1"
-                          {...form.register(`products.${index}.targetAmount`, {
-                            valueAsNumber: true,
-                          })}
+                          {...form.register(
+                            `products.${index}.targetQuentity`,
+                            {
+                              valueAsNumber: true,
+                            },
+                          )}
                           placeholder="Enter amount"
                         />
                       </div>
@@ -527,28 +539,20 @@ export default function EnhancedProductionSchedule() {
                     {/* Packet Calculation Preview */}
                     {form.watch(`products.${index}.unit`) === "kg" &&
                       form.watch(`products.${index}.productId`) &&
-                      form.watch(`products.${index}.targetAmount`) && (
+                      form.watch(`products.${index}.targetQuentity`) && (
                         <div className="p-3 bg-blue-50 rounded-lg">
                           <p className="text-sm text-blue-800">
                             <Package className="h-4 w-4 inline mr-1" />
                             Estimated packets needed:{" "}
                             {calculatePackets(
                               form.watch(`products.${index}.productId`),
-                              form.watch(`products.${index}.targetAmount`),
+                              form.watch(`products.${index}.targetQuentity`),
                             )}
                           </p>
                         </div>
                       )}
                   </div>
                 ))}
-              </div>
-
-              <div>
-                <Label>Notes (Optional)</Label>
-                <Textarea
-                  {...form.register("notes")}
-                  placeholder="Additional notes or instructions"
-                />
               </div>
 
               <div className="flex gap-2">

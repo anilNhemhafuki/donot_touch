@@ -274,7 +274,7 @@ export default function Settings() {
                       id="companyName"
                       name="companyName"
                       defaultValue={
-                        settings.companyName || "M.A.P. tech Pvt. Ltd."
+                        settings.companyName || "M.A.P. Tech Pvt. Ltd."
                       }
                       required
                     />
@@ -339,7 +339,7 @@ export default function Settings() {
                     <Label htmlFor="currency">Currency</Label>
                     <Select
                       name="currency"
-                      defaultValue={settings.currency || "USD"}
+                      defaultValue={settings.currency || "NPR"}
                     >
                       <SelectTrigger>
                         <SelectValue />

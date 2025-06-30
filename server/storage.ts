@@ -16,8 +16,7 @@ import {
   purchases,
   purchaseItems,
   expenses,
-  bills,
-  billItems,
+
   settings,
   type User,
   type UpsertUser,
@@ -229,7 +228,7 @@ export class Storage {
       return result[0] || undefined;
     } catch (error) {
       console.error("Error getting user by email:", error);
-      return null;
+      return undefined;
     }
   }
 
@@ -1248,7 +1247,13 @@ export class Storage {
 
   async getProductionScheduleByDate(date: string): Promise<any[]> {
     try {
-      const scheduleDate = new Date(date);
+      // Validate and parse the date string safely
+      const scheduleDate = new Date(date + 'T00:00:00.000Z');
+      if (isNaN(scheduleDate.getTime())) {
+        console.error('Invalid date provided:', date);
+        return [];
+      }
+      
       const nextDay = new Date(scheduleDate);
       nextDay.setDate(nextDay.getDate() + 1);
 
