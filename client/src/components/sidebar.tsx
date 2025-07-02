@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useCompanyBranding } from "@/hooks/use-company-branding";
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
   const [location] = useLocation();
   const { user } = useAuth();
+  const { branding } = useCompanyBranding();
   const [openSections, setOpenSections] = useState<string[]>([
     "core",
     "Finance",
@@ -39,6 +41,7 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
       items: [
         { name: "Dashboard", href: "/" },
         { name: "Settings", href: "/settings" },
+        { name: "Company Settings", href: "/company-settings" },
         { name: "Notifications", href: "/notifications" },
       ],
     },
@@ -128,14 +131,24 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
           </Button>
         </div>
 
-        {/* Enhanced Logo */}
-        <div className="p-6 flex-shrink-0 bg-gradient-to-r from-blue-600 to-purple-700 text-white">
+        {/* Dynamic Company Header */}
+        <div className="p-6 flex-shrink-0 bg-gradient-to-r from-primary/80 to-primary text-white" style={{ 
+          backgroundImage: `linear-gradient(135deg, ${branding.themeColor}CC, ${branding.themeColor})` 
+        }}>
           <Link href="/" className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
-              <i className="fas fa-bread-slice text-white text-xl"></i>
+              {branding.companyLogo ? (
+                <img 
+                  src={branding.companyLogo} 
+                  alt="Company Logo" 
+                  className="w-8 h-8 object-contain"
+                />
+              ) : (
+                <i className="fas fa-bread-slice text-white text-xl"></i>
+              )}
             </div>
             <div>
-              <h1 className="text-xl font-bold">Sweet Treats</h1>
+              <h1 className="text-xl font-bold">{branding.companyName}</h1>
             </div>
           </Link>
         </div>

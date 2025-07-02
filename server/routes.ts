@@ -1773,6 +1773,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Company Settings API endpoints
+  app.get("/api/settings", async (req, res) => {
+    try {
+      const allSettings = await storage.getSettings();
+      console.log("Fetched settings:", allSettings);
+      
+      // Convert settings array to object format
+      const settings: any = {};
+      allSettings.forEach((setting: any) => {
+        settings[setting.key] = setting.value;
+      });
+      
+      res.json({ 
+        success: true, 
+        settings: settings 
+      });
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch settings",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.put("/api/settings", isAuthenticated, async (req, res) => {
+    try {
+      const settingsData = req.body;
+      console.log("Updating settings with data:", settingsData);
+      
+      // Update each setting individually
+      const updatePromises = [];
+      for (const [key, value] of Object.entries(settingsData)) {
+        updatePromises.push(
+          storage.updateOrCreateSetting(key, value as string)
+        );
+      }
+      
+      await Promise.all(updatePromises);
+      
+      // Fetch updated settings
+      const allSettings = await storage.getSettings();
+      const settings: any = {};
+      allSettings.forEach((setting: any) => {
+        settings[setting.key] = setting.value;
+      });
+      
+      res.json({ 
+        success: true, 
+        message: "Settings updated successfully",
+        settings: settings 
+      });
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to update settings",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Register enhanced routes for comprehensive system features
   registerEnhancedRoutes(app);
 
