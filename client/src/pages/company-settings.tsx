@@ -74,8 +74,8 @@ export default function CompanySettings() {
       });
       setHasUnsavedChanges(false);
       queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
-      // Trigger page reload to update branding across app
-      window.location.reload();
+      // Force refetch of branding data across app
+      queryClient.refetchQueries({ queryKey: ['/api/settings'] });
     },
     onError: (error: any) => {
       toast({

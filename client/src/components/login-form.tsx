@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useCompanyBranding } from "@/hooks/use-company-branding";
 
 interface LoginFormProps {
   onSuccess: () => void;
@@ -14,6 +15,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const { toast } = useToast();
+  const { branding } = useCompanyBranding();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,10 +43,21 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="mx-auto w-16 h-16 bg-primary rounded-lg flex items-center justify-center mb-4">
-            <i className="fas fa-bread-slice text-white text-2xl"></i>
+          <div 
+            className="mx-auto w-16 h-16 bg-primary rounded-lg flex items-center justify-center mb-4"
+            style={{ backgroundColor: branding.themeColor }}
+          >
+            {branding.companyLogo ? (
+              <img 
+                src={branding.companyLogo} 
+                alt="Company Logo" 
+                className="w-10 h-10 object-contain"
+              />
+            ) : (
+              <i className="fas fa-bread-slice text-white text-2xl"></i>
+            )}
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Sweet Treats</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{branding.companyName}</h1>
           <p className="text-gray-600 dark:text-gray-400">Bakery Management System</p>
         </div>
 

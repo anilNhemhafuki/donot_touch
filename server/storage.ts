@@ -1026,7 +1026,6 @@ export class Storage {
         status: purchases.status,
         purchaseDate: purchases.purchaseDate,
         notes: purchases.notes,
-        createdBy: purchases.createdBy,
         createdAt: purchases.createdAt,
         updatedAt: purchases.updatedAt,
       })
@@ -1047,7 +1046,6 @@ export class Storage {
           paymentMethod: purchaseData.paymentMethod,
           status: purchaseData.status,
           notes: purchaseData.notes,
-          createdBy: purchaseData.createdBy,
         })
         .returning();
 
@@ -1093,7 +1091,6 @@ export class Storage {
               quantity: item.quantity,
               reason: "Purchase",
               reference: `PUR-${purchase.id}`,
-              createdBy: purchaseData.createdBy,
             });
           }
         }

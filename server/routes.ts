@@ -706,6 +706,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : null,
         status: orderData.status || "pending",
         totalAmount: parseFloat(orderData.totalAmount).toString(),
+        paymentMethod: orderData.paymentMethod || "cash",
         orderDate: orderData.orderDate
           ? new Date(orderData.orderDate)
           : new Date(),
@@ -1610,6 +1611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerEmail: customerEmail.trim(),
         customerPhone: customerPhone.trim(),
         totalAmount: totalAmount.toString(),
+        paymentMethod: "pending",
         orderDate: new Date(),
         dueDate: new Date(deliveryDate),
         notes: `Delivery Address: ${deliveryAddress.trim()}${specialInstructions ? `\nSpecial Instructions: ${specialInstructions.trim()}` : ""}`,
@@ -1790,7 +1792,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/notifications", isAuthenticated, async (req, res) => {
     try {
-      const notifications = await storage.getNotifications(req.user.id);
+      const notifications = await storage.getNotifications((req as any).user.id);
       res.json(notifications);
     } catch (error) {
       console.error("Error fetching notifications:", error);

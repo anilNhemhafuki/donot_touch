@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -10,9 +10,10 @@ interface CompanyBranding {
 }
 
 export function useCompanyBranding() {
+  const queryClient = useQueryClient();
   const { data: settingsResponse, isLoading, error } = useQuery({
     queryKey: ['/api/settings'],
-    queryFn: () => apiRequest('/api/settings'),
+    queryFn: () => apiRequest('GET', '/api/settings'),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
@@ -101,8 +102,8 @@ export function useCompanyBranding() {
     isLoading,
     error,
     refreshBranding: () => {
-      // Force a refetch when settings are updated
-      window.location.reload();
+      // Invalidate and refetch the settings
+      queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
     }
   };
 }
