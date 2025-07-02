@@ -878,6 +878,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/customers/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+```text
       await storage.deleteCustomer(id);
       res.json({ success: true });
     } catch (error) {
@@ -1773,18 +1774,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Company Settings API endpoints
+  // ============ Notifications Routes ============
+
+  app.get("/api/notifications", isAuthenticated, async (req, res) => {
+    try {
+      const notifications = await storage.getNotifications(req.user.id);
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+  });
+
+  app.put("/api/notifications/:id/read", isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.markNotificationAsRead(id, req.user.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      res.status(500).json({ error: 'Failed to mark notification as read' });
+    }
+  });
+
+  app.put("/api/notifications/mark-all-read", isAuthenticated, async (req, res) => {
+    try {
+      await storage.markAllNotificationsAsRead(req.user.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      res.status(500).json({ error: 'Failed to mark all notifications as read' });
+    }
+  });
+
+  app.post("/api/notifications/subscribe", isAuthenticated, async (req, res) => {
+    try {
+      const { subscription, userId } = req.body;
+      await storage.saveNotificationSubscription(userId || req.user.id, subscription);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error saving notification subscription:', error);
+      res.status(500).json({ error: 'Failed to save subscription' });
+    }
+  });
+
+  app.post("/api/notifications/unsubscribe", isAuthenticated, async (req, res) => {
+    try {
+      const { userId } = req.body;
+      await storage.removeNotificationSubscription(userId || req.user.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error removing notification subscription:', error);
+      res.status(500).json({ error: 'Failed to remove subscription' });
+    }
+  });
+
+  app.put("/api/notifications/rules", isAuthenticated, async (req, res) => {
+    try {
+      const { userId, rules } = req.body;
+      await storage.saveNotificationSettings(userId || req.user.id, rules);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error saving notification rules:', error);
+      res.status(500).json({ error: 'Failed to save notification rules' });
+    }
+  });
+
+  app.post("/api/notifications/test", isAuthenticated, async (req, res) => {
+    try {
+      const { userId } = req.body;
+      // Send a test notification
+      await storage.createNotification({
+        userId: userId || req.user.id,
+        type: 'system',
+        title: 'Test Notification',
+        description: 'This is a test notification to verify your settings.',
+        priority: 'medium',
+      });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+      res.status(500).json({ error: 'Failed to send test notification' });
+    }
+  });
+
+  // ============ Company Settings Routes ============
+
   app.get("/api/settings", async (req, res) => {
     try {
       const allSettings = await storage.getSettings();
       console.log("Fetched settings:", allSettings);
-      
+
       // Convert settings array to object format
       const settings: any = {};
       allSettings.forEach((setting: any) => {
         settings[setting.key] = setting.value;
       });
-      
+
       // Ensure default values are set if not present
       const defaultSettings = {
         companyName: 'Sweet Treats Bakery',
@@ -1803,9 +1889,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionTimeout: 60,
         passwordPolicy: 'medium'
       };
-      
+
       const mergedSettings = { ...defaultSettings, ...settings };
-      
+
       res.json({ 
         success: true, 
         settings: mergedSettings 
@@ -1824,7 +1910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const settingsData = req.body;
       console.log("Updating settings with data:", settingsData);
-      
+
       // Update each setting individually
       const updatePromises = [];
       for (const [key, value] of Object.entries(settingsData)) {
@@ -1834,16 +1920,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           );
         }
       }
-      
+
       await Promise.all(updatePromises);
-      
+
       // Fetch updated settings
       const allSettings = await storage.getSettings();
       const settings: any = {};
       allSettings.forEach((setting: any) => {
         settings[setting.key] = setting.value;
       });
-      
+
       // Ensure default values are maintained
       const defaultSettings = {
         companyName: 'Sweet Treats Bakery',
@@ -1862,9 +1948,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionTimeout: 60,
         passwordPolicy: 'medium'
       };
-      
+
       const mergedSettings = { ...defaultSettings, ...settings };
-      
+
       res.json({ 
         success: true, 
         message: "Settings updated successfully",

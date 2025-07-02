@@ -115,6 +115,61 @@ export default function NotificationSettings() {
     }
   };
 
+  const handleTestNotification = async () => {
+    setIsTestingNotification(true);
+    try {
+      await sendTestNotification();
+      toast({
+        title: "Test Sent",
+        description: "A test notification has been sent.",
+      });
+    } catch (error) {
+      toast({
+        title: "Test Failed",
+        description: "Failed to send test notification.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTestingNotification(false);
+    }
+  };
+
+  const handleSubscribe = async () => {
+    setIsLoading(true);
+    const success = await subscribe();
+    if (success) {
+      toast({
+        title: "Subscribed",
+        description: "You will now receive push notifications.",
+      });
+    } else {
+      toast({
+        title: "Subscription Failed",
+        description: "Failed to subscribe to push notifications.",
+        variant: "destructive",
+      });
+    }
+    setIsLoading(false);
+  };
+
+  const handleUnsubscribe = async () => {
+    setIsLoading(true);
+    const success = await unsubscribe();
+    if (success) {
+      toast({
+        title: "Unsubscribed",
+        description: "You will no longer receive push notifications.",
+      });
+    } else {
+      toast({
+        title: "Unsubscribe Failed",
+        description: "Failed to unsubscribe from push notifications.",
+        variant: "destructive",
+      });
+    }
+    setIsLoading(false);
+  };
+
   if (!notificationsSupported) {
     return (
       <div className="container mx-auto p-6">
@@ -143,6 +198,55 @@ export default function NotificationSettings() {
           </p>
         </div>
       </div>
+
+      {/* Permission Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Push Notification Status</CardTitle>
+          <CardDescription>
+            Current status of your browser notification permissions.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">
+                Permission Status: <span className="capitalize">{permission}</span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {subscription ? 'Subscribed to push notifications' : 'Not subscribed'}
+              </p>
+            </div>
+            <div className="space-x-2">
+              {permission !== 'granted' && (
+                <Button onClick={handlePermissionRequest} disabled={isLoading}>
+                  {isLoading ? 'Requesting...' : 'Request Permission'}
+                </Button>
+              )}
+              {permission === 'granted' && !subscription && (
+                <Button onClick={handleSubscribe} disabled={isLoading}>
+                  {isLoading ? 'Subscribing...' : 'Subscribe'}
+                </Button>
+              )}
+              {subscription && (
+                <>
+                  <Button variant="outline" onClick={handleUnsubscribe} disabled={isLoading}>
+                    {isLoading ? 'Unsubscribing...' : 'Unsubscribe'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleTestNotification} 
+                    disabled={isTestingNotification}
+                  >
+                    <TestTube className="h-4 w-4 mr-2" />
+                    {isTestingNotification ? 'Sending...' : 'Test Notification'}
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Permission Status */}
       <Card>

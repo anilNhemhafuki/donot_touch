@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
   id: string;
@@ -26,8 +28,45 @@ export default function Notifications() {
   const [activeTab, setActiveTab] = useState("activity");
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Mock notifications data
+  const markAsReadMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const response = await fetch(`/api/notifications/${notificationId}/read`, {
+        method: 'PUT',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to mark as read');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+    },
+  });
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/notifications/mark-all-read', {
+        method: 'PUT',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to mark all as read');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      toast({
+        title: "Success",
+        description: "All notifications marked as read",
+      });
+    },
+  });
+
+  // Fetch notifications data
+  const { data: notifications = [] } = useQuery({
+    queryKey: ["/api/notifications"],
+  });
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -120,6 +159,16 @@ export default function Notifications() {
               >
                 Activity
               </Button>
+              {unreadImportantCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => markAllAsReadMutation.mutate()}
+                  disabled={markAllAsReadMutation.isPending}
+                >
+                  Mark All Read
+                </Button>
+              )}
             </div>
 
             <div className="flex gap-2 items-center">
@@ -171,11 +220,16 @@ export default function Notifications() {
             {filteredNotifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`flex items-start gap-3 p-4 rounded-lg border transition-colors hover:bg-muted/50 ${
+                className={`flex items-start gap-3 p-4 rounded-lg border transition-colors hover:bg-muted/50 cursor-pointer ${
                   !notification.read
                     ? "bg-blue-50/50 border-blue-200"
                     : "bg-white"
                 }`}
+                onClick={() => {
+                  if (!notification.read) {
+                    markAsReadMutation.mutate(notification.id);
+                  }
+                }}
               >
                 <div className="flex-shrink-0 mt-1">
                   <div

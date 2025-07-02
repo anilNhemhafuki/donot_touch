@@ -209,6 +209,15 @@ export interface IStorage {
   getMediaItems(): Promise<any[]>;
   uploadMedia(file: any, userId: string): Promise<any>;
   deleteMedia(id: string): Promise<void>;
+
+  // Notification methods
+  getNotifications(userId: string): Promise<any[]>;
+  createNotification(notification: any): Promise<void>;
+  markNotificationAsRead(notificationId: string, userId: string): Promise<void>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
+  saveNotificationSubscription(userId: string, subscription: any): Promise<void>;
+  removeNotificationSubscription(userId: string): Promise<void>;
+  saveNotificationSettings(userId: string, settings: any): Promise<void>;
 }
 
 export class Storage {
@@ -1064,7 +1073,7 @@ export class Storage {
             const previousQty = parseFloat(currentItem.currentStock) || 0;
             const previousAmt = parseFloat(currentItem.costPerUnit) || 0;
             const newQuantity = previousQty + parseFloat(item.quantity);
-            
+
             await tx
               .update(inventoryItems)
               .set({
@@ -1249,7 +1258,7 @@ export class Storage {
         console.error('Invalid date provided:', date);
         return [];
       }
-      
+
       const nextDay = new Date(scheduleDate);
       nextDay.setDate(nextDay.getDate() + 1);
 
@@ -1381,6 +1390,89 @@ export class Storage {
       console.error("Error deleting media:", error);
       throw error;
     }
+  }
+
+  // Notification methods
+  async getNotifications(userId: string): Promise<any[]> {
+    // Mock notifications for now - in a real app, this would query the database
+    const mockNotifications = [
+      {
+        id: '1',
+        userId,
+        type: 'order',
+        title: 'New Order Received',
+        description: 'Order #12345 has been placed by John Doe',
+        timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+        read: false,
+        priority: 'high'
+      },
+      {
+        id: '2',
+        userId,
+        type: 'stock',
+        title: 'Low Stock Alert',
+        description: 'Flour inventory is running low (5kg remaining)',
+        timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+        read: false,
+        priority: 'medium'
+      },
+      {
+        id: '3',
+        userId,
+        type: 'production',
+        title: 'Production Schedule Reminder',
+        description: 'Chocolate cake production scheduled for today',
+        timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        read: true,
+        priority: 'low'
+      },
+      {
+        id: '4',
+        userId,
+        type: 'system',
+        title: 'System Update',
+        description: 'The system has been updated with new features',
+        timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+        read: true,
+        priority: 'low'
+      }
+    ];
+    return mockNotifications;
+  }
+
+  async createNotification(notification: any): Promise<void> {
+    // In a real app, this would insert into database
+    console.log('Creating notification:', notification);
+  }
+
+  async markNotificationAsRead(notificationId: string, userId: string): Promise<void> {
+    // In a real app, this would update the database
+    console.log(`Marking notification ${notificationId} as read for user ${userId}`);
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    // In a real app, this would update all notifications for the user
+    console.log(`Marking all notifications as read for user ${userId}`);
+  }
+
+  async saveNotificationSubscription(userId: string, subscription: any): Promise<void> {
+    // In a real app, this would save to database
+    console.log(`Saving notification subscription for user ${userId}:`, subscription);
+  }
+
+  async removeNotificationSubscription(userId: string): Promise<void> {
+    // In a real app, this would remove from database
+    console.log(`Removing notification subscription for user ${userId}`);
+  }
+
+  async saveNotificationSettings(userId: string, settings: any): Promise<void> {
+    // In a real app, this would save to database
+    console.log(`Saving notification settings for user ${userId}:`, settings);
+  }
+
+  // Company settings methods
+  async saveCompanySettings(settings: any): Promise<void> {
+    //Placeholder function
   }
 }
 
