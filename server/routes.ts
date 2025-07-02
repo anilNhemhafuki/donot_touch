@@ -374,7 +374,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
 
       // If only updating isActive status
-      if (req.body.hasOwnProperty('isActive') && Object.keys(req.body).length === 1) {
+      if (
+        req.body.hasOwnProperty("isActive") &&
+        Object.keys(req.body).length === 1
+      ) {
         const transformedData = {
           isActive: req.body.isActive,
         };
@@ -576,19 +579,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         unit: req.body.unit ? req.body.unit.trim() : "pcs",
         unitId: req.body.unitId ? parseInt(req.body.unitId) : null,
         costPerUnit: parseFloat(req.body.costPerUnit).toString(),
-        previousQuantity: req.body.previousQuantity ? parseFloat(req.body.previousQuantity).toString() : "0",
-        previousAmount: req.body.previousAmount ? parseFloat(req.body.previousAmount).toString() : "0",
-        defaultPrice: req.body.defaultPrice ? parseFloat(req.body.defaultPrice).toString() : "0",
+        previousQuantity: req.body.previousQuantity
+          ? parseFloat(req.body.previousQuantity).toString()
+          : "0",
+        previousAmount: req.body.previousAmount
+          ? parseFloat(req.body.previousAmount).toString()
+          : "0",
+        defaultPrice: req.body.defaultPrice
+          ? parseFloat(req.body.defaultPrice).toString()
+          : "0",
         group: req.body.group ? req.body.group.trim() : null,
-        openingQuantity: req.body.openingQuantity ? parseFloat(req.body.openingQuantity).toString() : parseFloat(req.body.currentStock).toString(),
-        openingRate: req.body.openingRate ? parseFloat(req.body.openingRate).toString() : parseFloat(req.body.costPerUnit).toString(),
-        openingValue: req.body.openingValue ? parseFloat(req.body.openingValue).toString() : "0",
+        openingQuantity: req.body.openingQuantity
+          ? parseFloat(req.body.openingQuantity).toString()
+          : parseFloat(req.body.currentStock).toString(),
+        openingRate: req.body.openingRate
+          ? parseFloat(req.body.openingRate).toString()
+          : parseFloat(req.body.costPerUnit).toString(),
+        openingValue: req.body.openingValue
+          ? parseFloat(req.body.openingValue).toString()
+          : "0",
         supplier: req.body.supplier ? req.body.supplier.trim() : null,
         company: req.body.company ? req.body.company.trim() : null,
         location: req.body.location ? req.body.location.trim() : null,
         notes: req.body.notes ? req.body.notes.trim() : null,
-        dateAdded: req.body.dateAdded ? new Date(req.body.dateAdded) : new Date(),
-        lastRestocked: req.body.lastRestocked ? new Date(req.body.lastRestocked) : new Date(),
+        dateAdded: req.body.dateAdded
+          ? new Date(req.body.dateAdded)
+          : new Date(),
+        lastRestocked: req.body.lastRestocked
+          ? new Date(req.body.lastRestocked)
+          : new Date(),
       };
 
       console.log("Creating inventory item with data:", transformedData);
@@ -878,7 +897,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/customers/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-```text
       await storage.deleteCustomer(id);
       res.json({ success: true });
     } catch (error) {
@@ -1237,11 +1255,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If password change is requested, verify current password
       if (newPassword) {
         if (!currentPassword) {
-          return res
-            .status(400)
-            .json({
-              message: "Current password is required to change password",
-            });
+          return res.status(400).json({
+            message: "Current password is required to change password",
+          });
         }
         const user = await storage.getUser(userId);
         const bcrypt = require("bcrypt");
@@ -1286,11 +1302,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let calculatedTotal = 0;
       for (const item of items) {
         if (!item.productId || !item.quantity || !item.price) {
-          return res
-            .status(400)
-            .json({
-              message: "All items must have productId, quantity, and price",
-            });
+          return res.status(400).json({
+            message: "All items must have productId, quantity, and price",
+          });
         }
         calculatedTotal += parseFloat(item.price) * parseInt(item.quantity);
       }
@@ -1366,11 +1380,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ) {
       return next();
     }
-    res
-      .status(403)
-      .json({
-        message: "Access denied. Admin, Supervisor, or Manager role required.",
-      });
+    res.status(403).json({
+      message: "Access denied. Admin, Supervisor, or Manager role required.",
+    });
   };
 
   // In-memory storage for push subscriptions (in production, use database)
@@ -1781,8 +1793,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const notifications = await storage.getNotifications(req.user.id);
       res.json(notifications);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
-      res.status(500).json({ error: 'Failed to fetch notifications' });
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ error: "Failed to fetch notifications" });
     }
   });
 
@@ -1792,42 +1804,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.markNotificationAsRead(id, req.user.id);
       res.json({ success: true });
     } catch (error) {
-      console.error('Error marking notification as read:', error);
-      res.status(500).json({ error: 'Failed to mark notification as read' });
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ error: "Failed to mark notification as read" });
     }
   });
 
-  app.put("/api/notifications/mark-all-read", isAuthenticated, async (req, res) => {
-    try {
-      await storage.markAllNotificationsAsRead(req.user.id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-      res.status(500).json({ error: 'Failed to mark all notifications as read' });
-    }
-  });
+  app.put(
+    "/api/notifications/mark-all-read",
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        await storage.markAllNotificationsAsRead(req.user.id);
+        res.json({ success: true });
+      } catch (error) {
+        console.error("Error marking all notifications as read:", error);
+        res
+          .status(500)
+          .json({ error: "Failed to mark all notifications as read" });
+      }
+    },
+  );
 
-  app.post("/api/notifications/subscribe", isAuthenticated, async (req, res) => {
-    try {
-      const { subscription, userId } = req.body;
-      await storage.saveNotificationSubscription(userId || req.user.id, subscription);
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Error saving notification subscription:', error);
-      res.status(500).json({ error: 'Failed to save subscription' });
-    }
-  });
+  app.post(
+    "/api/notifications/subscribe",
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const { subscription, userId } = req.body;
+        await storage.saveNotificationSubscription(
+          userId || req.user.id,
+          subscription,
+        );
+        res.json({ success: true });
+      } catch (error) {
+        console.error("Error saving notification subscription:", error);
+        res.status(500).json({ error: "Failed to save subscription" });
+      }
+    },
+  );
 
-  app.post("/api/notifications/unsubscribe", isAuthenticated, async (req, res) => {
-    try {
-      const { userId } = req.body;
-      await storage.removeNotificationSubscription(userId || req.user.id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Error removing notification subscription:', error);
-      res.status(500).json({ error: 'Failed to remove subscription' });
-    }
-  });
+  app.post(
+    "/api/notifications/unsubscribe",
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const { userId } = req.body;
+        await storage.removeNotificationSubscription(userId || req.user.id);
+        res.json({ success: true });
+      } catch (error) {
+        console.error("Error removing notification subscription:", error);
+        res.status(500).json({ error: "Failed to remove subscription" });
+      }
+    },
+  );
 
   app.put("/api/notifications/rules", isAuthenticated, async (req, res) => {
     try {
@@ -1835,8 +1864,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.saveNotificationSettings(userId || req.user.id, rules);
       res.json({ success: true });
     } catch (error) {
-      console.error('Error saving notification rules:', error);
-      res.status(500).json({ error: 'Failed to save notification rules' });
+      console.error("Error saving notification rules:", error);
+      res.status(500).json({ error: "Failed to save notification rules" });
     }
   });
 
@@ -1846,15 +1875,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send a test notification
       await storage.createNotification({
         userId: userId || req.user.id,
-        type: 'system',
-        title: 'Test Notification',
-        description: 'This is a test notification to verify your settings.',
-        priority: 'medium',
+        type: "system",
+        title: "Test Notification",
+        description: "This is a test notification to verify your settings.",
+        priority: "medium",
       });
       res.json({ success: true });
     } catch (error) {
-      console.error('Error sending test notification:', error);
-      res.status(500).json({ error: 'Failed to send test notification' });
+      console.error("Error sending test notification:", error);
+      res.status(500).json({ error: "Failed to send test notification" });
     }
   });
 
@@ -1873,35 +1902,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Ensure default values are set if not present
       const defaultSettings = {
-        companyName: 'Sweet Treats Bakery',
-        companyAddress: '',
-        companyPhone: '',
-        companyEmail: 'info@sweettreatsbakery.com',
-        companyLogo: '',
-        themeColor: '#8B4513',
-        currency: 'USD',
-        timezone: 'UTC',
+        companyName: "Sweet Treats Bakery",
+        companyAddress: "",
+        companyPhone: "",
+        companyEmail: "info@sweettreatsbakery.com",
+        companyLogo: "",
+        themeColor: "#8B4513",
+        currency: "USD",
+        timezone: "UTC",
         emailNotifications: true,
         lowStockAlerts: true,
         orderNotifications: true,
         productionReminders: true,
         twoFactorAuth: false,
         sessionTimeout: 60,
-        passwordPolicy: 'medium'
+        passwordPolicy: "medium",
       };
 
       const mergedSettings = { ...defaultSettings, ...settings };
 
-      res.json({ 
-        success: true, 
-        settings: mergedSettings 
+      res.json({
+        success: true,
+        settings: mergedSettings,
       });
     } catch (error) {
       console.error("Error fetching settings:", error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: "Failed to fetch settings",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
@@ -1916,7 +1945,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const [key, value] of Object.entries(settingsData)) {
         if (value !== null && value !== undefined) {
           updatePromises.push(
-            storage.updateOrCreateSetting(key, String(value))
+            storage.updateOrCreateSetting(key, String(value)),
           );
         }
       }
@@ -1932,36 +1961,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Ensure default values are maintained
       const defaultSettings = {
-        companyName: 'Sweet Treats Bakery',
-        companyAddress: '',
-        companyPhone: '',
-        companyEmail: 'info@sweettreatsbakery.com',
-        companyLogo: '',
-        themeColor: '#8B4513',
-        currency: 'USD',
-        timezone: 'UTC',
+        companyName: "Sweet Treats Bakery",
+        companyAddress: "",
+        companyPhone: "",
+        companyEmail: "info@sweettreatsbakery.com",
+        companyLogo: "",
+        themeColor: "#8B4513",
+        currency: "USD",
+        timezone: "UTC",
         emailNotifications: true,
         lowStockAlerts: true,
         orderNotifications: true,
         productionReminders: true,
         twoFactorAuth: false,
         sessionTimeout: 60,
-        passwordPolicy: 'medium'
+        passwordPolicy: "medium",
       };
 
       const mergedSettings = { ...defaultSettings, ...settings };
 
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         message: "Settings updated successfully",
-        settings: mergedSettings 
+        settings: mergedSettings,
       });
     } catch (error) {
       console.error("Error updating settings:", error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: "Failed to update settings",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });

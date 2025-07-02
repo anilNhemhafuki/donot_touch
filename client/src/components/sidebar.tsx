@@ -132,15 +132,18 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
         </div>
 
         {/* Dynamic Company Header */}
-        <div className="p-6 flex-shrink-0 bg-gradient-to-r from-primary/80 to-primary text-white" style={{ 
-          backgroundImage: `linear-gradient(135deg, ${branding.themeColor}CC, ${branding.themeColor})` 
-        }}>
+        <div
+          className="p-6 flex-shrink-0 bg-gradient-to-r from-primary/80 to-primary text-white"
+          style={{
+            backgroundImage: `linear-gradient(135deg, ${branding.themeColor}CC, ${branding.themeColor})`,
+          }}
+        >
           <Link href="/" className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
               {branding.companyLogo ? (
-                <img 
-                  src={branding.companyLogo} 
-                  alt="Company Logo" 
+                <img
+                  src={branding.companyLogo}
+                  alt="Company Logo"
                   className="w-8 h-8 object-contain"
                 />
               ) : (
@@ -154,8 +157,8 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
         </div>
 
         {/* Scrollable Navigation */}
-        <div className=" h-full flex-1 overflow-y-auto px-6 pb-6">
-          <ScrollArea className="h-full px-2 lg:px-3">
+        <ScrollArea className="h-full px-2 lg:px-3">
+          <div className=" h-full flex-1 overflow-y-auto px-6 pb-6">
             <nav className="space-y-1">
               {/* Render top-level items directly without Collapsible */}
               {navigationSections
@@ -216,8 +219,6 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                                   : "text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-600 hover:text-gray-900 dark:hover:text-white hover:shadow-sm"
                               }`}
                             >
-                              {/* Bullet Point */}
-                              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
                               {/* Icon */}
                               <i className={item.icon}></i>
                               {/* Name */}
@@ -288,9 +289,8 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                 </div>
               )}
             </nav>
-          </ScrollArea>
-        </div>
-
+          </div>
+        </ScrollArea>
         {/* Enhanced User Profile */}
         <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700">
           <div className="flex items-center space-x-3 bg-white dark:bg-gray-800 rounded-xl p-3 shadow-md border border-gray-200 dark:border-gray-600">
