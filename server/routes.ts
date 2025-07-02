@@ -1785,9 +1785,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         settings[setting.key] = setting.value;
       });
       
+      // Ensure default values are set if not present
+      const defaultSettings = {
+        companyName: 'Sweet Treats Bakery',
+        companyAddress: '',
+        companyPhone: '',
+        companyEmail: 'info@sweettreatsbakery.com',
+        companyLogo: '',
+        themeColor: '#8B4513',
+        currency: 'USD',
+        timezone: 'UTC',
+        emailNotifications: true,
+        lowStockAlerts: true,
+        orderNotifications: true,
+        productionReminders: true,
+        twoFactorAuth: false,
+        sessionTimeout: 60,
+        passwordPolicy: 'medium'
+      };
+      
+      const mergedSettings = { ...defaultSettings, ...settings };
+      
       res.json({ 
         success: true, 
-        settings: settings 
+        settings: mergedSettings 
       });
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -1807,9 +1828,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update each setting individually
       const updatePromises = [];
       for (const [key, value] of Object.entries(settingsData)) {
-        updatePromises.push(
-          storage.updateOrCreateSetting(key, value as string)
-        );
+        if (value !== null && value !== undefined) {
+          updatePromises.push(
+            storage.updateOrCreateSetting(key, String(value))
+          );
+        }
       }
       
       await Promise.all(updatePromises);
@@ -1821,10 +1844,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         settings[setting.key] = setting.value;
       });
       
+      // Ensure default values are maintained
+      const defaultSettings = {
+        companyName: 'Sweet Treats Bakery',
+        companyAddress: '',
+        companyPhone: '',
+        companyEmail: 'info@sweettreatsbakery.com',
+        companyLogo: '',
+        themeColor: '#8B4513',
+        currency: 'USD',
+        timezone: 'UTC',
+        emailNotifications: true,
+        lowStockAlerts: true,
+        orderNotifications: true,
+        productionReminders: true,
+        twoFactorAuth: false,
+        sessionTimeout: 60,
+        passwordPolicy: 'medium'
+      };
+      
+      const mergedSettings = { ...defaultSettings, ...settings };
+      
       res.json({ 
         success: true, 
         message: "Settings updated successfully",
-        settings: settings 
+        settings: mergedSettings 
       });
     } catch (error) {
       console.error("Error updating settings:", error);

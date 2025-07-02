@@ -10,17 +10,19 @@ interface CompanyBranding {
 }
 
 export function useCompanyBranding() {
-  const { data: settingsData, isLoading, error } = useQuery({
+  const { data: settingsResponse, isLoading, error } = useQuery({
     queryKey: ['/api/settings'],
     queryFn: () => apiRequest('/api/settings'),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  const settings = settingsResponse?.settings || {};
+
   const branding: CompanyBranding = {
-    companyName: settingsData?.settings?.companyName || 'Sweet Treats Bakery',
-    companyLogo: settingsData?.settings?.companyLogo || '',
-    themeColor: settingsData?.settings?.themeColor || '#8B4513',
-    currency: settingsData?.settings?.currency || 'USD',
+    companyName: settings?.companyName || 'Sweet Treats Bakery',
+    companyLogo: settings?.companyLogo || '',
+    themeColor: settings?.themeColor || '#8B4513',
+    currency: settings?.currency || 'USD',
   };
 
   // Apply theme color to CSS variables
@@ -66,11 +68,11 @@ export function useCompanyBranding() {
 
       try {
         const [h, s, l] = hexToHsl(branding.themeColor);
-        
+
         // Update CSS custom properties for primary color
         document.documentElement.style.setProperty('--primary', `${h} ${s}% ${l}%`);
         document.documentElement.style.setProperty('--primary-foreground', l > 50 ? '0 0% 98%' : '0 0% 2%');
-        
+
         // Update meta theme color for mobile browsers
         const metaThemeColor = document.querySelector('meta[name="theme-color"]');
         if (metaThemeColor) {

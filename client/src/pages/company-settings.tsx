@@ -39,26 +39,27 @@ export default function CompanySettings() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Fetch current settings
-  const { data: settingsData, isLoading } = useQuery({
+  const { data: settingsResponse, isLoading } = useQuery({
     queryKey: ['/api/settings'],
   });
 
   useEffect(() => {
-    if (settingsData?.settings) {
+    if (settingsResponse?.settings) {
+      const settingsData = settingsResponse.settings;
       const companySettings: CompanySettings = {
-        companyName: settingsData.settings.companyName || 'Sweet Treats Bakery',
-        companyAddress: settingsData.settings.companyAddress || '',
-        companyPhone: settingsData.settings.companyPhone || '',
-        companyEmail: settingsData.settings.companyEmail || '',
-        companyLogo: settingsData.settings.companyLogo || '',
-        themeColor: settingsData.settings.themeColor || '#8B4513',
-        currency: settingsData.settings.currency || 'USD',
-        timezone: settingsData.settings.timezone || 'UTC'
+        companyName: settingsData.companyName || 'Sweet Treats Bakery',
+        companyAddress: settingsData.companyAddress || '',
+        companyPhone: settingsData.companyPhone || '',
+        companyEmail: settingsData.companyEmail || 'info@sweettreatsbakery.com',
+        companyLogo: settingsData.companyLogo || '',
+        themeColor: settingsData.themeColor || '#8B4513',
+        currency: settingsData.currency || 'USD',
+        timezone: settingsData.timezone || 'UTC'
       };
       setSettings(companySettings);
       setLogoPreview(companySettings.companyLogo);
     }
-  }, [settingsData]);
+  }, [settingsResponse]);
 
   // Update settings mutation
   const updateSettingsMutation = useMutation({
@@ -145,16 +146,17 @@ export default function CompanySettings() {
 
   // Reset unsaved changes
   const handleReset = () => {
-    if (settingsData?.settings) {
+    if (settingsResponse?.settings) {
+      const settingsData = settingsResponse.settings;
       const companySettings: CompanySettings = {
-        companyName: settingsData.settings.companyName || 'Sweet Treats Bakery',
-        companyAddress: settingsData.settings.companyAddress || '',
-        companyPhone: settingsData.settings.companyPhone || '',
-        companyEmail: settingsData.settings.companyEmail || '',
-        companyLogo: settingsData.settings.companyLogo || '',
-        themeColor: settingsData.settings.themeColor || '#8B4513',
-        currency: settingsData.settings.currency || 'USD',
-        timezone: settingsData.settings.timezone || 'UTC'
+        companyName: settingsData.companyName || 'Sweet Treats Bakery',
+        companyAddress: settingsData.companyAddress || '',
+        companyPhone: settingsData.companyPhone || '',
+        companyEmail: settingsData.companyEmail || 'info@sweettreatsbakery.com',
+        companyLogo: settingsData.companyLogo || '',
+        themeColor: settingsData.themeColor || '#8B4513',
+        currency: settingsData.currency || 'USD',
+        timezone: settingsData.timezone || 'UTC'
       };
       setSettings(companySettings);
       setLogoPreview(companySettings.companyLogo);

@@ -119,7 +119,7 @@ function ThemeColorSelector({
       applyThemeColor(settings.themeColor);
       setSelectedColor(settings.themeColor);
     }
-  }, [settings?.themeColor]);
+  }, [settings]);
 
   return (
     <div className="space-y-4">
@@ -167,9 +167,12 @@ export default function Settings() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("general");
 
-  const { data: settings = {}, isLoading: settingsLoading } = useQuery({
+  const { data: settingsResponse = {}, isLoading: settingsLoading } = useQuery({
     queryKey: ["/api/settings"],
   });
+
+  // Extract settings from response structure
+  const settings = settingsResponse?.settings || {};
 
   const updateSettingsMutation = useMutation({
     mutationFn: (data: any) => apiRequest("PUT", "/api/settings", data),
@@ -274,7 +277,7 @@ export default function Settings() {
                       id="companyName"
                       name="companyName"
                       defaultValue={
-                        settings.companyName || "M.A.P. Tech Pvt. Ltd."
+                        settings.companyName || "Sweet Treats Bakery"
                       }
                       required
                     />
@@ -304,7 +307,7 @@ export default function Settings() {
                       id="companyEmail"
                       name="companyEmail"
                       type="email"
-                      defaultValue={settings.companyEmail || ""}
+                      defaultValue={settings.companyEmail || "info@sweettreatsbakery.com"}
                     />
                   </div>
                   <div>
@@ -339,7 +342,7 @@ export default function Settings() {
                     <Label htmlFor="currency">Currency</Label>
                     <Select
                       name="currency"
-                      defaultValue={settings.currency || "NPR"}
+                      defaultValue={settings.currency || "USD"}
                     >
                       <SelectTrigger>
                         <SelectValue />
