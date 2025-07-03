@@ -1,5 +1,6 @@
 import { db } from "./db";
 import { eq, desc, asc, and, gte, lte, sql } from "drizzle-orm";
+import bcrypt from "bcrypt";
 import {
   users,
   categories,
@@ -943,7 +944,6 @@ export class FixedStorage implements IStorage {
   async ensureDefaultAdmin(): Promise<void> {
     try {
       console.log("🔄 Ensuring default users exist...");
-      const bcrypt = require("bcrypt");
 
       const defaultUsers = [
         {
