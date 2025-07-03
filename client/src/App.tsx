@@ -35,6 +35,7 @@ import PublicOrderForm from "@/components/public-order-form";
 import Stock from "@/pages/stock";
 import Units from "@/pages/units";
 import CompanySettings from "@/pages/company-settings";
+import Footer from "@/components/footer";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -69,41 +70,44 @@ function Router() {
 
 function AuthenticatedApp({ sidebarOpen, setSidebarOpen }: { sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }) {
   return (
-    <div className="min-h-screen flex bg-background">
-      <Sidebar
-        isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
-      />
-      <main className="flex-1 flex flex-col lg:ml-0">
-        <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-        <div className="flex-1 overflow-x-hidden">
-          <Switch>
-            <Route path="/" component={Dashboard} />
-            <Route path="/products" component={Products} />
-            <Route path="/inventory" component={Inventory} />
-            <Route path="/stock" component={Stock} />
-            <Route path="/orders" component={Orders} />
-            <Route path="/production" component={Production} />
-            <Route path="/customers" component={Customers} />
-            <Route path="/parties" component={Parties} />
-            <Route path="/assets" component={Assets} />
-            <Route path="/expenses" component={Expenses} />
-            <Route path="/reports" component={Reports} />
-            <Route path="/day-book" component={DayBook} />
-            <Route path="/transactions" component={Transactions} />
-            <Route path="/billing" component={Billing} />
-            <Route path="/settings" component={Settings} />
-            <Route path="/company-settings" component={CompanySettings} />
-            <Route path="/notifications" component={Notifications} />
-            <Route path="/categories" component={CategoryManagement} />
-            <Route path="/units" component={Units} />
-            <Route path="/sales" component={Sales} />
-            <Route path="/purchases" component={Purchases} />
-            <Route path="/admin/users" component={AdminUsers} />
-            <Route component={NotFound} />
-          </Switch>
-        </div>
-      </main>
+    <div className="min-h-screen flex flex-col bg-background">
+      <div className="flex flex-1">
+        <Sidebar
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+        />
+        <main className="flex-1 flex flex-col lg:ml-0">
+          <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+          <div className="flex-1 overflow-x-hidden">
+            <Switch>
+              <Route path="/" component={Dashboard} />
+              <Route path="/products" component={Products} />
+              <Route path="/inventory" component={Inventory} />
+              <Route path="/stock" component={Stock} />
+              <Route path="/orders" component={Orders} />
+              <Route path="/production" component={Production} />
+              <Route path="/customers" component={Customers} />
+              <Route path="/parties" component={Parties} />
+              <Route path="/assets" component={Assets} />
+              <Route path="/expenses" component={Expenses} />
+              <Route path="/reports" component={Reports} />
+              <Route path="/day-book" component={DayBook} />
+              <Route path="/transactions" component={Transactions} />
+              <Route path="/billing" component={Billing} />
+              <Route path="/settings" component={Settings} />
+              <Route path="/company-settings" component={CompanySettings} />
+              <Route path="/notifications" component={Notifications} />
+              <Route path="/categories" component={CategoryManagement} />
+              <Route path="/units" component={Units} />
+              <Route path="/sales" component={Sales} />
+              <Route path="/purchases" component={Purchases} />
+              <Route path="/admin/users" component={AdminUsers} />
+              <Route component={NotFound} />
+            </Switch>
+          </div>
+        </main>
+      </div>
+      <Footer />
     </div>
   );
 }
