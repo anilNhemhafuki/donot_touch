@@ -2,7 +2,9 @@ import { db } from "./db.js";
 import { storage } from "./storage.js";
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is required. Please create a PostgreSQL database in Replit.");
+  throw new Error(
+    "DATABASE_URL environment variable is required. Please create a PostgreSQL database in Replit.",
+  );
 }
 
 export async function initializeDatabase() {
@@ -19,7 +21,6 @@ export async function initializeDatabase() {
     console.log("✅ Default users created");
 
     console.log("✅ Database initialization completed");
-
   } catch (error) {
     console.error("❌ Database initialization failed:", error);
     throw error;

@@ -90,7 +90,7 @@ export interface IStorage {
 
   // Units operations
   getUnits(): Promise<Unit[]>;
-  createUnit(unit: InsertUnit): Promise<Unit>;
+  createUnit(unit: InsertUnit): PromiinitializeDefaultPermissionsse<Unit>;
   updateUnit(id: number, unit: Partial<InsertUnit>): Promise<Unit>;
   deleteUnit(id: number): Promise<void>;
 
