@@ -1,5 +1,5 @@
 import { db } from "./db.js";
-import { storage } from "./storage.js";
+import { fixedStorage as storage } from "./storage-fixed.js";
 
 if (!process.env.DATABASE_URL) {
   throw new Error(

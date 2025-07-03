@@ -834,7 +834,7 @@ export class FixedStorage implements IStorage {
     }
 
     // Set default admin permissions (full access)
-    const allPermissions = await await this.getPermissions();
+    const allPermissions = await this.getPermissions();
     const adminPermissionIds = allPermissions
       .filter(p => p.action === 'read_write')
       .map(p => p.id);
