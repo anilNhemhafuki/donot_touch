@@ -1240,6 +1240,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // Permission management routes
+  app.get("/api/permissions", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const permissions = await storage.getPermissions();
+      res.json(permissions);
+    } catch (error) {
+      console.error("Error fetching permissions:", error);
+      res.status(500).json({ message: "Failed to fetch permissions" });
+    }
+  });
+
+  app.get("/api/permissions/role/:role", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { role } = req.params;
+      const permissions = await storage.getRolePermissions(role);
+      res.json(permissions);
+    } catch (error) {
+      console.error("Error fetching role permissions:", error);
+      res.status(500).json({ message: "Failed to fetch role permissions" });
+    }
+  });
+
+  app.put("/api/permissions/role/:role", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { role } = req.params;
+      const { permissionIds } = req.body;
+      await storage.setRolePermissions(role, permissionIds);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating role permissions:", error);
+      res.status(500).json({ message: "Failed to update role permissions" });
+    }
+  });
+
+  app.get("/api/permissions/user/:userId", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const permissions = await storage.getUserPermissions(userId);
+      res.json(permissions);
+    } catch (error) {
+      console.error("Error fetching user permissions:", error);
+      res.status(500).json({ message: "Failed to fetch user permissions" });
+    }
+  });
+
+  app.put("/api/permissions/user/:userId", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { permissionUpdates } = req.body;
+      await storage.setUserPermissions(userId, permissionUpdates);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating user permissions:", error);
+      res.status(500).json({ message: "Failed to update user permissions" });
+    }
+  });
+
+  app.get("/api/auth/permissions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const permissions = await storage.getUserPermissions(userId);
+      res.json(permissions);
+    } catch (error) {
+      console.error("Error fetching user permissions:", error);
+      res.status(500).json({ message: "Failed to fetch user permissions" });
+    }
+  });
+
   // Profile management routes
   app.put("/api/profile", isAuthenticated, async (req: any, res) => {
     try {

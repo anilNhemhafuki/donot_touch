@@ -36,6 +36,7 @@ import Stock from "@/pages/stock";
 import Units from "@/pages/units";
 import CompanySettings from "@/pages/company-settings";
 import Footer from "@/components/footer";
+import { ProtectedRoute } from "@/components/protected-route";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -80,28 +81,111 @@ function AuthenticatedApp({ sidebarOpen, setSidebarOpen }: { sidebarOpen: boolea
           <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
           <div className="flex-1 overflow-x-hidden">
             <Switch>
-              <Route path="/" component={Dashboard} />
-              <Route path="/products" component={Products} />
-              <Route path="/inventory" component={Inventory} />
-              <Route path="/stock" component={Stock} />
-              <Route path="/orders" component={Orders} />
-              <Route path="/production" component={Production} />
-              <Route path="/customers" component={Customers} />
-              <Route path="/parties" component={Parties} />
-              <Route path="/assets" component={Assets} />
-              <Route path="/expenses" component={Expenses} />
-              <Route path="/reports" component={Reports} />
-              <Route path="/day-book" component={DayBook} />
-              <Route path="/transactions" component={Transactions} />
-              <Route path="/billing" component={Billing} />
-              <Route path="/settings" component={Settings} />
-              <Route path="/company-settings" component={CompanySettings} />
-              <Route path="/notifications" component={Notifications} />
-              <Route path="/categories" component={CategoryManagement} />
-              <Route path="/units" component={Units} />
-              <Route path="/sales" component={Sales} />
-              <Route path="/purchases" component={Purchases} />
-              <Route path="/admin/users" component={AdminUsers} />
+              <Route path="/" component={() => (
+                <ProtectedRoute resource="dashboard" action="read">
+                  <Dashboard />
+                </ProtectedRoute>
+              )} />
+              <Route path="/products" component={() => (
+                <ProtectedRoute resource="products" action="read">
+                  <Products />
+                </ProtectedRoute>
+              )} />
+              <Route path="/inventory" component={() => (
+                <ProtectedRoute resource="inventory" action="read">
+                  <Inventory />
+                </ProtectedRoute>
+              )} />
+              <Route path="/stock" component={() => (
+                <ProtectedRoute resource="inventory" action="read">
+                  <Stock />
+                </ProtectedRoute>
+              )} />
+              <Route path="/orders" component={() => (
+                <ProtectedRoute resource="orders" action="read">
+                  <Orders />
+                </ProtectedRoute>
+              )} />
+              <Route path="/production" component={() => (
+                <ProtectedRoute resource="production" action="read">
+                  <Production />
+                </ProtectedRoute>
+              )} />
+              <Route path="/customers" component={() => (
+                <ProtectedRoute resource="customers" action="read">
+                  <Customers />
+                </ProtectedRoute>
+              )} />
+              <Route path="/parties" component={() => (
+                <ProtectedRoute resource="parties" action="read">
+                  <Parties />
+                </ProtectedRoute>
+              )} />
+              <Route path="/assets" component={() => (
+                <ProtectedRoute resource="assets" action="read">
+                  <Assets />
+                </ProtectedRoute>
+              )} />
+              <Route path="/expenses" component={() => (
+                <ProtectedRoute resource="expenses" action="read">
+                  <Expenses />
+                </ProtectedRoute>
+              )} />
+              <Route path="/reports" component={() => (
+                <ProtectedRoute resource="reports" action="read">
+                  <Reports />
+                </ProtectedRoute>
+              )} />
+              <Route path="/day-book" component={() => (
+                <ProtectedRoute resource="reports" action="read">
+                  <DayBook />
+                </ProtectedRoute>
+              )} />
+              <Route path="/transactions" component={() => (
+                <ProtectedRoute resource="reports" action="read">
+                  <Transactions />
+                </ProtectedRoute>
+              )} />
+              <Route path="/billing" component={() => (
+                <ProtectedRoute resource="orders" action="read">
+                  <Billing />
+                </ProtectedRoute>
+              )} />
+              <Route path="/settings" component={() => (
+                <ProtectedRoute resource="settings" action="read">
+                  <Settings />
+                </ProtectedRoute>
+              )} />
+              <Route path="/notifications" component={() => (
+                <ProtectedRoute resource="dashboard" action="read">
+                  <Notifications />
+                </ProtectedRoute>
+              )} />
+              <Route path="/notification-settings" component={() => (
+                <ProtectedRoute resource="settings" action="read">
+                  <NotificationSettings />
+                </ProtectedRoute>
+              )} />
+              <Route path="/admin/users" component={() => (
+                <ProtectedRoute resource="users" action="read_write">
+                  <AdminUsers />
+                </ProtectedRoute>
+              )} />
+              <Route path="/category-management" component={() => (
+                <ProtectedRoute resource="products" action="read_write">
+                  <CategoryManagement />
+                </ProtectedRoute>
+              )} />
+              <Route path="/sales" component={() => (
+                <ProtectedRoute resource="sales" action="read">
+                  <Sales />
+                </ProtectedRoute>
+              )} />
+              <Route path="/purchases" component={() => (
+                <ProtectedRoute resource="purchases" action="read">
+                  <Purchases />
+                </ProtectedRoute>
+              )} />
               <Route component={NotFound} />
             </Switch>
           </div>

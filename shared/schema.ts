@@ -222,6 +222,33 @@ export const assets = pgTable("assets", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Permissions table
+export const permissions = pgTable("permissions", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  resource: varchar("resource", { length: 100 }).notNull(), // e.g., 'products', 'orders', 'dashboard'
+  action: varchar("action", { length: 50 }).notNull(), // 'read', 'write', 'read_write'
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Role Permissions table
+export const rolePermissions = pgTable("role_permissions", {
+  id: serial("id").primaryKey(),
+  role: varchar("role", { length: 20 }).notNull(),
+  permissionId: integer("permission_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User Permissions table (for individual user overrides)
+export const userPermissions = pgTable("user_permissions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  permissionId: integer("permission_id").notNull(),
+  granted: boolean("granted").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Settings table
 export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),
@@ -274,6 +301,12 @@ export type Expense = typeof expenses.$inferSelect;
 export type InsertExpense = typeof expenses.$inferInsert;
 export type Asset = typeof assets.$inferSelect;
 export type InsertAsset = typeof assets.$inferInsert;
+export type Permission = typeof permissions.$inferSelect;
+export type InsertPermission = typeof permissions.$inferInsert;
+export type RolePermission = typeof rolePermissions.$inferSelect;
+export type InsertRolePermission = typeof rolePermissions.$inferInsert;
+export type UserPermission = typeof userPermissions.$inferSelect;
+export type InsertUserPermission = typeof userPermissions.$inferInsert;
 
 // Insert schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ 
@@ -309,4 +342,19 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const insertPermissionSchema = createInsertSchema(permissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserPermissionSchema = createInsertSchema(userPermissions).omit({
+  id: true,
+  createdAt: true,
 });

@@ -5,48 +5,67 @@ import {
   categories,
   products,
   inventoryItems,
-  inventoryCategories,
-  customers,
-  parties,
+  productIngredients,
   units,
-  purchases,
-  purchaseItems,
+  customers,
   orders,
   orderItems,
-  productIngredients,
   productionSchedule,
   inventoryTransactions,
   expenses,
   assets,
   settings,
-  type User,
-  type UpsertUser,
-  type Category,
-  type InsertCategory,
-  type Product,
-  type InsertProduct,
-  type InventoryItem,
-  type InsertInventoryItem,
-  type Customer,
-  type InsertCustomer,
-  type Party,
-  type InsertParty,
-  type Purchase,
-  type InsertPurchase,
-  type PurchaseItem,
-  type InsertPurchaseItem,
-  type Order,
-  type InsertOrder,
-  type OrderItem,
-  type InsertOrderItem,
-  type InventoryTransaction,
-  type InsertInventoryTransaction,
-  type Expense,
-  type InsertExpense,
-  type Asset,
-  type InsertAsset,
-} from "../shared/schema";
+  parties,
+  purchases,
+  purchaseItems,
+  inventoryCategories,
+  permissions,
+  rolePermissions,
+  userPermissions,
+} from "@shared/schema";
 import { IStorage } from "./storage";
+import type {
+  User,
+  UpsertUser,
+  Category,
+  InsertCategory,
+  Product,
+  InsertProduct,
+  InventoryItem,
+  InsertInventoryItem,
+  ProductIngredient,
+  InsertProductIngredient,
+  Unit,
+  InsertUnit,
+  Customer,
+  InsertCustomer,
+  Order,
+  InsertOrder,
+  OrderItem,
+  InsertOrderItem,
+  ProductionScheduleItem,
+  InsertProductionScheduleItem,
+  InventoryTransaction,
+  InsertInventoryTransaction,
+  Expense,
+  InsertExpense,
+  Asset,
+  InsertAsset,
+  Party,
+  InsertParty,
+  Purchase,
+  InsertPurchase,
+  PurchaseItem,
+  InsertPurchaseItem,
+  InventoryCategory,
+  InsertInventoryCategory,
+  Permission,
+  InsertPermission,
+  RolePermission,
+  InsertRolePermission,
+  UserPermission,
+  InsertUserPermission,
+} from "@shared/schema";
 
 export class FixedStorage implements IStorage {
   // User operations
@@ -62,7 +81,7 @@ export class FixedStorage implements IStorage {
 
   async upsertUser(userData: UpsertUser): Promise<User> {
     const existingUser = await this.getUserByEmail(userData.email);
-    
+
     if (existingUser) {
       const [updatedUser] = await db
         .update(users)
@@ -117,7 +136,7 @@ export class FixedStorage implements IStorage {
 
   async getProductsWithIngredients(): Promise<any[]> {
     const productsData = await db.select().from(products);
-    
+
     const result = [];
     for (const product of productsData) {
       const ingredients = await this.getProductIngredients(product.id);
@@ -126,7 +145,7 @@ export class FixedStorage implements IStorage {
         ingredients,
       });
     }
-    
+
     return result;
   }
 
@@ -235,14 +254,14 @@ export class FixedStorage implements IStorage {
       categoryId: data.categoryId,
       lastRestocked: data.lastRestocked,
     };
-    
+
     const [result] = await db.insert(inventoryItems).values(insertData).returning();
     return result;
   }
 
   async updateInventoryItem(id: number, data: any) {
     const updateData: any = {};
-    
+
     if (data.name !== undefined) updateData.name = data.name;
     if (data.currentStock !== undefined) updateData.currentStock = data.currentStock.toString();
     if (data.minLevel !== undefined) updateData.minLevel = data.minLevel.toString();
@@ -251,7 +270,7 @@ export class FixedStorage implements IStorage {
     if (data.supplier !== undefined) updateData.supplier = data.supplier;
     if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
     if (data.lastRestocked !== undefined) updateData.lastRestocked = data.lastRestocked;
-    
+
     updateData.updatedAt = new Date();
 
     const [result] = await db
@@ -476,7 +495,7 @@ export class FixedStorage implements IStorage {
     const totalOrdersResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(orders);
-    
+
     // Get total revenue from completed orders
     const totalRevenueResult = await db
       .select({ 
@@ -688,6 +707,155 @@ export class FixedStorage implements IStorage {
     // Implementation needed
   }
 
+  // Permissions methods
+  async getPermissions() {
+    return db.select().from(permissions).orderBy(asc(permissions.name));
+  }
+
+  async createPermission(data: InsertPermission): Promise<Permission> {
+    const [permission] = await db.insert(permissions).values(data).returning();
+    return permission;
+  }
+
+  async getRolePermissions(role: string): Promise<any[]> {
+    return db
+      .select({
+        id: permissions.id,
+        name: permissions.name,
+        resource: permissions.resource,
+        action: permissions.action,
+        description: permissions.description,
+      })
+      .from(rolePermissions)
+      .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+      .where(eq(rolePermissions.role, role))
+      .orderBy(asc(permissions.name));
+  }
+
+  async setRolePermissions(role: string, permissionIds: number[]): Promise<void> {
+    // Remove existing permissions for the role
+    await db.delete(rolePermissions).where(eq(rolePermissions.role, role));
+
+    // Add new permissions
+    if (permissionIds.length > 0) {
+      const rolePermissionData = permissionIds.map(permissionId => ({
+        role,
+        permissionId
+      }));
+      await db.insert(rolePermissions).values(rolePermissionData);
+    }
+  }
+
+  async getUserPermissions(userId: string): Promise<any[]> {
+    // Get user's role-based permissions
+    const user = await this.getUser(userId);
+    if (!user) return [];
+
+    const rolePerms = await this.getRolePermissions(user.role);
+
+    // Get user-specific permission overrides
+    const userPerms = await db
+      .select({
+        id: permissions.id,
+        name: permissions.name,
+        resource: permissions.resource,
+        action: permissions.action,
+        granted: userPermissions.granted,
+      })
+      .from(userPermissions)
+      .innerJoin(permissions, eq(userPermissions.permissionId, permissions.id))
+      .where(eq(userPermissions.userId, userId));
+
+    // Merge permissions (user overrides take precedence)
+    const permissionMap = new Map();
+
+    // Add role permissions
+    rolePerms.forEach(perm => {
+      permissionMap.set(perm.id, { ...perm, granted: true });
+    });
+
+    // Apply user overrides
+    userPerms.forEach(perm => {
+      permissionMap.set(perm.id, perm);
+    });
+
+    return Array.from(permissionMap.values()).filter(perm => perm.granted);
+  }
+
+  async setUserPermissions(userId: string, permissionUpdates: { permissionId: number; granted: boolean }[]): Promise<void> {
+    // Remove existing user permissions
+    await db.delete(userPermissions).where(eq(userPermissions.userId, userId));
+
+    // Add new user permissions
+    if (permissionUpdates.length > 0) {
+      const userPermissionData = permissionUpdates.map(update => ({
+        userId,
+        permissionId: update.permissionId,
+        granted: update.granted
+      }));
+      await db.insert(userPermissions).values(userPermissionData);
+    }
+  }
+
+  async checkUserPermission(userId: string, resource: string, action: string): Promise<boolean> {
+    const userPermissions = await this.getUserPermissions(userId);
+    return userPermissions.some(perm => 
+      perm.resource === resource && 
+      (perm.action === action || perm.action === 'read_write')
+    );
+  }
+
+  async initializeDefaultPermissions(): Promise<void> {
+    const existingPermissions = await this.getPermissions();
+    if (existingPermissions.length > 0) return;
+
+    const resources = [
+      'dashboard', 'products', 'inventory', 'orders', 'production', 
+      'customers', 'parties', 'assets', 'expenses', 'sales', 
+      'purchases', 'reports', 'settings', 'users'
+    ];
+
+    const actions = ['read', 'write', 'read_write'];
+
+    const defaultPermissions = [];
+    for (const resource of resources) {
+      for (const action of actions) {
+        defaultPermissions.push({
+          name: `${resource}_${action}`,
+          resource,
+          action,
+          description: `${action.charAt(0).toUpperCase() + action.slice(1)} access to ${resource}`
+        });
+      }
+    }
+
+    for (const permission of defaultPermissions) {
+      await this.createPermission(permission);
+    }
+
+    // Set default admin permissions (full access)
+    const allPermissions = await await this.getPermissions();
+    const adminPermissionIds = allPermissions
+      .filter(p => p.action === 'read_write')
+      .map(p => p.id);
+    await this.setRolePermissions('admin', adminPermissionIds);
+
+    // Set default manager permissions (read_write except users)
+    const managerPermissionIds = allPermissions
+      .filter(p => p.action === 'read_write' && p.resource !== 'users')
+      .map(p => p.id);
+    await this.setRolePermissions('manager', managerPermissionIds);
+
+    // Set default staff permissions (read access + basic write)
+    const staffPermissionIds = allPermissions
+      .filter(p => 
+        p.action === 'read' || 
+        (p.action === 'write' && ['orders', 'customers', 'production'].includes(p.resource))
+      )
+      .map(p => p.id);
+    await this.setRolePermissions('staff', staffPermissionIds);
+  }
+
   // Settings operations
   async getSettings(): Promise<any> {
     const settingsResult = await db.select().from(settings);
@@ -707,7 +875,7 @@ export class FixedStorage implements IStorage {
 
   async updateOrCreateSetting(key: string, value: string): Promise<any> {
     const existing = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
-    
+
     if (existing.length > 0) {
       const [result] = await db
         .update(settings)

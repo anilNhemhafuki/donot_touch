@@ -1,4 +1,3 @@
-
 import { db } from "./db.js";
 import { storage } from "./storage.js";
 
@@ -9,14 +8,18 @@ if (!process.env.DATABASE_URL) {
 export async function initializeDatabase() {
   try {
     console.log("🔄 Initializing database...");
-    
+
     // Ensure default users exist
-    console.log("🔄 Setting up default users...");
+    console.log("🔄 Ensuring default users exist...");
     await storage.ensureDefaultAdmin();
+
+    // Initialize permissions
+    console.log("🔄 Initializing permissions...");
+    await storage.initializeDefaultPermissions();
     console.log("✅ Default users created");
-    
+
     console.log("✅ Database initialization completed");
-    
+
   } catch (error) {
     console.error("❌ Database initialization failed:", error);
     throw error;

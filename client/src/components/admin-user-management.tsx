@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -26,13 +25,32 @@ export default function AdminUserManagement() {
   });
   const { toast } = useToast();
 
-  const { data: users = [], isLoading, error } = useQuery({
+  const { data: users = [], isLoading } = useQuery({
     queryKey: ["/api/admin/users"],
-    retry: (failureCount, error) => {
-      if (error.message.includes('403') || error.message.includes('404')) {
-        return false;
-      }
-      return failureCount < 3;
+    queryFn: () => apiRequest("/api/admin/users"),
+  });
+
+  const { data: allPermissions = [] } = useAllPermissions();
+  const { data: rolePermissions = [], refetch: refetchRolePermissions } = useRolePermissions(selectedRole);
+
+  const updateRolePermissionsMutation = useMutation({
+    mutationFn: async ({ role, permissionIds }: { role: string; permissionIds: number[] }) => {
+      return apiRequest(`/api/permissions/role/${role}`, {
+        method: "PUT",
+        body: JSON.stringify({ permissionIds }),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Role permissions updated successfully" });
+      refetchRolePermissions();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update permissions",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -178,6 +196,39 @@ export default function AdminUserManagement() {
     return variants[role] || "outline";
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    if (confirm("Are you sure you want to delete this user?")) {
+      deleteMutation.mutate(userId);
+    }
+  };
+
+  const handlePermissionChange = (permissionId: number, checked: boolean) => {
+    const currentPermissionIds = rolePermissions.map((p: any) => p.id);
+    let newPermissionIds;
+
+    if (checked) {
+      newPermissionIds = [...currentPermissionIds, permissionId];
+    } else {
+      newPermissionIds = currentPermissionIds.filter((id: number) => id !== permissionId);
+    }
+
+    updateRolePermissionsMutation.mutate({
+      role: selectedRole,
+      permissionIds: newPermissionIds,
+    });
+  };
+
+  const groupPermissionsByResource = (permissions: any[]) => {
+    const grouped = permissions.reduce((acc: any, perm: any) => {
+      if (!acc[perm.resource]) {
+        acc[perm.resource] = [];
+      }
+      acc[perm.resource].push(perm);
+      return acc;
+    }, {});
+    return grouped;
+  };
+
   if (error) {
     if (isUnauthorizedError(error) || error.message.includes('403') || error.message.includes('404')) {
       return (
@@ -193,7 +244,7 @@ export default function AdminUserManagement() {
         </Card>
       );
     }
-    
+
     return (
       <Card>
         <CardContent className="pt-6">
