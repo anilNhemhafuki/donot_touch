@@ -935,6 +935,62 @@ export class FixedStorage implements IStorage {
     await db.delete(users).where(eq(users.id, id));
   }
 
+  // Company settings methods
+  async saveCompanySettings(settings: any): Promise<void> {
+    //Placeholder function
+  }
+
+  async ensureDefaultAdmin(): Promise<void> {
+    try {
+      console.log("🔄 Ensuring default users exist...");
+      const bcrypt = require("bcrypt");
+
+      const defaultUsers = [
+        {
+          id: "admin_default",
+          email: "admin@sweetreats.com",
+          password: await bcrypt.hash("admin123", 10),
+          firstName: "Admin",
+          lastName: "User",
+          role: "admin",
+        },
+        {
+          id: "manager_default",
+          email: "manager@sweetreats.com",
+          password: await bcrypt.hash("manager123", 10),
+          firstName: "Manager",
+          lastName: "User",
+          role: "manager",
+        },
+        {
+          id: "staff_default",
+          email: "staff@sweetreats.com",
+          password: await bcrypt.hash("staff123", 10),
+          firstName: "Staff",
+          lastName: "User",
+          role: "staff",
+        },
+      ];
+
+      for (const user of defaultUsers) {
+        try {
+          const existingUser = await this.getUserByEmail(user.email);
+          if (!existingUser) {
+            await db.insert(users).values(user);
+            console.log(`✅ Created ${user.role} user: ${user.email}`);
+          } else {
+            console.log(`✅ ${user.role} user already exists: ${user.email}`);
+          }
+        } catch (error: any) {
+          console.log(`⚠️  Could not create ${user.role} user:`, error.message);
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error ensuring default users:", error);
+      throw error;
+    }
+  }
+
   // Media operations
   async getMediaItems(): Promise<any[]> {
     return [];
