@@ -291,7 +291,9 @@ export default function Stock() {
     }
 
     // Get the selected unit details
-    const selectedUnit = (units as any[]).find((u: any) => u.id.toString() === unitId);
+    const selectedUnit = (units as any[]).find(
+      (u: any) => u.id.toString() === unitId,
+    );
 
     const data = {
       name: name.trim(),
@@ -474,6 +476,21 @@ export default function Stock() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label htmlFor="minLevel" className="text-sm font-medium">
+                    Minimum Level
+                  </Label>
+                  <Input
+                    id="minLevel"
+                    name="minLevel"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Minimum stock level"
+                    defaultValue={editingItem?.minLevel || ""}
+                    className="mt-1"
+                  />
+                </div>
               </div>
 
               {/* Opening Stock Section */}
@@ -587,35 +604,6 @@ export default function Stock() {
                 <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="minLevel" className="text-sm font-medium">
-                        Minimum Level
-                      </Label>
-                      <Input
-                        id="minLevel"
-                        name="minLevel"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="Minimum stock level"
-                        defaultValue={editingItem?.minLevel || ""}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="location" className="text-sm font-medium">
-                        Location
-                      </Label>
-                      <Input
-                        id="location"
-                        name="location"
-                        placeholder="Storage location"
-                        defaultValue={editingItem?.location || ""}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
                       <Label htmlFor="supplier" className="text-sm font-medium">
                         Supplier
                       </Label>
@@ -636,6 +624,21 @@ export default function Stock() {
                         name="company"
                         placeholder="Company name"
                         defaultValue={editingItem?.company || ""}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="location" className="text-sm font-medium">
+                        Location
+                      </Label>
+                      <Input
+                        id="location"
+                        name="location"
+                        placeholder="Storage location"
+                        defaultValue={editingItem?.location || ""}
                         className="mt-1"
                       />
                     </div>
@@ -753,11 +756,16 @@ export default function Stock() {
                             Min: {parseFloat(item.minLevel || 0).toFixed(2)}
                           </div>
                         </TableCell>
-                         <TableCell className="text-muted-foreground">
-                          {item.previousQuantity ? parseFloat(item.previousQuantity).toLocaleString() : "0"}
+                        <TableCell className="text-muted-foreground">
+                          {item.previousQuantity
+                            ? parseFloat(item.previousQuantity).toLocaleString()
+                            : "0"}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {symbol} {item.previousAmount ? parseFloat(item.previousAmount).toLocaleString() : "0"}
+                          {symbol}{" "}
+                          {item.previousAmount
+                            ? parseFloat(item.previousAmount).toLocaleString()
+                            : "0"}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           {symbol}
@@ -774,16 +782,16 @@ export default function Stock() {
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
                           <div className="text-sm">
-                            {item.dateAdded ? 
-                              new Date(item.dateAdded).toLocaleDateString() : 
-                              new Date(item.createdAt || item.lastRestocked).toLocaleDateString()
-                            }
+                            {item.dateAdded
+                              ? new Date(item.dateAdded).toLocaleDateString()
+                              : new Date(
+                                  item.createdAt || item.lastRestocked,
+                                ).toLocaleDateString()}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {item.lastRestocked ? 
-                              `Updated: ${new Date(item.lastRestocked).toLocaleDateString()}` : 
-                              ''
-                            }
+                            {item.lastRestocked
+                              ? `Updated: ${new Date(item.lastRestocked).toLocaleDateString()}`
+                              : ""}
                           </div>
                         </TableCell>
                         <TableCell>

@@ -133,7 +133,7 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
 
         {/* Dynamic Company Header */}
         <div
-          className="p-6 flex-shrink-0 bg-gradient-to-r from-primary/80 to-primary text-white"
+          className="p-2 flex-shrink-0 bg-gradient-to-r from-primary/80 to-primary text-white"
           style={{
             backgroundImage: `linear-gradient(135deg, ${branding.themeColor}CC, ${branding.themeColor})`,
           }}
